@@ -57,8 +57,18 @@ describe("pathsAreClose / countCrossings", () => {
 	it("detects two crossing diagonals", () => {
 		const a = line(0, 0, 1, 1);
 		const b = line(0, 1, 1, 0);
+		// Thin margin: closest strided sample pair is ~0.02703 vs the 0.028
+		// threshold (~3.5%). This case documents the current calibration of
+		// FIBER_SAMPLES / stride / threshold; retune all three together.
 		expect(pathsAreClose(a, b)).toBe(true);
 		expect(countCrossings([a, b])).toBe(1);
+	});
+
+	it("detects paths that coincide at a strided sample (robust positive)", () => {
+		const a = line(0, 0, 1, 1);
+		// Identical paths: strided sample distance is exactly 0, so this
+		// positive case cannot drift with calibration changes.
+		expect(pathsAreClose(a, a)).toBe(true);
 	});
 
 	it("does not flag far-apart parallel lines", () => {
