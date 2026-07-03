@@ -8,6 +8,84 @@ import { computeWallLayout, frameGradientPos, frameRect } from "./viewport";
 /** Global glow multiplier (design prop default). */
 const GLOW = 1;
 
+/**
+ * Cache of pre-rendered LED glow sprites keyed by quantized colour+brightness.
+ *
+ * The edit-mode LED loop previously drew each LED's glow with
+ * `ctx.shadowColor`/`ctx.shadowBlur` around a filled arc. `shadowBlur` is one
+ * of the slowest Canvas2D operations; at a 5x5 grid that is ~600 shadow-blurred
+ * fills per frame and measured FPS dropped to ~18 (12 at 6x6) versus the 60fps
+ * target. Baking the glow into a tiny offscreen radial-gradient sprite once and
+ * blitting it with `drawImage` removes the per-LED blur cost entirely.
+ */
+const glowSpriteCache = new Map<string, HTMLCanvasElement>();
+
+/** Offscreen sprite dimensions (px). Small — it is scaled at draw time. */
+const GLOW_SPRITE_SIZE = 32;
+
+/**
+ * Build (or fetch from cache) a glow sprite for the given LED colour and
+ * brightness. RGB is quantized to 16 levels/channel and brightness to 8 levels,
+ * so the cache stays at most a few thousand tiny entries in practice — no
+ * eviction needed. The brightness-dependent halo spread is baked into the
+ * sprite geometry via the quantized brightness.
+ */
+function ledGlowSprite(
+	lr: number,
+	lg: number,
+	lb: number,
+	brightness: number,
+): HTMLCanvasElement {
+	const qr = Math.max(0, Math.min(15, Math.round((lr / 255) * 15)));
+	const qg = Math.max(0, Math.min(15, Math.round((lg / 255) * 15)));
+	const qb = Math.max(0, Math.min(15, Math.round((lb / 255) * 15)));
+	const qbri = Math.max(0, Math.min(7, Math.round(brightness * 7)));
+	const key = `${qr}_${qg}_${qb}_${qbri}`;
+	const cached = glowSpriteCache.get(key);
+	if (cached) return cached;
+
+	const canvas = document.createElement("canvas");
+	canvas.width = GLOW_SPRITE_SIZE;
+	canvas.height = GLOW_SPRITE_SIZE;
+	const sctx = canvas.getContext("2d");
+	// Environments without a real 2D context: return the blank canvas so callers
+	// never crash; drawImage of an empty canvas is a harmless no-op.
+	if (!sctx) {
+		glowSpriteCache.set(key, canvas);
+		return canvas;
+	}
+
+	const r = Math.round((qr / 15) * 255);
+	const g = Math.round((qg / 15) * 255);
+	const b = Math.round((qb / 15) * 255);
+	const bri = qbri / 7;
+	const coreAlpha = 0.4 + 0.6 * bri;
+
+	// The sprite spans core + halo. `coreFrac` is the fraction of the sprite
+	// radius occupied by the solid core; the remainder is the soft falloff whose
+	// spread grows with brightness (mirroring the old shadowBlur extent).
+	const coreRatio = 0.0095;
+	const haloRatio = 0.03 * coreAlpha;
+	const coreFrac = coreRatio / (coreRatio + haloRatio);
+
+	const c = GLOW_SPRITE_SIZE / 2;
+	const grad = sctx.createRadialGradient(c, c, 0, c, c, c);
+	grad.addColorStop(0, `rgba(${r},${g},${b},${coreAlpha})`);
+	grad.addColorStop(coreFrac, `rgba(${r},${g},${b},${coreAlpha})`);
+	grad.addColorStop(
+		coreFrac + (1 - coreFrac) * 0.4,
+		`rgba(${r},${g},${b},${(coreAlpha * 0.3).toFixed(3)})`,
+	);
+	grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+	sctx.fillStyle = grad;
+	sctx.beginPath();
+	sctx.arc(c, c, c, 0, 6.283);
+	sctx.fill();
+
+	glowSpriteCache.set(key, canvas);
+	return canvas;
+}
+
 export interface WallDrawState {
 	frames: Frame[];
 	gridSize: number;
@@ -310,13 +388,21 @@ function drawFrame(
 			ctx.strokeStyle = "rgba(255,255,255,0.12)";
 			ctx.lineWidth = 1;
 			ctx.stroke();
-			ctx.beginPath();
-			ctx.arc(bx, by, sz * 0.0095, 0, 6.283);
-			ctx.shadowColor = `rgba(${lr | 0},${lg | 0},${lb | 0},0.9)`;
-			ctx.shadowBlur = sz * 0.03 * (0.4 + 0.6 * light.brightness);
-			ctx.fillStyle = `rgba(${lr | 0},${lg | 0},${lb | 0},${0.4 + 0.6 * light.brightness})`;
-			ctx.fill();
-			ctx.shadowBlur = 0;
+			// Glow: blit a cached radial-gradient sprite instead of a per-LED
+			// shadowBlur fill (see glowSpriteCache above). Sized so the solid
+			// core matches the old core radius (sz * 0.0095) and the halo
+			// reaches roughly the old blur extent beyond it.
+			const coreWorld = sz * 0.0095;
+			const haloWorld = sz * 0.03 * (0.4 + 0.6 * light.brightness);
+			const glowWorld = coreWorld + haloWorld;
+			const sprite = ledGlowSprite(lr, lg, lb, light.brightness);
+			ctx.drawImage(
+				sprite,
+				bx - glowWorld,
+				by - glowWorld,
+				glowWorld * 2,
+				glowWorld * 2,
+			);
 			if (
 				selFiber &&
 				(selFiber.startLedIndex === led.index ||
