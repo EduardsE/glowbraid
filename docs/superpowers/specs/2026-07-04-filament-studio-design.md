@@ -14,7 +14,7 @@ A simulator for a real-world fibre-optic wall decoration. The physical installat
 - Fibers are passive light guides: LEDs inject light at the two endpoints; brightness decays with distance; colors from the two ends blend smoothly (red end + blue end → red→purple→blue). Never render LED dots along a cable.
 - Deterministic procedural generation: a given seed always produces the same layout.
 - Simulation engine separated from React UI (no simulation logic inside components).
-- 60 FPS target up to a 6×6 grid.
+- 60 FPS target up to a 5×5 grid (met: 59–61fps measured in both modes). **Accepted decision (2026-07-04, user sign-off):** 6×6 runs at ~44fps in both modes — smooth, no lag spikes — and is accepted as-is; the original requirements targeted 60fps only up to 5×5, and the 6×6 line was a spec extension. A future optimization pass (segment LOD / per-frame LED color memoization) is optional, not required.
 - Animations modify LED colors only; fibers follow automatically.
 
 ## 3. Decisions made during brainstorming
