@@ -346,9 +346,11 @@ import {
 } from "../geometry";
 import type { Point } from "../types";
 
+// Test paths use FIBER_SAMPLES points: pathsAreClose's stride/threshold
+// heuristic is calibrated for production-density (38-sample) paths.
 const line = (x0: number, y0: number, x1: number, y1: number): Point[] =>
-	Array.from({ length: 10 }, (_, i) => {
-		const t = i / 9;
+	Array.from({ length: FIBER_SAMPLES }, (_, i) => {
+		const t = i / (FIBER_SAMPLES - 1);
 		return { x: x0 + (x1 - x0) * t, y: y0 + (y1 - y0) * t };
 	});
 
