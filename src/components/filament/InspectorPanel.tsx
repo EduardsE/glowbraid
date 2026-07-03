@@ -72,6 +72,7 @@ function SelectedFrame(
 				</div>
 				<button
 					type="button"
+					aria-label="Re-seed frame"
 					onClick={props.onReseed}
 					className="h-8 w-8 cursor-pointer rounded-[9px] border border-white/10 bg-white/[0.03] text-sm text-[#e9eaf0] hover:bg-white/[0.08]"
 				>
@@ -130,6 +131,7 @@ function SelectedFrame(
 			<SliderRow label="Animation speed" value={`${props.speed.toFixed(1)}×`}>
 				<input
 					type="range"
+					aria-label="Animation speed"
 					min={0.1}
 					max={3}
 					step={0.1}
@@ -144,6 +146,7 @@ function SelectedFrame(
 			>
 				<input
 					type="range"
+					aria-label="LED brightness"
 					min={0.2}
 					max={1}
 					step={0.02}

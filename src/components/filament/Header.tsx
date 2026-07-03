@@ -49,6 +49,7 @@ export function Header({
 				<div className="flex items-center gap-1.5">
 					<button
 						type="button"
+						aria-label="Zoom out"
 						onClick={onZoomOut}
 						className="h-[30px] w-[30px] cursor-pointer rounded-lg border border-white/[0.08] bg-white/[0.02] text-[15px] leading-none text-[#e9eaf0] hover:bg-white/[0.07]"
 					>
@@ -63,6 +64,7 @@ export function Header({
 					</button>
 					<button
 						type="button"
+						aria-label="Zoom in"
 						onClick={onZoomIn}
 						className="h-[30px] w-[30px] cursor-pointer rounded-lg border border-white/[0.08] bg-white/[0.02] text-[15px] leading-none text-[#e9eaf0] hover:bg-white/[0.07]"
 					>

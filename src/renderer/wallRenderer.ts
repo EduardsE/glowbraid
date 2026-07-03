@@ -26,9 +26,10 @@ const GLOW_SPRITE_SIZE = 32;
 /**
  * Build (or fetch from cache) a glow sprite for the given LED colour and
  * brightness. RGB is quantized to 16 levels/channel and brightness to 8 levels,
- * so the cache stays at most a few thousand tiny entries in practice — no
- * eviction needed. The brightness-dependent halo spread is baked into the
- * sprite geometry via the quantized brightness.
+ * so the theoretical keyspace is 16³×8 = 32,768; in practice the 5 fixed
+ * palettes bound it to a few hundred entries — no eviction needed. The
+ * brightness-dependent halo spread is baked into the sprite geometry via the
+ * quantized brightness.
  */
 function ledGlowSprite(
 	lr: number,

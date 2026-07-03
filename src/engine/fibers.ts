@@ -70,13 +70,18 @@ export function generateFrame(seed: number, density: number): Frame {
 			FIBER_SAMPLES,
 		);
 
+		// Draw thickness BEFORE the push so the RNG draw order (start, end retries,
+		// dA, dB, thickness) stays stable — saved projects persist seeds and
+		// regenerate, so any reordering would change existing walls.
+		const thickness = 0.85 + rnd() * 0.5;
+
 		fibers.push({
 			id: `${seed}-${f}`,
 			startLedIndex: startIndex,
 			endLedIndex: endIndex,
 			path,
 			length: polylineLength(path),
-			thickness: 0.85 + rnd() * 0.5,
+			thickness,
 			hueBase: (start.u + end.u) / 2,
 		});
 	}

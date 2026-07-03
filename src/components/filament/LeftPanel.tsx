@@ -45,6 +45,7 @@ export function LeftPanel(props: LeftPanelProps) {
 			<SliderRow label="Frame size" value={`${props.frameSize}px`}>
 				<input
 					type="range"
+					aria-label="Frame size"
 					min={150}
 					max={340}
 					step={2}
@@ -77,6 +78,7 @@ export function LeftPanel(props: LeftPanelProps) {
 			<SliderRow label="Fibre runs / frame" value={String(props.fiberDensity)}>
 				<input
 					type="range"
+					aria-label="Fibre runs per frame"
 					min={8}
 					max={24}
 					step={1}

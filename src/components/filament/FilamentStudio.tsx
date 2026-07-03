@@ -1,5 +1,6 @@
 import type { MouseEvent } from "react";
 import { useCallback, useRef, useState } from "react";
+import { ANIMATIONS } from "@/engine/animation";
 import { generateFrame } from "@/engine/fibers";
 import { PALETTES } from "@/engine/palettes";
 import type {
@@ -288,16 +289,27 @@ export function FilamentStudio() {
 	const handleLoad = () => {
 		const d = loadProject();
 		if (!d) return;
-		rebuild(d.gridSize, d.fiberDensity, d.masterSeed, d.seeds);
+		// Sanitize fields that would brick the render loop if a hand-edited or
+		// legacy snapshot carries an unknown value (PALETTES[bad] → undefined →
+		// drawWall throws every frame). Kept minimal, not a full schema check.
+		const palette: PaletteId = PALETTES[d.palette] ? d.palette : "sunset";
+		const anim: AnimationId = ANIMATIONS.some((a) => a.id === d.anim)
+			? d.anim
+			: "flow";
+		const gridSize = Math.min(
+			6,
+			Math.max(1, Math.round(Number(d.gridSize) || 3)),
+		);
+		rebuild(gridSize, d.fiberDensity, d.masterSeed, d.seeds);
 		patch({
-			gridSize: d.gridSize,
+			gridSize,
 			frameSize: d.frameSize,
 			fiberDensity: d.fiberDensity,
 			masterSeed: d.masterSeed,
-			anim: d.anim,
+			anim,
 			speed: d.speed,
 			brightness: d.brightness,
-			palette: d.palette,
+			palette,
 			mode: d.mode ?? "sim",
 			empty: false,
 			selectedFrame: null,

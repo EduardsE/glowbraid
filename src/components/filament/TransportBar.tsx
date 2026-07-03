@@ -22,6 +22,7 @@ export function TransportBar(props: TransportBarProps) {
 			<div className="flex items-center gap-1.5">
 				<button
 					type="button"
+					aria-label={props.playing ? "Pause" : "Play"}
 					onClick={props.onPlayPause}
 					className={
 						props.playing
@@ -33,6 +34,7 @@ export function TransportBar(props: TransportBarProps) {
 				</button>
 				<button
 					type="button"
+					aria-label="Stop"
 					onClick={props.onStop}
 					className="h-9 w-9 cursor-pointer rounded-[9px] border border-white/10 bg-white/[0.03] text-xs text-[#e9eaf0] hover:bg-white/[0.08]"
 				>
@@ -40,6 +42,7 @@ export function TransportBar(props: TransportBarProps) {
 				</button>
 				<button
 					type="button"
+					aria-label="Toggle loop"
 					onClick={props.onLoop}
 					className={
 						props.loop
@@ -60,6 +63,7 @@ export function TransportBar(props: TransportBarProps) {
 				<input
 					ref={props.scrubRef}
 					type="range"
+					aria-label="Timeline position"
 					min={0}
 					max={1000}
 					step={1}

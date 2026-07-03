@@ -13,8 +13,10 @@ export function useAnimationLoop(step: (dt: number) => void): void {
 			const now = performance.now();
 			const dt = last === null ? 0.016 : Math.min(0.05, (now - last) / 1000);
 			last = now;
-			if (!document.hidden) step(dt);
+			// Schedule the next frame BEFORE running step(dt): if one frame's step
+			// throws, the loop still survives instead of being permanently killed.
 			rafId = requestAnimationFrame(tick);
+			if (!document.hidden) step(dt);
 		};
 		rafId = requestAnimationFrame(tick);
 		const fallback = window.setInterval(() => {
