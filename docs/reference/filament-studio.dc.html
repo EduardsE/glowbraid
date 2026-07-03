@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; background: #0b0c0f; overflow: hidden; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.09); border-radius: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    input[type=range] { accent-color: #9b8cff; }
+    @keyframes fil-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+  </style>
+</helmet>
+<div style="display:flex;flex-direction:column;height:100vh;width:100vw;background:radial-gradient(140% 120% at 50% -20%, #14151b 0%, #0b0c0f 60%);color:#e9eaf0;font-family:'Space Grotesk',system-ui,sans-serif;overflow:hidden;user-select:none;">
+
+  <header style="height:54px;flex:0 0 54px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;border-bottom:1px solid rgba(255,255,255,0.06);background:rgba(14,15,20,0.6);backdrop-filter:blur(14px);z-index:20;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="width:26px;height:26px;border-radius:8px;background:conic-gradient(from 210deg, #ff6b9d, #ffb36b, #9b8cff, #6bd8ff, #ff6b9d);box-shadow:0 0 18px rgba(155,140,255,0.5);"></div>
+      <div style="display:flex;flex-direction:column;line-height:1.05;">
+        <span style="font-weight:600;font-size:14px;letter-spacing:.01em;">Filament</span>
+        <span style="font-size:10px;color:rgba(233,234,240,0.42);letter-spacing:.06em;">FIBRE OPTIC WALL STUDIO</span>
+      </div>
+    </div>
+    <div style="display:flex;padding:3px;border:1px solid rgba(255,255,255,0.08);border-radius:11px;background:rgba(255,255,255,0.02);">
+      <button onClick="{{ onEdit }}" style="{{ editStyle }}">◧&nbsp; Edit</button>
+      <button onClick="{{ onSim }}" style="{{ simStyle }}">▶&nbsp; Simulate</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span style="padding:5px 10px;border:1px solid rgba(255,255,255,0.08);border-radius:8px;background:rgba(255,255,255,0.02);font-family:'Space Mono',monospace;font-size:11px;color:rgba(233,234,240,0.55);">{{ wallLabel }}</span>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <button onClick="{{ onZoomOut }}" style="width:30px;height:30px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:#e9eaf0;border-radius:8px;cursor:pointer;font-size:15px;line-height:1;" style-hover="background:rgba(255,255,255,0.07)">–</button>
+        <button onClick="{{ onFit }}" style="min-width:52px;height:30px;padding:0 8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:rgba(233,234,240,0.75);border-radius:8px;cursor:pointer;font-size:11px;font-family:'Space Mono',monospace;" style-hover="background:rgba(255,255,255,0.07)">{{ zoomPct }}</button>
+        <button onClick="{{ onZoomIn }}" style="width:30px;height:30px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:#e9eaf0;border-radius:8px;cursor:pointer;font-size:15px;line-height:1;" style-hover="background:rgba(255,255,255,0.07)">+</button>
+      </div>
+    </div>
+  </header>
+
+  <div style="flex:1;display:flex;min-height:0;position:relative;">
+
+    <aside style="width:264px;flex:0 0 264px;display:flex;flex-direction:column;gap:14px;padding:16px 14px;overflow-y:auto;border-right:1px solid rgba(255,255,255,0.05);background:rgba(12,13,17,0.4);z-index:10;">
+      <div style="font-size:10px;font-weight:600;letter-spacing:.14em;color:rgba(233,234,240,0.34);">WALL</div>
+
+      <div style="display:flex;flex-direction:column;gap:9px;">
+        <div style="font-size:12px;color:rgba(233,234,240,0.7);">Grid size</div>
+        <div style="display:flex;gap:5px;">
+          <sc-for list="{{ gridOptions }}" as="g" hint-placeholder-count="5">
+            <button onClick="{{ g.onClick }}" style="{{ g.style }}">{{ g.n }}</button>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:7px;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:12px;color:rgba(233,234,240,0.7);">Frame size</span><span style="font-size:11px;font-family:'Space Mono',monospace;color:#9b8cff;">{{ frameSizeLabel }}</span></div>
+        <input type="range" min="150" max="340" step="2" value="{{ frameSize }}" onChange="{{ onFrameSize }}" onInput="{{ onFrameSize }}" style="width:100%;">
+      </div>
+
+      <div style="height:1px;background:rgba(255,255,255,0.05);margin:2px 0;"></div>
+      <div style="font-size:10px;font-weight:600;letter-spacing:.14em;color:rgba(233,234,240,0.34);">FIBRES &amp; LEDS</div>
+
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid rgba(255,255,255,0.06);border-radius:11px;background:rgba(255,255,255,0.02);">
+        <div style="display:grid;grid-template-columns:repeat(6,4px);grid-template-rows:repeat(2,4px);gap:2px;">
+          <sc-for list="{{ ledDots }}" as="d" hint-placeholder-count="12"><span style="width:4px;height:4px;border-radius:50%;background:#9b8cff;opacity:.7;"></span></sc-for>
+        </div>
+        <div style="line-height:1.3;"><div style="font-size:12px;color:#e9eaf0;">24 LEDs / frame</div><div style="font-size:10px;color:rgba(233,234,240,0.4);">6 per edge · fixed</div></div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:7px;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:12px;color:rgba(233,234,240,0.7);">Fibre runs / frame</span><span style="font-size:11px;font-family:'Space Mono',monospace;color:#9b8cff;">{{ fiberDensity }}</span></div>
+        <input type="range" min="8" max="24" step="1" value="{{ fiberDensity }}" onChange="{{ onDensity }}" onInput="{{ onDensity }}" style="width:100%;">
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px;">
+        <button onClick="{{ onRandomize }}" style="height:38px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);color:#e9eaf0;border-radius:10px;cursor:pointer;font-size:12.5px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:8px;" style-hover="background:rgba(255,255,255,0.08)">↻ Re-route fibres</button>
+        <button onClick="{{ onGenerate }}" style="height:40px;border:1px solid rgba(155,140,255,0.4);background:linear-gradient(180deg,rgba(155,140,255,0.22),rgba(155,140,255,0.1));color:#fff;border-radius:10px;cursor:pointer;font-size:12.5px;font-weight:600;box-shadow:0 4px 18px rgba(155,140,255,0.18);" style-hover="background:linear-gradient(180deg,rgba(155,140,255,0.32),rgba(155,140,255,0.16))">✦ Generate new wall</button>
+      </div>
+
+      <div style="height:1px;background:rgba(255,255,255,0.05);margin:2px 0;"></div>
+      <div style="font-size:10px;font-weight:600;letter-spacing:.14em;color:rgba(233,234,240,0.34);">PROJECT</div>
+      <div style="display:flex;gap:8px;">
+        <button onClick="{{ onSave }}" style="flex:1;height:34px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);color:#e9eaf0;border-radius:9px;cursor:pointer;font-size:12px;" style-hover="background:rgba(255,255,255,0.08)">Save</button>
+        <button onClick="{{ onLoad }}" style="flex:1;height:34px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);color:#e9eaf0;border-radius:9px;cursor:pointer;font-size:12px;" style-hover="background:rgba(255,255,255,0.08)">Load</button>
+      </div>
+      <div style="font-size:10.5px;color:rgba(233,234,240,0.3);line-height:1.5;">{{ saveHint }}</div>
+
+      <div style="flex:1;"></div>
+      <div style="font-size:9.5px;color:rgba(233,234,240,0.22);letter-spacing:.05em;line-height:1.6;border-top:1px solid rgba(255,255,255,0.05);padding-top:10px;">SOON · Draw fibres · Move LEDs · Layers · ESP32 live · DMX</div>
+    </aside>
+
+    <section style="flex:1;position:relative;min-width:0;overflow:hidden;background:#0a0b0e;">
+      <canvas ref="{{ canvasRef }}" style="position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;"></canvas>
+
+      <sc-if value="{{ empty }}" hint-placeholder-val="{{ true }}">
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;background:radial-gradient(60% 60% at 50% 45%, rgba(10,11,14,0.2), rgba(10,11,14,0.75));z-index:5;">
+          <div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;animation:fil-float 6s ease-in-out infinite;">
+            <div style="font-size:26px;font-weight:600;letter-spacing:-0.01em;">Design light that flows.</div>
+            <div style="font-size:13.5px;color:rgba(233,234,240,0.5);max-width:400px;line-height:1.6;">Hidden LEDs around each frame inject colour into passive side-glow fibres. Generate a wall and watch the light travel.</div>
+          </div>
+          <button onClick="{{ onStart }}" style="height:46px;padding:0 26px;border:1px solid rgba(155,140,255,0.5);background:linear-gradient(180deg,rgba(155,140,255,0.28),rgba(155,140,255,0.12));color:#fff;border-radius:12px;cursor:pointer;font-size:14px;font-weight:600;font-family:'Space Grotesk',sans-serif;box-shadow:0 8px 30px rgba(155,140,255,0.28);" style-hover="background:linear-gradient(180deg,rgba(155,140,255,0.4),rgba(155,140,255,0.2))">Create New Wall</button>
+        </div>
+      </sc-if>
+
+      <div style="position:absolute;left:14px;bottom:14px;display:flex;gap:6px;font-family:'Space Mono',monospace;font-size:10px;color:rgba(233,234,240,0.35);z-index:6;pointer-events:none;">
+        <span style="padding:4px 8px;border:1px solid rgba(255,255,255,0.06);border-radius:6px;background:rgba(12,13,17,0.55);">scroll · zoom</span>
+        <span style="padding:4px 8px;border:1px solid rgba(255,255,255,0.06);border-radius:6px;background:rgba(12,13,17,0.55);">drag · pan</span>
+        <span style="padding:4px 8px;border:1px solid rgba(255,255,255,0.06);border-radius:6px;background:rgba(12,13,17,0.55);">click · select</span>
+      </div>
+      <div style="position:absolute;right:14px;bottom:14px;font-family:'Space Mono',monospace;font-size:10px;color:rgba(233,234,240,0.4);z-index:6;pointer-events:none;padding:4px 9px;border:1px solid rgba(255,255,255,0.08);border-radius:6px;background:rgba(12,13,17,0.6);">{{ modeTag }}</div>
+    </section>
+
+    <aside style="width:288px;flex:0 0 288px;display:flex;flex-direction:column;overflow-y:auto;border-left:1px solid rgba(255,255,255,0.05);background:rgba(12,13,17,0.4);z-index:10;">
+      <sc-if value="{{ hasSel }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:16px;padding:16px 14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;flex-direction:column;line-height:1.1;">
+              <span style="font-size:15px;font-weight:600;">Frame {{ selLabel }}</span>
+              <span style="font-size:10.5px;color:rgba(233,234,240,0.4);font-family:'Space Mono',monospace;">seed {{ selSeed }}</span>
+            </div>
+            <button onClick="{{ onReseed }}" style="width:32px;height:32px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);color:#e9eaf0;border-radius:9px;cursor:pointer;font-size:14px;" style-hover="background:rgba(255,255,255,0.08)">⟳</button>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div style="padding:11px 12px;border:1px solid rgba(255,255,255,0.06);border-radius:11px;background:rgba(255,255,255,0.02);"><div style="font-size:19px;font-weight:600;font-family:'Space Mono',monospace;color:#e9eaf0;">{{ selFibers }}</div><div style="font-size:10px;color:rgba(233,234,240,0.42);margin-top:2px;">FIBRE RUNS</div></div>
+            <div style="padding:11px 12px;border:1px solid rgba(255,255,255,0.06);border-radius:11px;background:rgba(255,255,255,0.02);"><div style="font-size:19px;font-weight:600;font-family:'Space Mono',monospace;color:#e9eaf0;">24</div><div style="font-size:10px;color:rgba(233,234,240,0.42);margin-top:2px;">LEDS</div></div>
+            <div style="padding:11px 12px;border:1px solid rgba(255,255,255,0.06);border-radius:11px;background:rgba(255,255,255,0.02);"><div style="font-size:19px;font-weight:600;font-family:'Space Mono',monospace;color:#e9eaf0;">{{ selCross }}</div><div style="font-size:10px;color:rgba(233,234,240,0.42);margin-top:2px;">CROSSINGS</div></div>
+            <div style="padding:11px 12px;border:1px solid rgba(255,255,255,0.06);border-radius:11px;background:rgba(255,255,255,0.02);"><div style="font-size:19px;font-weight:600;font-family:'Space Mono',monospace;color:#e9eaf0;">{{ selLen }}</div><div style="font-size:10px;color:rgba(233,234,240,0.42);margin-top:2px;">AVG LEN</div></div>
+          </div>
+
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;"><span style="font-size:10px;font-weight:600;letter-spacing:.14em;color:rgba(233,234,240,0.34);">CONNECTION MAP</span><span style="font-size:9.5px;color:rgba(233,234,240,0.3);">click a fibre</span></div>
+            <canvas ref="{{ mapRef }}" style="width:100%;height:150px;border:1px solid rgba(255,255,255,0.07);border-radius:12px;background:#08090c;display:block;cursor:pointer;"></canvas>
+            <div style="font-size:11px;color:rgba(233,234,240,0.5);margin-top:8px;line-height:1.5;font-family:'Space Mono',monospace;">{{ fiberInspect }}</div>
+          </div>
+
+          <div>
+            <div style="font-size:10px;font-weight:600;letter-spacing:.14em;color:rgba(233,234,240,0.34);margin-bottom:9px;">LED DRIVE PATTERN</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+              <sc-for list="{{ animList }}" as="a" hint-placeholder-count="6">
+                <button onClick="{{ a.onClick }}" style="{{ a.style }}">{{ a.name }}</button>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:7px;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:12px;color:rgba(233,234,240,0.7);">Animation speed</span><span style="font-size:11px;font-family:'Space Mono',monospace;color:#9b8cff;">{{ speedLabel }}</span></div>
+            <input type="range" min="0.1" max="3" step="0.1" value="{{ speed }}" onChange="{{ onSpeed }}" onInput="{{ onSpeed }}" style="width:100%;">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:7px;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:12px;color:rgba(233,234,240,0.7);">LED brightness</span><span style="font-size:11px;font-family:'Space Mono',monospace;color:#9b8cff;">{{ brightnessLabel }}</span></div>
+            <input type="range" min="0.2" max="1" step="0.02" value="{{ brightness }}" onChange="{{ onBrightness }}" onInput="{{ onBrightness }}" style="width:100%;">
+          </div>
+
+          <div>
+            <div style="font-size:10px;font-weight:600;letter-spacing:.14em;color:rgba(233,234,240,0.34);margin-bottom:9px;">COLOUR PALETTE</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <sc-for list="{{ paletteList }}" as="p" hint-placeholder-count="5">
+                <button onClick="{{ p.onClick }}" style="{{ p.style }}"><span style="{{ p.swatch }}"></span><span>{{ p.name }}</span></button>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ noSel }}" hint-placeholder-val="{{ true }}">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:30px;text-align:center;height:100%;">
+          <div style="width:38px;height:38px;border-radius:10px;border:1px dashed rgba(255,255,255,0.14);"></div>
+          <div style="font-size:12.5px;color:rgba(233,234,240,0.4);line-height:1.6;">Select a frame on the wall<br>to edit its fibres &amp; LED pattern</div>
+        </div>
+      </sc-if>
+    </aside>
+
+  </div>
+
+  <footer style="height:74px;flex:0 0 74px;display:flex;align-items:center;gap:18px;padding:0 18px;border-top:1px solid rgba(255,255,255,0.06);background:rgba(14,15,20,0.6);backdrop-filter:blur(14px);z-index:20;">
+    <div style="display:flex;align-items:center;gap:6px;">
+      <button onClick="{{ onPlayPause }}" style="{{ playBtnStyle }}">{{ playIcon }}</button>
+      <button onClick="{{ onStop }}" style="width:36px;height:36px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);color:#e9eaf0;border-radius:9px;cursor:pointer;font-size:12px;" style-hover="background:rgba(255,255,255,0.08)">◼</button>
+      <button onClick="{{ onLoop }}" style="{{ loopBtnStyle }}">↺</button>
+    </div>
+    <span ref="{{ timeRef }}" style="font-family:'Space Mono',monospace;font-size:12px;color:rgba(233,234,240,0.6);min-width:88px;">0:00 / 0:12</span>
+    <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+      <input type="range" ref="{{ scrubRef }}" min="0" max="1000" step="1" value="0" onInput="{{ onScrub }}" style="width:100%;">
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:rgba(233,234,240,0.22);font-family:'Space Mono',monospace;letter-spacing:.05em;"><span>KEYFRAMES · SOON</span><span>LOOP {{ duration }}s</span></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span style="font-size:11px;color:rgba(233,234,240,0.5);">Speed</span>
+      <div style="display:flex;gap:4px;">
+        <sc-for list="{{ speedPresets }}" as="s" hint-placeholder-count="4">
+          <button onClick="{{ s.onClick }}" style="{{ s.style }}">{{ s.label }}</button>
+        </sc-for>
+      </div>
+    </div>
+  </footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:&quot;100%&quot;},&quot;glow&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:0.5,&quot;max&quot;:1.8,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;×&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Look&quot;}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      empty: true,
+      mode: 'sim',
+      gridSize: 3,
+      frameSize: 236,
+      fiberDensity: 16,
+      masterSeed: 7431,
+      selected: null,
+      selFiber: null,
+      playing: true,
+      anim: 'flow',
+      speed: 1,
+      brightness: 0.92,
+      palette: 'sunset',
+      loop: true,
+      zoom: 1,
+    };
+    this.canvasRef = React.createRef();
+    this.mapRef = React.createRef();
+    this.scrubRef = React.createRef();
+    this.timeRef = React.createRef();
+    this.t = 0;
+    this.pan = { x: 0, y: 0 };
+    this.frames = [];
+    this.frameSeeds = [];
+    this.duration = 12;
+    this.TRAVEL = 1.15;   // seconds of colour delay per unit of fibre length
+    this.DECAY = 1.95;    // brightness fall-off from an LED into the fibre
+    this.PAL = {
+      sunset:   { name: 'Sunset',   stops: [[255,92,140],[255,150,96],[255,214,138],[214,96,206],[150,96,255]] },
+      neon:     { name: 'Neon',     stops: [[86,240,255],[255,64,204],[126,255,190],[178,120,255],[86,240,255]] },
+      aurora:   { name: 'Aurora',   stops: [[92,255,182],[86,204,255],[160,120,255],[64,255,222],[92,255,182]] },
+      ember:    { name: 'Ember',    stops: [[255,72,64],[255,150,60],[255,206,110],[255,96,150],[200,50,80]] },
+      spectrum: { name: 'Spectrum', stops: [[255,80,80],[255,200,60],[110,255,110],[70,200,255],[180,110,255]] },
+    };
+    this.ANIMS = [
+      { id:'flow', name:'Flowing' }, { id:'rainbow', name:'Rainbow' },
+      { id:'pulse', name:'Pulse' }, { id:'breathe', name:'Breathing' },
+      { id:'sparkle', name:'Sparkle' }, { id:'gradient', name:'Gradient' },
+    ];
+  }
+
+  rng(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  hash(n) { const s = Math.sin(n * 12.9898) * 43758.5453; return s - Math.floor(s); }
+
+  componentDidMount() {
+    this.buildFrames();
+    const cv = this.canvasRef.current;
+    this.ro = new ResizeObserver(() => this.resize());
+    this.ro.observe(cv.parentElement);
+    this.resize();
+    let dragging = false, moved = false, sx = 0, sy = 0, px = 0, py = 0;
+    cv.addEventListener('pointerdown', e => { dragging = true; moved = false; sx = e.clientX; sy = e.clientY; px = this.pan.x; py = this.pan.y; cv.setPointerCapture(e.pointerId); cv.style.cursor = 'grabbing'; });
+    cv.addEventListener('pointermove', e => { if (!dragging) return; const dx = e.clientX - sx, dy = e.clientY - sy; if (Math.abs(dx) + Math.abs(dy) > 4) moved = true; this.pan.x = px + dx; this.pan.y = py + dy; });
+    cv.addEventListener('pointerup', e => { dragging = false; cv.style.cursor = 'grab'; if (!moved) this.pick(e); });
+    cv.addEventListener('wheel', e => { e.preventDefault(); const f = e.deltaY < 0 ? 1.12 : 0.89; const nz = Math.min(4, Math.max(0.3, this.state.zoom * f)); this.setState({ zoom: nz }); }, { passive: false });
+    this.loopId = requestAnimationFrame(this.tick);
+    // fallback driver so the canvas still renders when the tab is backgrounded (rAF is paused while hidden)
+    this.fallback = setInterval(() => { if (document.hidden) this.step(0.04); }, 40);
+  }
+  componentWillUnmount() { cancelAnimationFrame(this.loopId); clearInterval(this.fallback); if (this.ro) this.ro.disconnect(); }
+
+  resize() {
+    const cv = this.canvasRef.current; if (!cv) return;
+    const r = cv.parentElement.getBoundingClientRect();
+    const dpr = Math.min(1.75, window.devicePixelRatio || 1);
+    cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
+    this.dpr = dpr; this.cw = r.width; this.ch = r.height;
+  }
+
+  // ---------- LED network geometry ----------
+  buildFrames() {
+    const { gridSize, fiberDensity, masterSeed } = this.state;
+    const n = gridSize * gridSize;
+    if (this.frameSeeds.length !== n) this.frameSeeds = Array.from({ length: n }, (_, i) => ((masterSeed * 2654435761 + i * 40503) >>> 0) % 100000);
+    this.frames = this.frameSeeds.map(s => this.genFrame(s, fiberDensity));
+  }
+  buildLeds() {
+    const leds = []; let gi = 0;
+    const edges = [
+      { e:'T', f:(t)=>({x:t,y:0,nx:0,ny:1}) },
+      { e:'R', f:(t)=>({x:1,y:t,nx:-1,ny:0}) },
+      { e:'B', f:(t)=>({x:1-t,y:1,nx:0,ny:-1}) },
+      { e:'L', f:(t)=>({x:0,y:1-t,nx:1,ny:0}) },
+    ];
+    // 6 LEDs per edge, grouped as two cut strips of 3 (each strip's LEDs sit close together,
+    // wired to the next strip) — matches how a real LED-strip segment is installed.
+    const groupCenters = [0.27, 0.73], within = [-0.085, 0, 0.085];
+    edges.forEach((ed, ei) => {
+      for (let k = 0; k < 6; k++) {
+        const grp = Math.floor(k / 3), idx = k % 3;
+        const tt = groupCenters[grp] + within[idx], p = ed.f(tt);
+        leds.push({ gi: gi++, x:p.x, y:p.y, nx:p.nx, ny:p.ny, edge:ed.e, en:k+1, grp, u:(ei + tt)/4 });
+      }
+    });
+    return leds;
+  }
+  cubic(P0,P1,P2,P3,n){ const out=[]; for(let i=0;i<n;i++){ const t=i/(n-1), mt=1-t; const a=mt*mt*mt,b=3*mt*mt*t,c=3*mt*t*t,d=t*t*t; out.push({x:a*P0.x+b*P1.x+c*P2.x+d*P3.x, y:a*P0.y+b*P1.y+c*P2.y+d*P3.y}); } return out; }
+  genFrame(seed, density) {
+    const rnd = this.rng(seed);
+    const leds = this.buildLeds();
+    const fibers = [];
+    for (let f = 0; f < density; f++) {
+      const ai = Math.floor(rnd() * 24); const A = leds[ai];
+      let bi = ai, B = A, tries = 0;
+      do { bi = Math.floor(rnd() * 24); B = leds[bi]; tries++; } while ((B.edge === A.edge || Math.hypot(A.x-B.x, A.y-B.y) < 0.42) && tries < 14);
+      const dA = 0.34 + rnd() * 0.42, dB = 0.34 + rnd() * 0.42;
+      const P1 = { x: A.x + A.nx*dA, y: A.y + A.ny*dA };
+      const P2 = { x: B.x + B.nx*dB, y: B.y + B.ny*dB };
+      const pts = this.cubic(A, P1, P2, B, 38);
+      let len = 0; for (let i = 1; i < pts.length; i++) len += Math.hypot(pts[i].x-pts[i-1].x, pts[i].y-pts[i-1].y);
+      fibers.push({ a:ai, b:bi, pts, len, width:0.85 + rnd()*0.5, hueBase:(A.u+B.u)/2 });
+    }
+    let cross = 0;
+    for (let i = 0; i < fibers.length; i++) for (let j = i+1; j < fibers.length; j++) if (this.proximity(fibers[i], fibers[j])) cross++;
+    return { seed, leds, fibers, cross };
+  }
+  proximity(f1, f2) { for (let i = 2; i < f1.pts.length-2; i += 4) for (let j = 2; j < f2.pts.length-2; j += 4) if (Math.hypot(f1.pts[i].x-f2.pts[j].x, f1.pts[i].y-f2.pts[j].y) < 0.028) return true; return false; }
+
+  // ---------- colour + LED drive ----------
+  sample(pal, u) { const st = pal.stops, n = st.length - 1; u = ((u % 1) + 1) % 1; const f = u*n, i = Math.floor(f), t = f-i, a = st[i], b = st[Math.min(n,i+1)]; return [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t]; }
+  ledColor(led, gpos, time, anim, sp) {
+    const pal = this.PAL[this.state.palette]; const u = led.u; let hp, b = 1;
+    if (anim === 'flow') { hp = u*1.5 + time*sp*0.11; b = 1; }
+    else if (anim === 'rainbow') { hp = u*3 + time*sp*0.08; b = 1; }
+    else if (anim === 'pulse') { hp = u*0.6 + time*sp*0.03; b = 0.22 + 0.78*(0.5+0.5*Math.sin(time*sp*2.6 + u*6.283)); }
+    else if (anim === 'breathe') { hp = u*0.4 + time*0.02; b = 0.2 + 0.8*(0.5+0.5*Math.sin(time*sp*1.0)); }
+    else if (anim === 'sparkle') { const cyc = Math.floor(time*sp*1.8); const h = this.hash(cyc*61 + led.gi*7 + Math.floor(gpos*13)*131); const ph = (time*sp*1.8)%1; b = h > 0.66 ? Math.max(0.06, 1-ph) : 0.06; hp = u + h; }
+    else if (anim === 'gradient') { const g = 0.5+0.5*Math.sin(time*sp*0.55 - (gpos*3.2 + u*1.4)); hp = gpos*0.5 + u*0.5 + time*sp*0.02; b = 0.15 + 0.85*g; }
+    else { hp = u; }
+    return { c: this.sample(pal, hp), b };
+  }
+
+  tick = () => {
+    const now = performance.now();
+    const dt = this.last ? Math.min(0.05, (now - this.last)/1000) : 0.016; this.last = now;
+    if (!document.hidden) this.step(dt);
+    this.loopId = requestAnimationFrame(this.tick);
+  };
+  step(dt) {
+    if (this.state.playing) { this.t += dt; if (this.t >= this.duration) { if (this.state.loop) this.t -= this.duration; else { this.t = this.duration; this.setState({ playing:false }); } } }
+    if (this.scrubRef.current && document.activeElement !== this.scrubRef.current) this.scrubRef.current.value = Math.round((this.t/this.duration)*1000);
+    if (this.timeRef.current) this.timeRef.current.textContent = this.fmt(this.t) + ' / ' + this.fmt(this.duration);
+    this.draw();
+  }
+  fmt(s){ const m=Math.floor(s/60), r=Math.floor(s%60); return m+':'+String(r).padStart(2,'0'); }
+
+  layout() {
+    const { gridSize, frameSize, zoom } = this.state;
+    const gap = frameSize * 0.09;
+    const W = gridSize*frameSize + (gridSize-1)*gap, H = W;
+    const base = Math.min(this.cw*0.82/W, this.ch*0.82/H), scale = base*zoom;
+    return { gap, W, H, scale, tx: this.cw/2 + this.pan.x - scale*W/2, ty: this.ch/2 + this.pan.y - scale*H/2, frameSize };
+  }
+
+  draw() {
+    const cv = this.canvasRef.current; if (!cv) return;
+    const ctx = cv.getContext('2d');
+    ctx.setTransform(this.dpr,0,0,this.dpr,0,0);
+    ctx.clearRect(0,0,this.cw,this.ch);
+    if (this.state.empty) { this.drawShowcase(ctx); return; }
+    const L = this.layout(), { gridSize, frameSize } = this.state, gap = L.gap;
+    const edit = this.state.mode === 'edit';
+    const gd = Math.max(1, gridSize-1);
+    for (let idx = 0; idx < this.frames.length; idx++) {
+      const gx = idx % gridSize, gy = Math.floor(idx/gridSize);
+      const fx = L.tx + gx*(frameSize+gap)*L.scale, fy = L.ty + gy*(frameSize+gap)*L.scale, sz = frameSize*L.scale;
+      const gpos = (gx + gy) / (2*gd);
+      this.drawFrame(ctx, fx, fy, sz, this.frames[idx], idx === this.state.selected, this.t, edit, gpos);
+    }
+    this.drawMap();
+  }
+
+  drawFrame(ctx, x, y, sz, frame, sel, t, edit, gpos) {
+    const pal = this.PAL[this.state.palette];
+    const glow = (this.props.glow ?? 1), br = this.state.brightness, anim = this.state.anim, sp = this.state.speed;
+    const r = sz*0.045;
+    // bezel
+    ctx.save(); this.roundRect(ctx, x-sz*0.03, y-sz*0.03, sz*1.06, sz*1.06, r*1.5);
+    ctx.fillStyle = edit ? '#181a20' : '#141519'; ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.lineWidth = 1; ctx.stroke(); ctx.restore();
+    // panel + fibres
+    ctx.save(); this.roundRect(ctx, x, y, sz, sz, r); ctx.clip();
+    ctx.fillStyle = '#07080b'; ctx.fillRect(x,y,sz,sz);
+    const amb = this.sample(pal, (t*0.03)%1);
+    const gr = ctx.createRadialGradient(x+sz*0.5,y+sz*0.55,sz*0.05,x+sz*0.5,y+sz*0.55,sz*0.75);
+    gr.addColorStop(0, `rgba(${amb[0]|0},${amb[1]|0},${amb[2]|0},0.14)`); gr.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle = gr; ctx.fillRect(x,y,sz,sz);
+    ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+    for (const fib of frame.fibers) {
+      const P = fib.pts, n = P.length, A = frame.leds[fib.a], B = frame.leds[fib.b];
+      // passive plastic light-guide (faint tinted body)
+      const bc = this.sample(pal, fib.hueBase);
+      ctx.beginPath(); for (let i=0;i<n;i++){ const pxp=x+P[i].x*sz, pyp=y+P[i].y*sz; i?ctx.lineTo(pxp,pyp):ctx.moveTo(pxp,pyp); }
+      ctx.strokeStyle = `rgba(${bc[0]|0},${bc[1]|0},${bc[2]|0},0.07)`; ctx.lineWidth = fib.width*sz*0.028; ctx.stroke();
+      ctx.strokeStyle = 'rgba(180,190,210,0.05)'; ctx.lineWidth = fib.width*sz*0.010; ctx.stroke();
+      // injected light from both LED ends
+      let prevX = x+P[0].x*sz, prevY = y+P[0].y*sz;
+      for (let i = 1; i < n; i++) {
+        const px = x+P[i].x*sz, py = y+P[i].y*sz, um = (i-0.5)/(n-1);
+        const ca = this.ledColor(A, gpos, t - um*fib.len*this.TRAVEL, anim, sp);
+        const cb = this.ledColor(B, gpos, t - (1-um)*fib.len*this.TRAVEL, anim, sp);
+        const iA = ca.b*Math.exp(-um*this.DECAY), iB = cb.b*Math.exp(-(1-um)*this.DECAY), tot = iA+iB;
+        if (tot > 0.05) {
+          const cr = (ca.c[0]*iA+cb.c[0]*iB)/tot, cg = (ca.c[1]*iA+cb.c[1]*iB)/tot, cbl = (ca.c[2]*iA+cb.c[2]*iB)/tot;
+          const inten = Math.min(1, tot) * br;
+          ctx.beginPath(); ctx.moveTo(prevX,prevY); ctx.lineTo(px,py);
+          ctx.strokeStyle = `rgba(${cr|0},${cg|0},${cbl|0},${(inten*0.16*glow).toFixed(3)})`; ctx.lineWidth = fib.width*sz*0.05*glow; ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(prevX,prevY); ctx.lineTo(px,py);
+          ctx.strokeStyle = `rgba(${Math.min(255,cr+70)|0},${Math.min(255,cg+70)|0},${Math.min(255,cbl+70)|0},${Math.min(1,inten).toFixed(3)})`; ctx.lineWidth = fib.width*sz*0.014; ctx.stroke();
+        }
+        prevX = px; prevY = py;
+      }
+    }
+    ctx.globalCompositeOperation = 'source-over';
+    // selected fibre highlight (edit)
+    if (edit && sel && this.state.selFiber != null && frame.fibers[this.state.selFiber]) {
+      const P = frame.fibers[this.state.selFiber].pts;
+      ctx.beginPath(); for (let i=0;i<P.length;i++){ const pxp=x+P[i].x*sz, pyp=y+P[i].y*sz; i?ctx.lineTo(pxp,pyp):ctx.moveTo(pxp,pyp); }
+      ctx.strokeStyle = 'rgba(255,255,255,0.85)'; ctx.lineWidth = 2; ctx.setLineDash([5,5]); ctx.stroke(); ctx.setLineDash([]);
+    }
+    ctx.restore();
+    // panel border
+    ctx.save(); this.roundRect(ctx, x, y, sz, sz, r);
+    if (sel) { ctx.strokeStyle = 'rgba(155,140,255,0.9)'; ctx.lineWidth = 2; ctx.shadowColor = 'rgba(155,140,255,0.7)'; ctx.shadowBlur = 16; }
+    else { ctx.strokeStyle = 'rgba(255,255,255,0.09)'; ctx.lineWidth = 1; }
+    ctx.stroke(); ctx.restore();
+    // LEDs embedded in border — only in edit mode
+    if (edit) {
+      // draw the 3-LED strip backing (a real cut segment of LED strip) under each group
+      ctx.save();
+      for (let s = 0; s < frame.leds.length; s += 3) {
+        const a = frame.leds[s], c = frame.leds[s+2];
+        const ax = x + a.x*sz - a.nx*sz*0.03, ay = y + a.y*sz - a.ny*sz*0.03;
+        const cx = x + c.x*sz - c.nx*sz*0.03, cy = y + c.y*sz - c.ny*sz*0.03;
+        ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(cx,cy);
+        ctx.strokeStyle = 'rgba(255,255,255,0.14)'; ctx.lineWidth = sz*0.012; ctx.lineCap = 'round'; ctx.stroke();
+      }
+      ctx.restore();
+      const selF = (sel && this.state.selFiber != null) ? frame.fibers[this.state.selFiber] : null;
+      for (const led of frame.leds) {
+        const lc = this.ledColor(led, gpos, t, anim, sp);
+        const bx = x + led.x*sz - led.nx*sz*0.03, by = y + led.y*sz - led.ny*sz*0.03;
+        ctx.beginPath(); ctx.arc(bx,by,sz*0.017,0,6.283); ctx.fillStyle = '#0a0b0e'; ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 1; ctx.stroke();
+        ctx.beginPath(); ctx.arc(bx,by,sz*0.0095,0,6.283);
+        ctx.shadowColor = `rgba(${lc.c[0]|0},${lc.c[1]|0},${lc.c[2]|0},0.9)`; ctx.shadowBlur = sz*0.03*(0.4+0.6*lc.b);
+        ctx.fillStyle = `rgba(${lc.c[0]|0},${lc.c[1]|0},${lc.c[2]|0},${0.4+0.6*lc.b})`; ctx.fill(); ctx.shadowBlur = 0;
+        if (selF && (selF.a === led.gi || selF.b === led.gi)) { ctx.beginPath(); ctx.arc(bx,by,sz*0.022,0,6.283); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.6; ctx.stroke(); }
+      }
+    }
+  }
+
+  drawShowcase(ctx) {
+    const sz = Math.min(this.cw, this.ch) * 0.44, x = this.cw/2 - sz/2, y = this.ch/2 - sz/2 - 10;
+    if (!this.showFrame) this.showFrame = this.genFrame(2024, 18);
+    this.drawFrame(ctx, x, y, sz, this.showFrame, false, this.t, false, 0.5);
+  }
+
+  drawMap() {
+    const mc = this.mapRef.current; if (!mc || this.state.selected == null) return;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const r = mc.getBoundingClientRect(); if (!r.width) return;
+    if (mc.width !== Math.round(r.width*dpr)) { mc.width = Math.round(r.width*dpr); mc.height = Math.round(r.height*dpr); }
+    if (!mc._bound) { mc._bound = true; mc.addEventListener('click', e => this.pickFiber(e)); }
+    const ctx = mc.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,r.width,r.height);
+    const frame = this.frames[this.state.selected]; if (!frame) return;
+    const pal = this.PAL[this.state.palette];
+    const s = Math.min(r.width, r.height)*0.84, ox = (r.width-s)/2, oy = (r.height-s)/2;
+    this._mapGeo = { s, ox, oy };
+    // frame outline
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1; ctx.strokeRect(ox, oy, s, s);
+    ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+    frame.fibers.forEach((fib, fi) => {
+      const active = fi === this.state.selFiber;
+      const c = this.sample(pal, fib.hueBase);
+      ctx.beginPath(); for (let i=0;i<fib.pts.length;i++){ const px=ox+fib.pts[i].x*s, py=oy+fib.pts[i].y*s; i?ctx.lineTo(px,py):ctx.moveTo(px,py); }
+      ctx.strokeStyle = active ? 'rgba(255,255,255,0.95)' : `rgba(${c[0]|0},${c[1]|0},${c[2]|0},0.45)`;
+      ctx.lineWidth = active ? 2.2 : 1.2; ctx.stroke();
+    });
+    ctx.globalCompositeOperation = 'source-over';
+    const selF = this.state.selFiber != null ? frame.fibers[this.state.selFiber] : null;
+    for (const led of frame.leds) {
+      const on = selF && (selF.a === led.gi || selF.b === led.gi);
+      ctx.beginPath(); ctx.arc(ox+led.x*s, oy+led.y*s, on?3:1.6, 0, 6.283);
+      ctx.fillStyle = on ? '#fff' : 'rgba(255,255,255,0.3)'; ctx.fill();
+    }
+  }
+  pickFiber(e) {
+    if (this.state.selected == null || !this._mapGeo) return;
+    const mc = this.mapRef.current, r = mc.getBoundingClientRect();
+    const mx = (e.clientX - r.left - this._mapGeo.ox)/this._mapGeo.s, my = (e.clientY - r.top - this._mapGeo.oy)/this._mapGeo.s;
+    const frame = this.frames[this.state.selected]; let best = -1, bd = 0.05;
+    frame.fibers.forEach((fib, fi) => { for (let i=0;i<fib.pts.length;i+=2){ const d = Math.hypot(fib.pts[i].x-mx, fib.pts[i].y-my); if (d < bd) { bd = d; best = fi; } } });
+    this.setState({ selFiber: best >= 0 ? best : null });
+  }
+
+  roundRect(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+
+  pick(e) {
+    if (this.state.empty) return;
+    const cv = this.canvasRef.current, br = cv.getBoundingClientRect();
+    const mx = e.clientX - br.left, my = e.clientY - br.top;
+    const L = this.layout(), { gridSize, frameSize } = this.state, gap = L.gap;
+    for (let idx = 0; idx < this.frames.length; idx++) {
+      const gx = idx % gridSize, gy = Math.floor(idx/gridSize);
+      const fx = L.tx + gx*(frameSize+gap)*L.scale, fy = L.ty + gy*(frameSize+gap)*L.scale, sz = frameSize*L.scale;
+      if (mx>=fx && mx<=fx+sz && my>=fy && my<=fy+sz) { this.setState({ selected: idx, selFiber: null }); return; }
+    }
+    this.setState({ selected: null, selFiber: null });
+  }
+
+  renderVals() {
+    const st = this.state, self = this;
+    const sel = st.selected != null ? this.frames[st.selected] : null;
+
+    const gridOptions = [2,3,4,5,6].map(n => ({
+      n, style: `flex:1;height:32px;border:1px solid ${n===st.gridSize?'rgba(155,140,255,0.5)':'rgba(255,255,255,0.09)'};background:${n===st.gridSize?'rgba(155,140,255,0.16)':'rgba(255,255,255,0.02)'};color:${n===st.gridSize?'#fff':'rgba(233,234,240,0.65)'};border-radius:8px;cursor:pointer;font-size:12px;font-family:'Space Grotesk',sans-serif;`,
+      onClick: () => { self.frameSeeds = []; self.setState({ gridSize: n, selected: null, selFiber: null }, () => self.buildFrames()); },
+    }));
+    const animList = this.ANIMS.map(a => ({
+      name: a.name,
+      style: `height:34px;border:1px solid ${a.id===st.anim?'rgba(155,140,255,0.5)':'rgba(255,255,255,0.08)'};background:${a.id===st.anim?'rgba(155,140,255,0.16)':'rgba(255,255,255,0.02)'};color:${a.id===st.anim?'#fff':'rgba(233,234,240,0.62)'};border-radius:9px;cursor:pointer;font-size:11.5px;font-family:'Space Grotesk',sans-serif;`,
+      onClick: () => self.setState({ anim: a.id }),
+    }));
+    const paletteList = Object.keys(this.PAL).map(id => {
+      const p = this.PAL[id];
+      const grad = 'linear-gradient(90deg,' + p.stops.map((c,i)=>`rgb(${c[0]},${c[1]},${c[2]}) ${Math.round(i/(p.stops.length-1)*100)}%`).join(',') + ')';
+      const active = id === st.palette;
+      return { name: p.name,
+        style: `display:flex;align-items:center;gap:10px;height:38px;padding:0 11px;border:1px solid ${active?'rgba(155,140,255,0.5)':'rgba(255,255,255,0.07)'};background:${active?'rgba(155,140,255,0.12)':'rgba(255,255,255,0.02)'};color:${active?'#fff':'rgba(233,234,240,0.7)'};border-radius:10px;cursor:pointer;font-size:12px;font-family:'Space Grotesk',sans-serif;text-align:left;`,
+        swatch: `display:inline-block;width:44px;height:14px;border-radius:5px;background:${grad};box-shadow:0 0 10px rgba(255,255,255,0.08);`,
+        onClick: () => self.setState({ palette: id }) };
+    });
+    const speedPresets = [0.5,1,1.5,2].map(v => ({
+      label: v + '×',
+      style: `min-width:34px;height:26px;padding:0 6px;border:1px solid ${Math.abs(v-st.speed)<0.01?'rgba(155,140,255,0.5)':'rgba(255,255,255,0.08)'};background:${Math.abs(v-st.speed)<0.01?'rgba(155,140,255,0.16)':'rgba(255,255,255,0.02)'};color:${Math.abs(v-st.speed)<0.01?'#fff':'rgba(233,234,240,0.6)'};border-radius:7px;cursor:pointer;font-size:11px;font-family:'Space Mono',monospace;`,
+      onClick: () => self.setState({ speed: v }),
+    }));
+
+    const avgLen = sel ? (sel.fibers.reduce((a,f)=>a+f.len,0)/sel.fibers.length*100).toFixed(0) : 0;
+    const totalLeds = st.gridSize*st.gridSize*24;
+    let fiberInspect = 'Click a fibre in the map to trace which LEDs feed it.';
+    if (sel && st.selFiber != null && sel.fibers[st.selFiber]) {
+      const fb = sel.fibers[st.selFiber], A = sel.leds[fb.a], B = sel.leds[fb.b];
+      fiberInspect = `Fibre ${st.selFiber+1}:  LED ${A.edge}${A.en}  →  LED ${B.edge}${B.en}   (fed from both ends)`;
+    }
+    const activeMode = (m) => `padding:6px 14px;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:500;font-family:'Space Grotesk',sans-serif;background:${st.mode===m?'rgba(155,140,255,0.22)':'transparent'};color:${st.mode===m?'#fff':'rgba(233,234,240,0.55)'};`;
+
+    return {
+      empty: st.empty,
+      wallLabel: `${st.gridSize} × ${st.gridSize}  ·  ${st.gridSize*st.gridSize} frames  ·  ${totalLeds} LEDs`,
+      zoomPct: Math.round(st.zoom*100) + '%',
+      modeTag: st.mode === 'edit' ? 'EDIT · LEDS VISIBLE' : 'SIMULATE · INSTALLATION VIEW',
+      editStyle: activeMode('edit'), simStyle: activeMode('sim'),
+      onEdit: () => self.setState({ mode: 'edit' }), onSim: () => self.setState({ mode: 'sim' }),
+      ledDots: Array.from({length:12}),
+      gridOptions,
+      frameSize: st.frameSize, frameSizeLabel: st.frameSize + 'px',
+      fiberDensity: st.fiberDensity,
+      onFrameSize: e => self.setState({ frameSize: +e.target.value }),
+      onDensity: e => self.setState({ fiberDensity: +e.target.value }, () => self.buildFrames()),
+      onRandomize: () => { self.setState({ masterSeed: (Math.random()*99999)|0 }, () => { self.frameSeeds = []; self.buildFrames(); self.forceUpdate(); }); },
+      onGenerate: () => { self.frameSeeds = []; self.setState({ masterSeed: (Math.random()*99999)|0, selected: null, selFiber: null, empty: false }, () => self.buildFrames()); },
+      onSave: () => { try { localStorage.setItem('filament.project', JSON.stringify({ gridSize:st.gridSize, frameSize:st.frameSize, fiberDensity:st.fiberDensity, masterSeed:st.masterSeed, seeds:self.frameSeeds, anim:st.anim, speed:st.speed, brightness:st.brightness, palette:st.palette, mode:st.mode })); self.setState({ _saved: Date.now() }); } catch(e){} },
+      onLoad: () => { try { const d = JSON.parse(localStorage.getItem('filament.project')||'null'); if (!d) return; self.frameSeeds = d.seeds || []; self.setState({ gridSize:d.gridSize, frameSize:d.frameSize, fiberDensity:d.fiberDensity, masterSeed:d.masterSeed, anim:d.anim, speed:d.speed, brightness:d.brightness, palette:d.palette, mode:d.mode||'sim', empty:false, selected:null, selFiber:null }, () => self.buildFrames()); } catch(e){} },
+      saveHint: st._saved ? 'Saved to this browser ✓' : 'Stores the current wall in this browser.',
+
+      onStart: () => { self.frameSeeds = []; self.setState({ empty:false, masterSeed:(Math.random()*99999)|0 }, () => self.buildFrames()); },
+      onZoomIn: () => self.setState({ zoom: Math.min(4, st.zoom*1.15) }),
+      onZoomOut: () => self.setState({ zoom: Math.max(0.3, st.zoom/1.15) }),
+      onFit: () => { self.pan = {x:0,y:0}; self.setState({ zoom: 1 }); },
+      canvasRef: this.canvasRef, mapRef: this.mapRef, scrubRef: this.scrubRef, timeRef: this.timeRef,
+
+      hasSel: !!sel, noSel: !sel && !st.empty,
+      selLabel: sel ? String(st.selected+1).padStart(2,'0') : '',
+      selSeed: sel ? sel.seed : '',
+      selFibers: sel ? sel.fibers.length : 0,
+      selCross: sel ? sel.cross : 0,
+      selLen: sel ? avgLen : 0,
+      fiberInspect,
+      onReseed: () => { if (st.selected==null) return; self.frameSeeds[st.selected] = (Math.random()*99999)|0; self.buildFrames(); self.setState({ selFiber: null }); },
+
+      animList, paletteList,
+      speed: st.speed, speedLabel: st.speed.toFixed(1)+'×',
+      brightness: st.brightness, brightnessLabel: Math.round(st.brightness*100)+'%',
+      onSpeed: e => self.setState({ speed:+e.target.value }),
+      onBrightness: e => self.setState({ brightness:+e.target.value }),
+
+      playing: st.playing, playIcon: st.playing ? '❚❚' : '▶',
+      playBtnStyle: `width:40px;height:40px;border:1px solid ${st.playing?'rgba(255,255,255,0.12)':'rgba(155,140,255,0.5)'};background:${st.playing?'rgba(255,255,255,0.05)':'rgba(155,140,255,0.2)'};color:#fff;border-radius:10px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;`,
+      onPlayPause: () => self.setState({ playing: !st.playing }),
+      onStop: () => { self.t = 0; self.setState({ playing:false }); },
+      loop: st.loop,
+      loopBtnStyle: `width:36px;height:36px;border:1px solid ${st.loop?'rgba(155,140,255,0.5)':'rgba(255,255,255,0.1)'};background:${st.loop?'rgba(155,140,255,0.16)':'rgba(255,255,255,0.03)'};color:${st.loop?'#c9beff':'rgba(233,234,240,0.6)'};border-radius:9px;cursor:pointer;font-size:14px;`,
+      onLoop: () => self.setState({ loop: !st.loop }),
+      onScrub: e => { self.t = (+e.target.value/1000)*self.duration; },
+      duration: this.duration, speedPresets,
+    };
+  }
+}
+</script>
+</body>
+</html>
