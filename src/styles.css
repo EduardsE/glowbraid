@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
 
@@ -344,4 +344,46 @@ a {
     background-color: var(--background);
     color: var(--foreground);
   }
+}
+
+html,
+body {
+	height: 100%;
+	margin: 0;
+	padding: 0;
+	overflow: hidden;
+	background: #0b0c0f;
+}
+
+::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}
+::-webkit-scrollbar-thumb {
+	background: rgba(255, 255, 255, 0.09);
+	border-radius: 8px;
+}
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+input[type="range"] {
+	accent-color: #9b8cff;
+}
+
+.font-grotesk {
+	font-family: "Space Grotesk", system-ui, sans-serif;
+}
+.font-smono {
+	font-family: "Space Mono", monospace;
+}
+
+@keyframes fil-float {
+	0%,
+	100% {
+		transform: translateY(0);
+	}
+	50% {
+		transform: translateY(-6px);
+	}
 }
