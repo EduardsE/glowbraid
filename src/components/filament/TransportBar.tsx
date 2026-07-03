@@ -43,6 +43,7 @@ export function TransportBar(props: TransportBarProps) {
 				<button
 					type="button"
 					aria-label="Toggle loop"
+					aria-pressed={props.loop}
 					onClick={props.onLoop}
 					className={
 						props.loop

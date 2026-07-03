@@ -292,7 +292,9 @@ export function FilamentStudio() {
 		// Sanitize fields that would brick the render loop if a hand-edited or
 		// legacy snapshot carries an unknown value (PALETTES[bad] → undefined →
 		// drawWall throws every frame). Kept minimal, not a full schema check.
-		const palette: PaletteId = PALETTES[d.palette] ? d.palette : "sunset";
+		const palette: PaletteId = Object.hasOwn(PALETTES, d.palette)
+			? d.palette
+			: "sunset";
 		const anim: AnimationId = ANIMATIONS.some((a) => a.id === d.anim)
 			? d.anim
 			: "flow";
