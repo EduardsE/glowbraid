@@ -117,6 +117,30 @@ describe("generateFrame", () => {
 describe("generateFrame with FiberStyle", () => {
   const TAUT: FiberStyle = { curviness: 0, randomness: 0.5 };
 
+  const STYLE_EXTREMES: FiberStyle[] = [
+    { curviness: 0, randomness: 0 },
+    { curviness: 0, randomness: 1 },
+    { curviness: 1, randomness: 0 },
+    { curviness: 1, randomness: 1 },
+    { curviness: 0.5, randomness: 0.5 },
+  ];
+
+  it("every path point stays inside the frame at all style extremes (seeds 1-100)", () => {
+    for (const style of STYLE_EXTREMES) {
+      for (let seed = 1; seed <= 100; seed++) {
+        const frame = generateFrame(seed, style);
+        for (const fiber of frame.fibers) {
+          for (const p of fiber.path) {
+            expect(p.x).toBeGreaterThanOrEqual(-1e-9);
+            expect(p.x).toBeLessThanOrEqual(1 + 1e-9);
+            expect(p.y).toBeGreaterThanOrEqual(-1e-9);
+            expect(p.y).toBeLessThanOrEqual(1 + 1e-9);
+          }
+        }
+      }
+    }
+  });
+
   it("defaults match DEFAULT_FIBER_STYLE exactly", () => {
     expect(DEFAULT_FIBER_STYLE).toEqual({ curviness: 0.5, randomness: 0.5 });
     expect(generateFrame(7431)).toEqual(

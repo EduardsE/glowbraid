@@ -19,6 +19,42 @@ export const DEFAULT_FIBER_STYLE: FiberStyle = {
   randomness: 0.5,
 };
 
+/**
+ * Control points never leave [MARGIN, 1 − MARGIN]. A cubic Bézier stays
+ * inside the convex hull of its four defining points, and the two endpoints
+ * sit on the frame border, so clamped control points guarantee the whole
+ * fiber stays inside the frame — no sampling, retries, or extra RNG draws.
+ */
+const MARGIN = 0.02;
+
+function clampAxis(v: number): number {
+  return Math.min(1 - MARGIN, Math.max(MARGIN, v));
+}
+
+/**
+ * Clamp a control point into the frame. If clamping crushes the bow's
+ * perpendicular-to-chord component below the floor, re-apply the floor on
+ * the point's resolved side and clamp again. The side is interior-facing
+ * for suppressed-S fibers (Task 1), so the re-push has room; the final
+ * clamp keeps containment absolute either way.
+ */
+function containControlPoint(
+  led: Led,
+  cp: ControlPoint,
+  px: number,
+  py: number,
+  floor: number,
+): { x: number; y: number } {
+  let x = clampAxis(cp.x);
+  let y = clampAxis(cp.y);
+  const perp = (x - led.position.x) * px + (y - led.position.y) * py;
+  if (perp * cp.side < floor) {
+    x = clampAxis(x + (cp.side * floor - perp) * px);
+    y = clampAxis(y + (cp.side * floor - perp) * py);
+  }
+  return { x, y };
+}
+
 /** Extra bow multiplier for directly-opposite (collinear) LED pairs. */
 const BOW_COLLINEAR = 2.2;
 
@@ -259,10 +295,12 @@ export function generateFrame(
       forcedSide,
     );
     const cpB = controlPoint(end, dB, sB, px, py, shape.perpFloor, forcedSide);
+    const p1 = containControlPoint(start, cpA, px, py, shape.perpFloor);
+    const p2 = containControlPoint(end, cpB, px, py, shape.perpFloor);
     const path = sampleCubicBezier(
       start.position,
-      { x: cpA.x, y: cpA.y },
-      { x: cpB.x, y: cpB.y },
+      p1,
+      p2,
       end.position,
       FIBER_SAMPLES,
     );
