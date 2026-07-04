@@ -180,9 +180,11 @@ export function drawShowcaseFrame(
   frame: Frame,
   opts: ShowcaseOptions,
 ): void {
-  const sz = Math.min(width, height) * 0.44;
+  const sz = Math.min(width, height) * 0.72;
   const x = width / 2 - sz / 2;
-  const y = height / 2 - sz / 2 - 10;
+  const y = height / 2 - sz / 2;
+  ctx.save();
+  ctx.globalAlpha = 0.85;
   drawFrame(ctx, x, y, sz, frame, {
     selected: false,
     selectedFiber: null,
@@ -190,6 +192,7 @@ export function drawShowcaseFrame(
     gpos: 0.5,
     ...opts,
   });
+  ctx.restore();
 }
 
 function drawFrame(

@@ -151,7 +151,7 @@ export function FilamentStudio() {
     const palette = PALETTES[s.palette];
     if (s.empty) {
       if (!showcaseRef.current) {
-        showcaseRef.current = generateFrame(2024, styleOf(s));
+        showcaseRef.current = generateFrame(51840, styleOf(s));
       }
       drawShowcaseFrame(ctx, width, height, showcaseRef.current, {
         time: tRef.current,
