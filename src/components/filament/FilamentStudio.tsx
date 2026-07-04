@@ -409,6 +409,8 @@ export function FilamentStudio() {
           onCurviness={(v) => handleStyle({ curviness: v })}
           randomness={ui.randomness}
           onRandomness={(v) => handleStyle({ randomness: v })}
+          socketDepth={ui.socketDepth}
+          onSocketDepth={(v) => handleStyle({ socketDepth: v })}
           onReroute={handleReroute}
           onGenerate={handleGenerate}
           onSave={handleSave}

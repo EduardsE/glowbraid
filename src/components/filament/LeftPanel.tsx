@@ -12,6 +12,8 @@ export interface LeftPanelProps {
   onCurviness: (v: number) => void;
   randomness: number;
   onRandomness: (v: number) => void;
+  socketDepth: number;
+  onSocketDepth: (v: number) => void;
   onReroute: () => void;
   onGenerate: () => void;
   onSave: () => void;
@@ -112,6 +114,22 @@ export function LeftPanel(props: LeftPanelProps) {
           step={0.01}
           value={props.randomness}
           onChange={(e) => props.onRandomness(Number(e.target.value))}
+          className="w-full"
+        />
+      </SliderRow>
+
+      <SliderRow
+        label="Socket depth"
+        value={`${Math.round(props.socketDepth * 100)}%`}
+      >
+        <input
+          type="range"
+          aria-label="Socket depth"
+          min={0}
+          max={1}
+          step={0.01}
+          value={props.socketDepth}
+          onChange={(e) => props.onSocketDepth(Number(e.target.value))}
           className="w-full"
         />
       </SliderRow>

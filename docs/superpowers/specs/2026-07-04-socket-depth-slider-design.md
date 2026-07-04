@@ -1,7 +1,7 @@
 # Socket Depth Slider (Perpendicular Fiber Exits) — Design
 
 Date: 2026-07-04
-Status: Approved
+Status: Implemented
 Extends: `2026-07-04-fiber-style-sliders-design.md`. The perfect-matching
 invariants (12 fibers, every LED used exactly once, different-edge endpoints,
 no straight fibers) and unconditional containment remain in force at every
