@@ -1,27 +1,74 @@
 import { describe, expect, it } from "vitest";
-import { generateFrame } from "../fibers";
+import { FIBERS_PER_FRAME, generateFrame } from "../fibers";
 import { FIBER_SAMPLES } from "../geometry";
+import { LEDS_PER_FRAME } from "../leds";
+import type { Point } from "../types";
+
+/** Max perpendicular distance from the path's points to its endpoint chord. */
+function maxChordDeviation(path: Point[]): number {
+  const a = path[0];
+  const b = path[path.length - 1];
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const len = Math.hypot(dx, dy) || 1;
+  let max = 0;
+  for (const p of path) {
+    const d = Math.abs((p.x - a.x) * dy - (p.y - a.y) * dx) / len;
+    if (d > max) max = d;
+  }
+  return max;
+}
 
 describe("generateFrame", () => {
-  it("is deterministic: same seed and density produce identical frames", () => {
-    expect(generateFrame(7431, 16)).toEqual(generateFrame(7431, 16));
+  it("is deterministic: same seed produces identical frames", () => {
+    expect(generateFrame(7431)).toEqual(generateFrame(7431));
   });
 
   it("different seeds produce different layouts", () => {
-    const a = generateFrame(1, 16);
-    const b = generateFrame(2, 16);
+    const a = generateFrame(1);
+    const b = generateFrame(2);
     expect(a.fibers.map((f) => f.path)).not.toEqual(
       b.fibers.map((f) => f.path),
     );
   });
 
-  it("produces exactly `density` fibers", () => {
-    expect(generateFrame(7431, 8).fibers).toHaveLength(8);
-    expect(generateFrame(7431, 24).fibers).toHaveLength(24);
+  it("produces exactly FIBERS_PER_FRAME fibers", () => {
+    expect(FIBERS_PER_FRAME).toBe(12);
+    expect(generateFrame(7431).fibers).toHaveLength(FIBERS_PER_FRAME);
+  });
+
+  it("perfect matching: every LED appears exactly once (seeds 1-50)", () => {
+    for (let seed = 1; seed <= 50; seed++) {
+      const frame = generateFrame(seed);
+      const used = frame.fibers
+        .flatMap((f) => [f.startLedIndex, f.endLedIndex])
+        .sort((x, y) => x - y);
+      expect(used).toEqual(Array.from({ length: LEDS_PER_FRAME }, (_, i) => i));
+    }
+  });
+
+  it("endpoints lie on different edges (seeds 1-50)", () => {
+    for (let seed = 1; seed <= 50; seed++) {
+      const frame = generateFrame(seed);
+      for (const fiber of frame.fibers) {
+        expect(frame.leds[fiber.startLedIndex].side).not.toBe(
+          frame.leds[fiber.endLedIndex].side,
+        );
+      }
+    }
+  });
+
+  it("no straight fibers: every path bows off its chord (seeds 1-50)", () => {
+    for (let seed = 1; seed <= 50; seed++) {
+      const frame = generateFrame(seed);
+      for (const fiber of frame.fibers) {
+        expect(maxChordDeviation(fiber.path)).toBeGreaterThan(0.01);
+      }
+    }
   });
 
   it("every fiber references two valid LEDs and spans them exactly", () => {
-    const frame = generateFrame(2024, 18);
+    const frame = generateFrame(2024);
     for (const fiber of frame.fibers) {
       const a = frame.leds[fiber.startLedIndex];
       const b = frame.leds[fiber.endLedIndex];
@@ -38,30 +85,9 @@ describe("generateFrame", () => {
     }
   });
 
-  it("routing constraints hold across seeds 1–30 at density 16", () => {
-    for (let seed = 1; seed <= 30; seed++) {
-      const frame = generateFrame(seed, 16);
-      const pairs = new Set<string>();
-      for (const fiber of frame.fibers) {
-        const a = frame.leds[fiber.startLedIndex];
-        const b = frame.leds[fiber.endLedIndex];
-        expect(a.side).not.toBe(b.side);
-        expect(
-          Math.hypot(a.position.x - b.position.x, a.position.y - b.position.y),
-        ).toBeGreaterThanOrEqual(0.42);
-        const key =
-          fiber.startLedIndex < fiber.endLedIndex
-            ? `${fiber.startLedIndex}-${fiber.endLedIndex}`
-            : `${fiber.endLedIndex}-${fiber.startLedIndex}`;
-        expect(pairs.has(key)).toBe(false);
-        pairs.add(key);
-      }
-    }
-  });
-
   it("counts crossings deterministically", () => {
-    const frame = generateFrame(7431, 16);
-    expect(frame.crossings).toBe(generateFrame(7431, 16).crossings);
+    const frame = generateFrame(7431);
+    expect(frame.crossings).toBe(generateFrame(7431).crossings);
     expect(frame.crossings).toBeGreaterThanOrEqual(0);
   });
 });

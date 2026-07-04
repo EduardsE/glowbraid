@@ -43,7 +43,6 @@ export interface Frame {
 
 export interface WallConfig {
   gridSize: number;
-  fiberDensity: number;
   frameSeeds: number[];
 }
 

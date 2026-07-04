@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { FIBERS_PER_FRAME } from "../fibers";
 import { deriveFrameSeeds, generateWall } from "../wall";
 
 describe("deriveFrameSeeds", () => {
@@ -16,30 +17,22 @@ describe("deriveFrameSeeds", () => {
 });
 
 describe("generateWall", () => {
-  it("generates one frame per seed with the requested density", () => {
+  it("generates one frame per seed with FIBERS_PER_FRAME fibers", () => {
     const frameSeeds = deriveFrameSeeds(7431, 4);
-    const frames = generateWall({ gridSize: 2, fiberDensity: 12, frameSeeds });
+    const frames = generateWall({ gridSize: 2, frameSeeds });
     expect(frames).toHaveLength(4);
     frames.forEach((frame, i) => {
       expect(frame.seed).toBe(frameSeeds[i]);
-      expect(frame.fibers).toHaveLength(12);
+      expect(frame.fibers).toHaveLength(FIBERS_PER_FRAME);
     });
   });
 
   it("replacing one frame seed changes only that frame", () => {
     const seeds = deriveFrameSeeds(7431, 4);
-    const before = generateWall({
-      gridSize: 2,
-      fiberDensity: 12,
-      frameSeeds: seeds,
-    });
+    const before = generateWall({ gridSize: 2, frameSeeds: seeds });
     const reseeded = [...seeds];
     reseeded[2] = 12345;
-    const after = generateWall({
-      gridSize: 2,
-      fiberDensity: 12,
-      frameSeeds: reseeded,
-    });
+    const after = generateWall({ gridSize: 2, frameSeeds: reseeded });
     expect(after[0]).toEqual(before[0]);
     expect(after[1]).toEqual(before[1]);
     expect(after[3]).toEqual(before[3]);
