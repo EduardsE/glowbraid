@@ -22,42 +22,21 @@ export const DEFAULT_FIBER_STYLE: FiberStyle = {
 
 /**
  * Control points never leave [MARGIN, 1 − MARGIN]. A cubic Bézier stays
- * inside the convex hull of its four defining points, and the two endpoints
- * sit on the frame border, so clamped control points guarantee the whole
- * fiber stays inside the frame — no sampling, retries, or extra RNG draws.
+ * inside the convex hull of its four defining points; the stub tips sit at
+ * most STUB_MAX inside the frame and the clamped control points are
+ * interior, so the whole fiber stays inside — no sampling or retries.
+ * Control points lie on axis-aligned LED normals, so clamping only shortens
+ * them along the normal; the perpendicular exit direction survives.
  */
 const MARGIN = 0.02;
+
+/** Stub length (socket depth) range in normalized frame units. */
+const STUB_MIN = 0.005;
+const STUB_MAX = 0.12;
 
 function clampAxis(v: number): number {
   return Math.min(1 - MARGIN, Math.max(MARGIN, v));
 }
-
-/**
- * Clamp a control point into the frame. If clamping crushes the bow's
- * perpendicular-to-chord component below the floor, re-apply the floor on
- * the point's resolved side and clamp again. The side is interior-facing
- * for suppressed-S fibers (Task 1), so the re-push has room; the final
- * clamp keeps containment absolute either way.
- */
-function containControlPoint(
-  led: Led,
-  cp: ControlPoint,
-  px: number,
-  py: number,
-  floor: number,
-): { x: number; y: number } {
-  let x = clampAxis(cp.x);
-  let y = clampAxis(cp.y);
-  const perp = (x - led.position.x) * px + (y - led.position.y) * py;
-  if (perp * cp.side < floor) {
-    x = clampAxis(x + (cp.side * floor - perp) * px);
-    y = clampAxis(y + (cp.side * floor - perp) * py);
-  }
-  return { x, y };
-}
-
-/** Extra bow multiplier for directly-opposite (collinear) LED pairs. */
-const BOW_COLLINEAR = 2.2;
 
 /** Soft-scoring penalty for near-collinear pairs; keeps score positive. */
 const COLLINEAR_PENALTY = 0.7;
@@ -74,15 +53,6 @@ function sanitizeAxis(value: number, fallback: number): number {
 interface ShapeParams {
   controlMin: number;
   controlRange: number;
-  bowMin: number;
-  bowVar: number;
-  /**
-   * Minimum magnitude of each control point's offset component perpendicular
-   * to the chord. Enforced deterministically (no extra RNG) so every fiber
-   * bows off its chord; a worst-case opposing-sign S-curve at the 0.05 floor
-   * still deviates ~0.28·0.05 = 0.014 > the 0.01 straightness-test floor.
-   */
-  perpFloor: number;
 }
 
 /** Shape constants interpolated from curviness: 0 = taut arcs, 1 = loopy. */
@@ -90,9 +60,6 @@ function shapeParams(curviness: number): ShapeParams {
   return {
     controlMin: lerp(0.3, 0.38, curviness),
     controlRange: lerp(0.12, 0.47, curviness),
-    bowMin: lerp(0.04, 0.12, curviness),
-    bowVar: lerp(0.04, 0.33, curviness),
-    perpFloor: lerp(0.05, 0.1, curviness),
   };
 }
 
@@ -205,58 +172,22 @@ function fallbackPairs(count: number, rnd: Rng): Array<[number, number]> {
   return pairs;
 }
 
-interface ControlPoint {
-  x: number;
-  y: number;
-  /** Resolved sign of the offset's perpendicular-to-chord component. */
-  side: 1 | -1;
-}
-
-/**
- * Build a control point offset from an endpoint by `normal·d + tangent·s`
- * (tangent = normal rotated 90°: (x, y) → (−y, x)), then deterministically
- * set its component perpendicular to the chord (px, py) to
- * `side · max(floor, |current|)`. With no forcedSide the natural sign is
- * kept and only the floor is enforced — this guarantees a visible bow (the
- * normal and tangent terms alone can cancel perpendicular to the chord and
- * collapse the Bézier to a straight line). With forcedSide the offset is
- * mirrored onto that side, keeping its magnitude — used to suppress
- * S-curves at low curviness. No RNG is drawn; seeds stay reproducible.
- */
-function controlPoint(
-  led: Led,
-  d: number,
-  s: number,
-  px: number,
-  py: number,
-  floor: number,
-  forcedSide?: 1 | -1,
-): ControlPoint {
-  let ox = led.normal.x * d - led.normal.y * s;
-  let oy = led.normal.y * d + led.normal.x * s;
-  const perp = ox * px + oy * py;
-  const side = forcedSide ?? (perp > 0 || (perp === 0 && s >= 0) ? 1 : -1);
-  const desired = side * Math.max(floor, Math.abs(perp));
-  ox += (desired - perp) * px;
-  oy += (desired - perp) * py;
-  return { x: led.position.x + ox, y: led.position.y + oy, side };
-}
-
 /**
  * Deterministically generate one frame's fiber layout from a seed and style.
  * Perfect matching (spec 2026-07-04-fiber-perfect-matching): exactly 12
  * fibers, every LED used exactly once, endpoints on different edges,
  * control points bowed so no fiber is straight.
  *
- * Style (spec 2026-07-04-fiber-style-sliders): curviness interpolates the
- * shape constants and gates S-curves; both axes clamp to [0, 1].
+ * Style (specs 2026-07-04-fiber-style-sliders, 2026-07-04-socket-depth-
+ * slider): curviness scales the control-point reach, randomness reshapes
+ * matcher weights, socketDepth sets the straight perpendicular stub length
+ * at each LED hole. All axes clamp to [0, 1]. Exits are always
+ * perpendicular; only the stub length is user-tunable.
  *
  * RNG draw order (stable — saved projects persist seeds and regenerate):
  * per matching attempt one 24-element shuffle then one weighted pick per
- * pair; after matching, per fiber: dA, dB, magA, signDrawA, magB, signDrawB,
- * thickness. Style never changes the number or order of draws, only how
- * they are interpreted — curviness reinterprets the shape draws, randomness
- * reshapes the pick weights.
+ * pair; after matching, per fiber: dA, dB, four retired-but-consumed shape
+ * draws, thickness. Style never changes the number or order of draws.
  */
 export function generateFrame(
   seed: number,
@@ -270,9 +201,14 @@ export function generateFrame(
     style.randomness,
     DEFAULT_FIBER_STYLE.randomness,
   );
+  const socketDepth = sanitizeAxis(
+    style.socketDepth,
+    DEFAULT_FIBER_STYLE.socketDepth,
+  );
   /** r=0 → 8 (best-score routing), r=0.5 → 1 (today), r=1 → 0.125 (chaos). */
   const exponent = 8 ** (1 - 2 * randomness);
   const shape = shapeParams(curviness);
+  const stub = lerp(STUB_MIN, STUB_MAX, socketDepth);
   const rnd = createRng(seed);
   const leds = buildLeds();
 
@@ -289,58 +225,42 @@ export function generateFrame(
   const fibers: Fiber[] = pairs.map(([startIndex, endIndex], f) => {
     const start = leds[startIndex];
     const end = leds[endIndex];
-    const coll = collinearity(start, end);
-    const boost = 1 + BOW_COLLINEAR * coll * coll;
 
     const dA = shape.controlMin + rnd() * shape.controlRange;
     const dB = shape.controlMin + rnd() * shape.controlRange;
-    const magA = (shape.bowMin + rnd() * shape.bowVar) * boost;
-    const signDrawA = rnd();
-    const magB = (shape.bowMin + rnd() * shape.bowVar) * boost;
-    const signDrawB = rnd();
+    // Four draws kept from the retired tangent-bow machinery (magA,
+    // signDrawA, magB, signDrawB) — consumed so persisted seeds keep their
+    // matching and thickness across engine versions, but perpendicular
+    // exits leave them nothing to steer.
+    rnd();
+    rnd();
+    rnd();
+    rnd();
 
-    // Chord unit and its perpendicular; all bow geometry lives in this frame.
-    const cx = end.position.x - start.position.x;
-    const cy = end.position.y - start.position.y;
-    const clen = Math.hypot(cx, cy) || 1;
-    const px = -cy / clen;
-    const py = cx / clen;
-
-    // Side of the chord facing the square's center — the side with room.
-    const mx = (start.position.x + end.position.x) / 2;
-    const my = (start.position.y + end.position.y) / 2;
-    const interiorSide: 1 | -1 =
-      (0.5 - mx) * px + (0.5 - my) * py >= 0 ? 1 : -1;
-
-    // signDrawB's sign bit and its re-expanded fraction are independent
-    // uniforms: the bit picks sB's tangent sign, the fraction gates
-    // S-curves. With probability `curviness` the natural chord sides are
-    // kept (S-curves possible, today's behavior); otherwise both control
-    // points are forced to the interior side — a clean C-arc.
-    const sA = (signDrawA < 0.5 ? -1 : 1) * magA;
-    const sB = (signDrawB < 0.5 ? -1 : 1) * magB;
-    const sGate = signDrawB < 0.5 ? signDrawB * 2 : signDrawB * 2 - 1;
-    const forcedSide = sGate < curviness ? undefined : interiorSide;
-
-    const cpA = controlPoint(
-      start,
-      dA,
-      sA,
-      px,
-      py,
-      shape.perpFloor,
-      forcedSide,
-    );
-    const cpB = controlPoint(end, dB, sB, px, py, shape.perpFloor, forcedSide);
-    const p1 = containControlPoint(start, cpA, px, py, shape.perpFloor);
-    const p2 = containControlPoint(end, cpB, px, py, shape.perpFloor);
-    const path = sampleCubicBezier(
-      start.position,
-      p1,
-      p2,
-      end.position,
-      FIBER_SAMPLES,
-    );
+    // Straight socket stub: the fiber leaves the hole along the LED normal.
+    const stubA = {
+      x: start.position.x + start.normal.x * stub,
+      y: start.position.y + start.normal.y * stub,
+    };
+    const stubB = {
+      x: end.position.x + end.normal.x * stub,
+      y: end.position.y + end.normal.y * stub,
+    };
+    // Control points on the normals: the cubic's end tangents continue the
+    // stubs exactly — perpendicular exit, no kink at the joint.
+    const p1 = {
+      x: clampAxis(stubA.x + start.normal.x * dA),
+      y: clampAxis(stubA.y + start.normal.y * dA),
+    };
+    const p2 = {
+      x: clampAxis(stubB.x + end.normal.x * dB),
+      y: clampAxis(stubB.y + end.normal.y * dB),
+    };
+    const path = [
+      { ...start.position },
+      ...sampleCubicBezier(stubA, p1, p2, stubB, FIBER_SAMPLES - 2),
+      { ...end.position },
+    ];
     const thickness = 0.85 + rnd() * 0.5;
 
     return {

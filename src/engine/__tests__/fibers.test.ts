@@ -23,16 +23,6 @@ function maxChordDeviation(path: Point[]): number {
   return max;
 }
 
-/** Signed perpendicular distance of each path point from the endpoint chord. */
-function signedDeviations(path: Point[]): number[] {
-  const a = path[0];
-  const b = path[path.length - 1];
-  const dx = b.x - a.x;
-  const dy = b.y - a.y;
-  const len = Math.hypot(dx, dy) || 1;
-  return path.map((p) => ((p.x - a.x) * dy - (p.y - a.y) * dx) / len);
-}
-
 describe("generateFrame", () => {
   it("is deterministic: same seed produces identical frames", () => {
     expect(generateFrame(7431)).toEqual(generateFrame(7431));
@@ -84,7 +74,10 @@ describe("generateFrame", () => {
     for (const seed of seeds) {
       const frame = generateFrame(seed);
       for (const fiber of frame.fibers) {
-        expect(maxChordDeviation(fiber.path)).toBeGreaterThan(0.01);
+        // Perpendicular exits cap the bow of near-facing opposite pairs
+        // (min cross-offset 0.085 → deviation ≈ 0.007); floor lowered from
+        // 0.01 accordingly. Exactly-facing pairs are matcher-excluded.
+        expect(maxChordDeviation(fiber.path)).toBeGreaterThan(0.005);
       }
     }
   });
@@ -219,24 +212,10 @@ describe("generateFrame with FiberStyle", () => {
     for (let seed = 1; seed <= 200; seed++) {
       const frame = generateFrame(seed, TAUT);
       for (const fiber of frame.fibers) {
-        expect(maxChordDeviation(fiber.path)).toBeGreaterThan(0.01);
-      }
-    }
-  });
-
-  it("no S-curves at curviness 0: paths stay on one side of their chord (seeds 1-200)", () => {
-    for (let seed = 1; seed <= 200; seed++) {
-      const frame = generateFrame(seed, TAUT);
-      for (const fiber of frame.fibers) {
-        const devs = signedDeviations(fiber.path);
-        const extreme = devs.reduce(
-          (m, d) => (Math.abs(d) > Math.abs(m) ? d : m),
-          0,
-        );
-        const side = Math.sign(extreme) || 1;
-        for (const d of devs) {
-          expect(d * side).toBeGreaterThan(-0.005);
-        }
+        // Perpendicular exits cap the bow of near-facing opposite pairs
+        // (min cross-offset 0.085 → deviation ≈ 0.007); floor lowered from
+        // 0.01 accordingly. Exactly-facing pairs are matcher-excluded.
+        expect(maxChordDeviation(fiber.path)).toBeGreaterThan(0.005);
       }
     }
   });
@@ -274,5 +253,94 @@ describe("generateFrame with FiberStyle", () => {
         }
       }
     }
+  });
+});
+
+describe("generateFrame socket depth (perpendicular exits)", () => {
+  const depthStyle = (socketDepth: number): FiberStyle => ({
+    curviness: 0.5,
+    randomness: 0.5,
+    socketDepth,
+  });
+
+  /** Engine's stub-length mapping: L = lerp(0.005, 0.12, socketDepth). */
+  const stubLength = (socketDepth: number) =>
+    0.005 + (0.12 - 0.005) * socketDepth;
+
+  it("every fiber exits both LEDs exactly perpendicular through its stub (seeds 1-100, depths 0/0.4/1)", () => {
+    for (const socketDepth of [0, 0.4, 1]) {
+      const L = stubLength(socketDepth);
+      for (let seed = 1; seed <= 100; seed++) {
+        const frame = generateFrame(seed, depthStyle(socketDepth));
+        for (const fiber of frame.fibers) {
+          const a = frame.leds[fiber.startLedIndex];
+          const b = frame.leds[fiber.endLedIndex];
+          const first = fiber.path[1];
+          expect(first.x).toBeCloseTo(a.position.x + a.normal.x * L, 12);
+          expect(first.y).toBeCloseTo(a.position.y + a.normal.y * L, 12);
+          const last = fiber.path[fiber.path.length - 2];
+          expect(last.x).toBeCloseTo(b.position.x + b.normal.x * L, 12);
+          expect(last.y).toBeCloseTo(b.position.y + b.normal.y * L, 12);
+        }
+      }
+    }
+  });
+
+  it("the curve leaves the stub tip along the normal (no kink), seeds 1-50", () => {
+    // First cubic sample after the stub tip: its deviation from the normal
+    // ray through the LED is O(t²) ≈ 0.002 — assert well under 0.01.
+    for (let seed = 1; seed <= 50; seed++) {
+      const frame = generateFrame(seed, depthStyle(1));
+      for (const fiber of frame.fibers) {
+        const a = frame.leds[fiber.startLedIndex];
+        const p = fiber.path[2];
+        const offNormal = Math.abs(
+          (p.x - a.position.x) * a.normal.y - (p.y - a.position.y) * a.normal.x,
+        );
+        expect(offNormal).toBeLessThan(0.01);
+      }
+    }
+  });
+
+  it("socketDepth reshapes paths without changing pairings (seeds 1-50)", () => {
+    for (let seed = 1; seed <= 50; seed++) {
+      const shallow = generateFrame(seed, depthStyle(0));
+      const deep = generateFrame(seed, depthStyle(1));
+      expect(
+        shallow.fibers.map((f) => [f.startLedIndex, f.endLedIndex]),
+      ).toEqual(deep.fibers.map((f) => [f.startLedIndex, f.endLedIndex]));
+      expect(shallow.fibers.map((f) => f.path)).not.toEqual(
+        deep.fibers.map((f) => f.path),
+      );
+    }
+  });
+
+  it("stays inside the frame at socket depth extremes (seeds 1-100)", () => {
+    for (const socketDepth of [0, 1]) {
+      for (let seed = 1; seed <= 100; seed++) {
+        const frame = generateFrame(seed, depthStyle(socketDepth));
+        for (const fiber of frame.fibers) {
+          for (const p of fiber.path) {
+            expect(p.x).toBeGreaterThanOrEqual(-1e-9);
+            expect(p.x).toBeLessThanOrEqual(1 + 1e-9);
+            expect(p.y).toBeGreaterThanOrEqual(-1e-9);
+            expect(p.y).toBeLessThanOrEqual(1 + 1e-9);
+          }
+        }
+      }
+    }
+  });
+
+  it("sanitizes socketDepth like the other axes", () => {
+    expect(
+      generateFrame(5, { curviness: 0.5, randomness: 0.5, socketDepth: 2 }),
+    ).toEqual(generateFrame(5, depthStyle(1)));
+    expect(
+      generateFrame(5, {
+        curviness: 0.5,
+        randomness: 0.5,
+        socketDepth: Number.NaN,
+      }),
+    ).toEqual(generateFrame(5, depthStyle(0.4)));
   });
 });

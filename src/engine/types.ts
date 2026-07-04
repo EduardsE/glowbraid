@@ -24,7 +24,7 @@ export interface Fiber {
   id: string;
   startLedIndex: number;
   endLedIndex: number;
-  /** 38 samples of a cubic Bézier, includes both endpoints */
+  /** 38 points: straight socket stubs at both ends + sampled cubic Bézier */
   path: Point[];
   /** Polyline length in frame units */
   length: number;
