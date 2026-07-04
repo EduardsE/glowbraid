@@ -198,4 +198,33 @@ describe("generateFrame with FiberStyle", () => {
       }
     }
   });
+
+  it("changing randomness changes the pairing for some seeds", () => {
+    const pairsAt = (r: number) =>
+      Array.from({ length: 20 }, (_, i) =>
+        generateFrame(i + 1, { curviness: 0.5, randomness: r }).fibers.map(
+          (f) => [f.startLedIndex, f.endLedIndex],
+        ),
+      );
+    expect(pairsAt(0)).not.toEqual(pairsAt(1));
+  });
+
+  it("matching invariants hold at randomness extremes (seeds 1-50)", () => {
+    for (const randomness of [0, 1]) {
+      for (let seed = 1; seed <= 50; seed++) {
+        const frame = generateFrame(seed, { curviness: 0.5, randomness });
+        const used = frame.fibers
+          .flatMap((f) => [f.startLedIndex, f.endLedIndex])
+          .sort((x, y) => x - y);
+        expect(used).toEqual(
+          Array.from({ length: LEDS_PER_FRAME }, (_, i) => i),
+        );
+        for (const fiber of frame.fibers) {
+          expect(frame.leds[fiber.startLedIndex].side).not.toBe(
+            frame.leds[fiber.endLedIndex].side,
+          );
+        }
+      }
+    }
+  });
 });

@@ -135,7 +135,11 @@ function pairScore(a: Led, b: Led): number {
  * with a weighted-random partner on a different edge. Returns null on a
  * dead end (all remaining unpaired LEDs share the current LED's edge).
  */
-function tryMatchOnce(leds: Led[], rnd: Rng): Array<[number, number]> | null {
+function tryMatchOnce(
+  leds: Led[],
+  rnd: Rng,
+  exponent: number,
+): Array<[number, number]> | null {
   const order = shuffledIndices(leds.length, rnd);
   const unpaired = new Set(order);
   const pairs: Array<[number, number]> = [];
@@ -147,7 +151,9 @@ function tryMatchOnce(leds: Led[], rnd: Rng): Array<[number, number]> | null {
       if (leds[j].side !== leds[i].side) candidates.push(j);
     }
     if (candidates.length === 0) return null;
-    const weights = candidates.map((j) => pairScore(leds[i], leds[j]));
+    const weights = candidates.map(
+      (j) => pairScore(leds[i], leds[j]) ** exponent,
+    );
     let total = 0;
     for (const w of weights) total += w;
     let r = rnd() * total;
@@ -225,7 +231,8 @@ function controlPoint(
  * per matching attempt one 24-element shuffle then one weighted pick per
  * pair; after matching, per fiber: dA, dB, magA, signDrawA, magB, signDrawB,
  * thickness. Style never changes the number or order of draws, only how
- * they are interpreted.
+ * they are interpreted — curviness reinterprets the shape draws, randomness
+ * reshapes the pick weights.
  */
 export function generateFrame(
   seed: number,
@@ -235,6 +242,12 @@ export function generateFrame(
     style.curviness,
     DEFAULT_FIBER_STYLE.curviness,
   );
+  const randomness = sanitizeAxis(
+    style.randomness,
+    DEFAULT_FIBER_STYLE.randomness,
+  );
+  /** r=0 → 8 (best-score routing), r=0.5 → 1 (today), r=1 → 0.125 (chaos). */
+  const exponent = 8 ** (1 - 2 * randomness);
   const shape = shapeParams(curviness);
   const rnd = createRng(seed);
   const leds = buildLeds();
@@ -245,7 +258,7 @@ export function generateFrame(
     pairs === null && attempt < MAX_MATCHING_RESTARTS;
     attempt++
   ) {
-    pairs = tryMatchOnce(leds, rnd);
+    pairs = tryMatchOnce(leds, rnd, exponent);
   }
   if (pairs === null) pairs = fallbackPairs(leds.length, rnd);
 
