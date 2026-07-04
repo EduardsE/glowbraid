@@ -66,7 +66,6 @@ export interface LedLight {
 export interface ProjectSnapshot {
   gridSize: number;
   frameSize: number;
-  fiberDensity: number;
   masterSeed: number;
   seeds: number[];
   anim: AnimationId;

@@ -31,7 +31,6 @@ interface StudioState {
   mode: "edit" | "sim";
   gridSize: number;
   frameSize: number;
-  fiberDensity: number;
   masterSeed: number;
   selectedFrame: number | null;
   selectedFiber: number | null;
@@ -50,7 +49,6 @@ const INITIAL_STATE: StudioState = {
   mode: "sim",
   gridSize: 3,
   frameSize: 236,
-  fiberDensity: 16,
   masterSeed: 7431,
   selectedFrame: null,
   selectedFiber: null,
@@ -97,12 +95,7 @@ export function FilamentStudio() {
   }, []);
 
   const rebuild = useCallback(
-    (
-      gridSize: number,
-      fiberDensity: number,
-      masterSeed: number,
-      seeds?: number[],
-    ) => {
+    (gridSize: number, masterSeed: number, seeds?: number[]) => {
       const count = gridSize * gridSize;
       seedsRef.current =
         seeds && seeds.length === count
@@ -110,7 +103,6 @@ export function FilamentStudio() {
           : deriveFrameSeeds(masterSeed, count);
       framesRef.current = generateWall({
         gridSize,
-        fiberDensity,
         frameSeeds: seedsRef.current,
       });
     },
@@ -127,7 +119,7 @@ export function FilamentStudio() {
     const s = uiRef.current;
     const palette = PALETTES[s.palette];
     if (s.empty) {
-      if (!showcaseRef.current) showcaseRef.current = generateFrame(2024, 18);
+      if (!showcaseRef.current) showcaseRef.current = generateFrame(2024);
       drawShowcaseFrame(ctx, width, height, showcaseRef.current, {
         time: tRef.current,
         anim: s.anim,
@@ -240,21 +232,17 @@ export function FilamentStudio() {
   });
 
   const handleGridSize = (n: number) => {
-    rebuild(n, ui.fiberDensity, ui.masterSeed);
+    rebuild(n, ui.masterSeed);
     patch({ gridSize: n, selectedFrame: null, selectedFiber: null });
-  };
-  const handleDensity = (n: number) => {
-    rebuild(ui.gridSize, n, ui.masterSeed, seedsRef.current);
-    patch({ fiberDensity: n });
   };
   const handleReroute = () => {
     const seed = randomSeed();
-    rebuild(ui.gridSize, ui.fiberDensity, seed);
+    rebuild(ui.gridSize, seed);
     patch({ masterSeed: seed });
   };
   const handleGenerate = () => {
     const seed = randomSeed();
-    rebuild(ui.gridSize, ui.fiberDensity, seed);
+    rebuild(ui.gridSize, seed);
     patch({
       masterSeed: seed,
       empty: false,
@@ -267,7 +255,7 @@ export function FilamentStudio() {
     if (s.selectedFrame == null) return;
     const seed = randomSeed();
     seedsRef.current[s.selectedFrame] = seed;
-    framesRef.current[s.selectedFrame] = generateFrame(seed, s.fiberDensity);
+    framesRef.current[s.selectedFrame] = generateFrame(seed);
     patch({ selectedFiber: null });
   };
   const handleSave = () => {
@@ -275,7 +263,6 @@ export function FilamentStudio() {
     const snapshot: ProjectSnapshot = {
       gridSize: s.gridSize,
       frameSize: s.frameSize,
-      fiberDensity: s.fiberDensity,
       masterSeed: s.masterSeed,
       seeds: seedsRef.current,
       anim: s.anim,
@@ -302,11 +289,10 @@ export function FilamentStudio() {
       6,
       Math.max(1, Math.round(Number(d.gridSize) || 3)),
     );
-    rebuild(gridSize, d.fiberDensity, d.masterSeed, d.seeds);
+    rebuild(gridSize, d.masterSeed, d.seeds);
     patch({
       gridSize,
       frameSize: d.frameSize,
-      fiberDensity: d.fiberDensity,
       masterSeed: d.masterSeed,
       anim,
       speed: d.speed,
@@ -360,8 +346,6 @@ export function FilamentStudio() {
           onGridSize={handleGridSize}
           frameSize={ui.frameSize}
           onFrameSize={(n) => patch({ frameSize: n })}
-          fiberDensity={ui.fiberDensity}
-          onFiberDensity={handleDensity}
           onReroute={handleReroute}
           onGenerate={handleGenerate}
           onSave={handleSave}

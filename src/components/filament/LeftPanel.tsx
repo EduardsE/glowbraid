@@ -8,8 +8,6 @@ export interface LeftPanelProps {
   onGridSize: (n: number) => void;
   frameSize: number;
   onFrameSize: (n: number) => void;
-  fiberDensity: number;
-  onFiberDensity: (n: number) => void;
   onReroute: () => void;
   onGenerate: () => void;
   onSave: () => void;
@@ -75,18 +73,12 @@ export function LeftPanel(props: LeftPanelProps) {
         </div>
       </div>
 
-      <SliderRow label="Fibre runs / frame" value={String(props.fiberDensity)}>
-        <input
-          type="range"
-          aria-label="Fibre runs per frame"
-          min={8}
-          max={24}
-          step={1}
-          value={props.fiberDensity}
-          onChange={(e) => props.onFiberDensity(Number(e.target.value))}
-          className="w-full"
-        />
-      </SliderRow>
+      <div className="rounded-[11px] border border-white/[0.06] bg-white/[0.02] px-3 py-2.5 leading-[1.3]">
+        <div className="text-xs text-[#e9eaf0]">12 fibre runs / frame</div>
+        <div className="text-[10px] text-[rgba(233,234,240,0.4)]">
+          one per LED · fixed
+        </div>
+      </div>
 
       <div className="mt-1 flex flex-col gap-2">
         <button
