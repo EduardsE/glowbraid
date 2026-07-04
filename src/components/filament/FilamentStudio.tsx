@@ -16,7 +16,7 @@ import type { MapGeometry } from "@/renderer/mapRenderer";
 import { drawConnectionMap, pickMapFiber } from "@/renderer/mapRenderer";
 import { computeWallLayout, pickFrame } from "@/renderer/viewport";
 import { drawShowcaseFrame, drawWall } from "@/renderer/wallRenderer";
-import { EmptyState } from "./EmptyState";
+import { EmptyState, type EmptyStatePreset } from "./EmptyState";
 import { Header } from "./Header";
 import { InspectorPanel } from "./InspectorPanel";
 import { LeftPanel } from "./LeftPanel";
@@ -283,6 +283,19 @@ export function FilamentStudio() {
       selectedFiber: null,
     });
   };
+  const handlePreset = (preset: EmptyStatePreset) => {
+    const seed = randomSeed();
+    rebuild(preset.gridSize, seed, styleOf(ui));
+    patch({
+      gridSize: preset.gridSize,
+      palette: preset.palette,
+      anim: preset.anim,
+      masterSeed: seed,
+      empty: false,
+      selectedFrame: null,
+      selectedFiber: null,
+    });
+  };
   const handleReseed = () => {
     const s = uiRef.current;
     if (s.selectedFrame == null) return;
@@ -426,7 +439,9 @@ export function FilamentStudio() {
             ref={canvasRef}
             className="absolute inset-0 block h-full w-full cursor-grab"
           />
-          {ui.empty ? <EmptyState onStart={handleGenerate} /> : null}
+          {ui.empty ? (
+            <EmptyState onPreset={handlePreset} onStart={handleGenerate} />
+          ) : null}
           <div className="font-smono pointer-events-none absolute bottom-3.5 left-3.5 z-[6] flex gap-1.5 text-[10px] text-[rgba(233,234,240,0.35)]">
             <HintChip>scroll · zoom</HintChip>
             <HintChip>drag · pan</HintChip>
