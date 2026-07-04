@@ -1,10 +1,11 @@
 import type { MouseEvent } from "react";
 import { useCallback, useRef, useState } from "react";
 import { ANIMATIONS } from "@/engine/animation";
-import { generateFrame } from "@/engine/fibers";
+import { DEFAULT_FIBER_STYLE, generateFrame } from "@/engine/fibers";
 import { PALETTES } from "@/engine/palettes";
 import type {
   AnimationId,
+  FiberStyle,
   Frame,
   PaletteId,
   Point,
@@ -31,6 +32,8 @@ interface StudioState {
   mode: "edit" | "sim";
   gridSize: number;
   frameSize: number;
+  curviness: number;
+  randomness: number;
   masterSeed: number;
   selectedFrame: number | null;
   selectedFiber: number | null;
@@ -49,6 +52,8 @@ const INITIAL_STATE: StudioState = {
   mode: "sim",
   gridSize: 3,
   frameSize: 236,
+  curviness: DEFAULT_FIBER_STYLE.curviness,
+  randomness: DEFAULT_FIBER_STYLE.randomness,
   masterSeed: 7431,
   selectedFrame: null,
   selectedFiber: null,
@@ -70,6 +75,16 @@ function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60);
   const r = Math.floor(seconds % 60);
   return `${m}:${String(r).padStart(2, "0")}`;
+}
+
+function styleOf(s: { curviness: number; randomness: number }): FiberStyle {
+  return { curviness: s.curviness, randomness: s.randomness };
+}
+
+/** Loader sanitizer: legacy/hand-edited snapshots → finite 0–1 or 0.5. */
+function styleAxis(value: unknown): number {
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.min(1, Math.max(0, n)) : 0.5;
 }
 
 export function FilamentStudio() {
@@ -95,7 +110,12 @@ export function FilamentStudio() {
   }, []);
 
   const rebuild = useCallback(
-    (gridSize: number, masterSeed: number, seeds?: number[]) => {
+    (
+      gridSize: number,
+      masterSeed: number,
+      style: FiberStyle,
+      seeds?: number[],
+    ) => {
       const count = gridSize * gridSize;
       seedsRef.current =
         seeds && seeds.length === count
@@ -104,6 +124,7 @@ export function FilamentStudio() {
       framesRef.current = generateWall({
         gridSize,
         frameSeeds: seedsRef.current,
+        style,
       });
     },
     [],
@@ -119,7 +140,9 @@ export function FilamentStudio() {
     const s = uiRef.current;
     const palette = PALETTES[s.palette];
     if (s.empty) {
-      if (!showcaseRef.current) showcaseRef.current = generateFrame(2024);
+      if (!showcaseRef.current) {
+        showcaseRef.current = generateFrame(2024, styleOf(s));
+      }
       drawShowcaseFrame(ctx, width, height, showcaseRef.current, {
         time: tRef.current,
         anim: s.anim,
@@ -232,17 +255,17 @@ export function FilamentStudio() {
   });
 
   const handleGridSize = (n: number) => {
-    rebuild(n, ui.masterSeed);
+    rebuild(n, ui.masterSeed, styleOf(ui));
     patch({ gridSize: n, selectedFrame: null, selectedFiber: null });
   };
   const handleReroute = () => {
     const seed = randomSeed();
-    rebuild(ui.gridSize, seed);
+    rebuild(ui.gridSize, seed, styleOf(ui));
     patch({ masterSeed: seed });
   };
   const handleGenerate = () => {
     const seed = randomSeed();
-    rebuild(ui.gridSize, seed);
+    rebuild(ui.gridSize, seed, styleOf(ui));
     patch({
       masterSeed: seed,
       empty: false,
@@ -255,8 +278,17 @@ export function FilamentStudio() {
     if (s.selectedFrame == null) return;
     const seed = randomSeed();
     seedsRef.current[s.selectedFrame] = seed;
-    framesRef.current[s.selectedFrame] = generateFrame(seed);
+    framesRef.current[s.selectedFrame] = generateFrame(seed, styleOf(s));
     patch({ selectedFiber: null });
+  };
+  const handleStyle = (partial: Partial<FiberStyle>) => {
+    const s = uiRef.current;
+    const style = { ...styleOf(s), ...partial };
+    if (!s.empty) {
+      rebuild(s.gridSize, s.masterSeed, style, seedsRef.current);
+    }
+    showcaseRef.current = null;
+    patch(partial);
   };
   const handleSave = () => {
     const s = uiRef.current;
@@ -269,6 +301,8 @@ export function FilamentStudio() {
       speed: s.speed,
       brightness: s.brightness,
       palette: s.palette,
+      curviness: s.curviness,
+      randomness: s.randomness,
       mode: s.mode,
     };
     if (saveProject(snapshot)) patch({ saved: true });
@@ -289,11 +323,15 @@ export function FilamentStudio() {
       6,
       Math.max(1, Math.round(Number(d.gridSize) || 3)),
     );
-    rebuild(gridSize, d.masterSeed, d.seeds);
+    const curviness = styleAxis(d.curviness);
+    const randomness = styleAxis(d.randomness);
+    rebuild(gridSize, d.masterSeed, { curviness, randomness }, d.seeds);
     patch({
       gridSize,
       frameSize: d.frameSize,
       masterSeed: d.masterSeed,
+      curviness,
+      randomness,
       anim,
       speed: d.speed,
       brightness: d.brightness,
@@ -346,6 +384,10 @@ export function FilamentStudio() {
           onGridSize={handleGridSize}
           frameSize={ui.frameSize}
           onFrameSize={(n) => patch({ frameSize: n })}
+          curviness={ui.curviness}
+          onCurviness={(v) => handleStyle({ curviness: v })}
+          randomness={ui.randomness}
+          onRandomness={(v) => handleStyle({ randomness: v })}
           onReroute={handleReroute}
           onGenerate={handleGenerate}
           onSave={handleSave}

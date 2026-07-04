@@ -82,5 +82,8 @@ export interface ProjectSnapshot {
   speed: number;
   brightness: number;
   palette: PaletteId;
+  /** FiberStyle axes, 0–1. Absent in legacy saves → loader defaults to 0.5. */
+  curviness: number;
+  randomness: number;
   mode: "edit" | "sim";
 }

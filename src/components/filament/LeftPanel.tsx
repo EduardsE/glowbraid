@@ -8,6 +8,10 @@ export interface LeftPanelProps {
   onGridSize: (n: number) => void;
   frameSize: number;
   onFrameSize: (n: number) => void;
+  curviness: number;
+  onCurviness: (v: number) => void;
+  randomness: number;
+  onRandomness: (v: number) => void;
   onReroute: () => void;
   onGenerate: () => void;
   onSave: () => void;
@@ -79,6 +83,38 @@ export function LeftPanel(props: LeftPanelProps) {
           one per LED · fixed
         </div>
       </div>
+
+      <SliderRow
+        label="Curviness"
+        value={`${Math.round(props.curviness * 100)}%`}
+      >
+        <input
+          type="range"
+          aria-label="Curviness"
+          min={0}
+          max={1}
+          step={0.01}
+          value={props.curviness}
+          onChange={(e) => props.onCurviness(Number(e.target.value))}
+          className="w-full"
+        />
+      </SliderRow>
+
+      <SliderRow
+        label="Randomness"
+        value={`${Math.round(props.randomness * 100)}%`}
+      >
+        <input
+          type="range"
+          aria-label="Randomness"
+          min={0}
+          max={1}
+          step={0.01}
+          value={props.randomness}
+          onChange={(e) => props.onRandomness(Number(e.target.value))}
+          className="w-full"
+        />
+      </SliderRow>
 
       <div className="mt-1 flex flex-col gap-2">
         <button
