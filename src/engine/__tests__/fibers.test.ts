@@ -128,8 +128,6 @@ describe("generateFrame", () => {
 });
 
 describe("generateFrame with FiberStyle", () => {
-  const TAUT: FiberStyle = { curviness: 0, randomness: 0.5, socketDepth: 0.4 };
-
   const STYLE_EXTREMES: FiberStyle[] = [
     { curviness: 0, randomness: 0, socketDepth: 0.4 },
     { curviness: 0, randomness: 1, socketDepth: 0.4 },
@@ -209,13 +207,16 @@ describe("generateFrame with FiberStyle", () => {
   });
 
   it("no straight fibers at curviness 0 (seeds 1-200)", () => {
-    for (let seed = 1; seed <= 200; seed++) {
-      const frame = generateFrame(seed, TAUT);
-      for (const fiber of frame.fibers) {
-        // Perpendicular exits cap the bow of near-facing opposite pairs
-        // (min cross-offset 0.085 → deviation ≈ 0.007); floor lowered from
-        // 0.01 accordingly. Exactly-facing pairs are matcher-excluded.
-        expect(maxChordDeviation(fiber.path)).toBeGreaterThan(0.005);
+    for (const socketDepth of [0, 0.4]) {
+      const style: FiberStyle = { curviness: 0, randomness: 0.5, socketDepth };
+      for (let seed = 1; seed <= 200; seed++) {
+        const frame = generateFrame(seed, style);
+        for (const fiber of frame.fibers) {
+          // Perpendicular exits cap the bow of near-facing opposite pairs
+          // (min cross-offset 0.085 → deviation ≈ 0.007); floor lowered from
+          // 0.01 accordingly. Exactly-facing pairs are matcher-excluded.
+          expect(maxChordDeviation(fiber.path)).toBeGreaterThan(0.005);
+        }
       }
     }
   });
@@ -298,6 +299,14 @@ describe("generateFrame socket depth (perpendicular exits)", () => {
           (p.x - a.position.x) * a.normal.y - (p.y - a.position.y) * a.normal.x,
         );
         expect(offNormal).toBeLessThan(0.01);
+        const b = frame.leds[fiber.endLedIndex];
+        const q = fiber.path[fiber.path.length - 3];
+        expect(
+          Math.abs(
+            (q.x - b.position.x) * b.normal.y -
+              (q.y - b.position.y) * b.normal.x,
+          ),
+        ).toBeLessThan(0.01);
       }
     }
   });

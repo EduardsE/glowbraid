@@ -236,6 +236,7 @@ export function generateFrame(
     rnd();
     rnd();
     rnd();
+    const thickness = 0.85 + rnd() * 0.5;
 
     // Straight socket stub: the fiber leaves the hole along the LED normal.
     const stubA = {
@@ -261,7 +262,6 @@ export function generateFrame(
       ...sampleCubicBezier(stubA, p1, p2, stubB, FIBER_SAMPLES - 2),
       { ...end.position },
     ];
-    const thickness = 0.85 + rnd() * 0.5;
 
     return {
       id: `${seed}-${f}`,
