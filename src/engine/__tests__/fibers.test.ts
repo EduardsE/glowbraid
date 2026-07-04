@@ -207,15 +207,21 @@ describe("generateFrame with FiberStyle", () => {
   });
 
   it("no straight fibers at curviness 0 (seeds 1-200)", () => {
-    for (const socketDepth of [0, 0.4]) {
+    // The bow of a near-facing opposite pair scales with the control-arm
+    // length (bow ∝ cross-offset × arm). At socketDepth 0 the arms compress
+    // to ARM_TUCK (0.3×), so the worst-case bow drops to ≈ 0.0023 — near
+    // straight is physically correct for a shallow socket. Exactly-facing
+    // pairs stay matcher-excluded, so a dead-straight fiber (deviation ~0)
+    // still fails these floors.
+    for (const [socketDepth, floor] of [
+      [0, 0.0015],
+      [0.4, 0.005],
+    ]) {
       const style: FiberStyle = { curviness: 0, randomness: 0.5, socketDepth };
       for (let seed = 1; seed <= 200; seed++) {
         const frame = generateFrame(seed, style);
         for (const fiber of frame.fibers) {
-          // Perpendicular exits cap the bow of near-facing opposite pairs
-          // (min cross-offset 0.085 → deviation ≈ 0.007); floor lowered from
-          // 0.01 accordingly. Exactly-facing pairs are matcher-excluded.
-          expect(maxChordDeviation(fiber.path)).toBeGreaterThan(0.005);
+          expect(maxChordDeviation(fiber.path)).toBeGreaterThan(floor);
         }
       }
     }
@@ -264,9 +270,8 @@ describe("generateFrame socket depth (perpendicular exits)", () => {
     socketDepth,
   });
 
-  /** Engine's stub-length mapping: L = lerp(0.005, 0.12, socketDepth). */
-  const stubLength = (socketDepth: number) =>
-    0.005 + (0.12 - 0.005) * socketDepth;
+  /** Engine's stub-length mapping: L = lerp(0, 0.12, socketDepth). */
+  const stubLength = (socketDepth: number) => 0.12 * socketDepth;
 
   it("every fiber exits both LEDs exactly perpendicular through its stub (seeds 1-100, depths 0/0.4/1)", () => {
     for (const socketDepth of [0, 0.4, 1]) {
@@ -309,6 +314,40 @@ describe("generateFrame socket depth (perpendicular exits)", () => {
         ).toBeLessThan(0.01);
       }
     }
+  });
+
+  it("shallower sockets bend sooner: mean perpendicular run grows with depth (seeds 1-50)", () => {
+    // Distance from the LED at which the path first strays more than 0.02
+    // off the normal ray — the visible "socket run". Stub length alone
+    // barely moves this (the control arm dominates); the arm compression at
+    // low socketDepth is what makes the slider minimum visibly shallow.
+    const meanRun = (socketDepth: number) => {
+      let total = 0;
+      let count = 0;
+      for (let seed = 1; seed <= 50; seed++) {
+        const frame = generateFrame(seed, depthStyle(socketDepth));
+        for (const fiber of frame.fibers) {
+          const a = frame.leds[fiber.startLedIndex];
+          for (const p of fiber.path) {
+            const off = Math.abs(
+              (p.x - a.position.x) * a.normal.y -
+                (p.y - a.position.y) * a.normal.x,
+            );
+            if (off > 0.02) {
+              total += Math.hypot(p.x - a.position.x, p.y - a.position.y);
+              count++;
+              break;
+            }
+          }
+        }
+      }
+      return total / count;
+    };
+    const shallow = meanRun(0);
+    const mid = meanRun(0.4);
+    const deep = meanRun(1);
+    expect(shallow).toBeLessThan(mid * 0.6);
+    expect(mid).toBeLessThan(deep);
   });
 
   it("socketDepth reshapes paths without changing pairings (seeds 1-50)", () => {

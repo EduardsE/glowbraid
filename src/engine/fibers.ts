@@ -31,8 +31,20 @@ export const DEFAULT_FIBER_STYLE: FiberStyle = {
 const MARGIN = 0.02;
 
 /** Stub length (socket depth) range in normalized frame units. */
-const STUB_MIN = 0.005;
+const STUB_MIN = 0;
 const STUB_MAX = 0.12;
+
+/**
+ * Below the default socket depth the control arms compress toward the hole,
+ * so a shallow socket lets the fiber turn right after its exit — the visible
+ * perpendicular run is dominated by the arm length, not the stub (at stub 0
+ * an uncompressed arm still hugs the normal for ~15% of the frame). The exit
+ * tangent stays exactly on the normal; only the hug length shrinks. At
+ * socketDepth ≥ ARM_RAMP_END (the default) arms are untouched, so existing
+ * saves at the default keep their look.
+ */
+const ARM_TUCK = 0.3;
+const ARM_RAMP_END = DEFAULT_FIBER_STYLE.socketDepth;
 
 function clampAxis(v: number): number {
   return Math.min(1 - MARGIN, Math.max(MARGIN, v));
@@ -181,8 +193,9 @@ function fallbackPairs(count: number, rnd: Rng): Array<[number, number]> {
  * Style (specs 2026-07-04-fiber-style-sliders, 2026-07-04-socket-depth-
  * slider): curviness scales the control-point reach, randomness reshapes
  * matcher weights, socketDepth sets the straight perpendicular stub length
- * at each LED hole. All axes clamp to [0, 1]. Exits are always
- * perpendicular; only the stub length is user-tunable.
+ * at each LED hole (and, below the default depth, compresses the control
+ * arms so shallow sockets bend right after the hole). All axes clamp to
+ * [0, 1]. Exits are always perpendicular at every depth.
  *
  * RNG draw order (stable — saved projects persist seeds and regenerate):
  * per matching attempt one 24-element shuffle then one weighted pick per
@@ -209,6 +222,7 @@ export function generateFrame(
   const exponent = 8 ** (1 - 2 * randomness);
   const shape = shapeParams(curviness);
   const stub = lerp(STUB_MIN, STUB_MAX, socketDepth);
+  const armScale = lerp(ARM_TUCK, 1, Math.min(socketDepth / ARM_RAMP_END, 1));
   const rnd = createRng(seed);
   const leds = buildLeds();
 
@@ -226,8 +240,8 @@ export function generateFrame(
     const start = leds[startIndex];
     const end = leds[endIndex];
 
-    const dA = shape.controlMin + rnd() * shape.controlRange;
-    const dB = shape.controlMin + rnd() * shape.controlRange;
+    const dA = (shape.controlMin + rnd() * shape.controlRange) * armScale;
+    const dB = (shape.controlMin + rnd() * shape.controlRange) * armScale;
     // Four draws kept from the retired tangent-bow machinery (magA,
     // signDrawA, magB, signDrawB) — consumed so persisted seeds keep their
     // matching and thickness across engine versions, but perpendicular

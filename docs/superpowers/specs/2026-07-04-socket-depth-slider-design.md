@@ -52,9 +52,19 @@ export const DEFAULT_FIBER_STYLE: FiberStyle = {
 
 - `socketDepth` is sanitized like the other axes: clamp to [0, 1], NaN/±∞
   fall back to the default.
-- Engine mapping: stub length `L = lerp(0.005, 0.12, socketDepth)` in
-  normalized frame units (exact endpoints tunable during implementation;
-  default 0.4 ≈ a couple of real-world cm on the reference frame).
+- Engine mapping: stub length `L = lerp(0, 0.12, socketDepth)` in
+  normalized frame units (default 0.4 ≈ a couple of real-world cm on the
+  reference frame). *(Amended 2026-07-04: the minimum dropped from 0.005 to
+  0 — at slider 0 there is no straight section at all.)*
+- **Arm compression at shallow depths** *(amended 2026-07-04)*: the visible
+  perpendicular run is dominated by the control-arm length, not the stub —
+  at stub 0 an uncompressed arm still hugs the normal for ~15 % of the
+  frame, which made the slider minimum look far too deep. Below the default
+  depth the drawn `dA`/`dB` are scaled by
+  `armScale = lerp(0.3, 1, min(socketDepth / 0.4, 1))`, so at slider 0 the
+  fiber turns right after the hole (run ≈ 4 % of frame) while the exit
+  tangent stays exactly on the normal. At `socketDepth ≥ 0.4` the scale is
+  1: the default look and everything above it are unchanged.
 - `generateFrame(seed, style)` and `generateWall` signatures are unchanged;
   the new field rides along in `FiberStyle`.
 
@@ -147,7 +157,16 @@ Across seeds × `socketDepth ∈ {0, 0.4, 1}` (and existing style extremes):
   under perpendicular exits the bow of a near-facing opposite pair (minimum
   cross-offset 0.085 between distinct LEDs) mathematically caps at ≈ 0.007,
   so 0.01 is unattainable; 0.005 still rejects the excluded straight cases
-  (deviation ~0).
+  (deviation ~0). *(Amended 2026-07-04: the bow scales with the control arm
+  — bow ∝ cross-offset × arm — so arm compression at shallow depths lowers
+  the worst case to ≈ 0.0023 at `socketDepth = 0`. The floor is
+  depth-dependent: 0.0015 at depth 0, 0.005 at the default and above. A
+  near-straight fiber at a shallow socket is physically correct; exactly
+  straight remains impossible via the matcher exclusion.)*
+- **Perpendicular run shrinks with depth** *(amended 2026-07-04)*: the mean
+  distance from the LED at which paths first stray > 0.02 off the normal
+  ray must be well under the default's at `socketDepth = 0` and grow
+  monotonically toward depth 1.
 - **No facing pairs matched:** over sampled seeds, no emitted pair is
   exactly facing (excluding the documented fallback path).
 - **Determinism & stability:** same `(seed, style)` → deep-equal frames;
