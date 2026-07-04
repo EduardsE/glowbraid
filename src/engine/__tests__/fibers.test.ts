@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { FIBERS_PER_FRAME, generateFrame } from "../fibers";
+import {
+  DEFAULT_FIBER_STYLE,
+  FIBERS_PER_FRAME,
+  generateFrame,
+} from "../fibers";
 import { FIBER_SAMPLES } from "../geometry";
 import { LEDS_PER_FRAME } from "../leds";
-import type { Point } from "../types";
+import type { FiberStyle, Point } from "../types";
 
 /** Max perpendicular distance from the path's points to its endpoint chord. */
 function maxChordDeviation(path: Point[]): number {
@@ -17,6 +21,16 @@ function maxChordDeviation(path: Point[]): number {
     if (d > max) max = d;
   }
   return max;
+}
+
+/** Signed perpendicular distance of each path point from the endpoint chord. */
+function signedDeviations(path: Point[]): number[] {
+  const a = path[0];
+  const b = path[path.length - 1];
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const len = Math.hypot(dx, dy) || 1;
+  return path.map((p) => ((p.x - a.x) * dy - (p.y - a.y) * dx) / len);
 }
 
 describe("generateFrame", () => {
@@ -97,5 +111,67 @@ describe("generateFrame", () => {
     const frame = generateFrame(7431);
     expect(frame.crossings).toBe(generateFrame(7431).crossings);
     expect(frame.crossings).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe("generateFrame with FiberStyle", () => {
+  const TAUT: FiberStyle = { curviness: 0, randomness: 0.5 };
+
+  it("defaults match DEFAULT_FIBER_STYLE exactly", () => {
+    expect(DEFAULT_FIBER_STYLE).toEqual({ curviness: 0.5, randomness: 0.5 });
+    expect(generateFrame(7431)).toEqual(
+      generateFrame(7431, DEFAULT_FIBER_STYLE),
+    );
+  });
+
+  it("is deterministic per (seed, style)", () => {
+    const style: FiberStyle = { curviness: 0.3, randomness: 0.8 };
+    expect(generateFrame(7431, style)).toEqual(generateFrame(7431, style));
+  });
+
+  it("changing curviness changes fiber paths", () => {
+    const a = generateFrame(7431, { curviness: 0, randomness: 0.5 });
+    const b = generateFrame(7431, { curviness: 1, randomness: 0.5 });
+    expect(a.fibers.map((f) => f.path)).not.toEqual(
+      b.fibers.map((f) => f.path),
+    );
+  });
+
+  it("clamps out-of-range style values to the extremes", () => {
+    expect(generateFrame(5, { curviness: -1, randomness: 2 })).toEqual(
+      generateFrame(5, { curviness: 0, randomness: 1 }),
+    );
+  });
+
+  it("falls back to defaults for non-finite style values", () => {
+    expect(
+      generateFrame(5, { curviness: Number.NaN, randomness: Number.NaN }),
+    ).toEqual(generateFrame(5));
+  });
+
+  it("no straight fibers at curviness 0 (seeds 1-200)", () => {
+    for (let seed = 1; seed <= 200; seed++) {
+      const frame = generateFrame(seed, TAUT);
+      for (const fiber of frame.fibers) {
+        expect(maxChordDeviation(fiber.path)).toBeGreaterThan(0.01);
+      }
+    }
+  });
+
+  it("no S-curves at curviness 0: paths stay on one side of their chord (seeds 1-200)", () => {
+    for (let seed = 1; seed <= 200; seed++) {
+      const frame = generateFrame(seed, TAUT);
+      for (const fiber of frame.fibers) {
+        const devs = signedDeviations(fiber.path);
+        const extreme = devs.reduce(
+          (m, d) => (Math.abs(d) > Math.abs(m) ? d : m),
+          0,
+        );
+        const side = Math.sign(extreme) || 1;
+        for (const d of devs) {
+          expect(d * side).toBeGreaterThan(-0.005);
+        }
+      }
+    }
   });
 });

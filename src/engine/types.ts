@@ -41,6 +41,14 @@ export interface Frame {
   crossings: number;
 }
 
+/** User-tunable fiber generation style; both axes 0–1. */
+export interface FiberStyle {
+  /** 0 = taut gentle C-arcs, 1 = big loopy sweeps with S-curves */
+  curviness: number;
+  /** 0 = orderly best-score routing, 1 = near-uniform chaotic routing */
+  randomness: number;
+}
+
 export interface WallConfig {
   gridSize: number;
   frameSeeds: number[];
