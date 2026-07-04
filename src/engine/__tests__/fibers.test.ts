@@ -112,6 +112,26 @@ describe("generateFrame", () => {
     expect(frame.crossings).toBe(generateFrame(7431).crossings);
     expect(frame.crossings).toBeGreaterThanOrEqual(0);
   });
+
+  it("never matches exactly-facing LEDs (seeds 1-200)", () => {
+    // Opposite parallel edges + same cross-axis coordinate would force a
+    // dead-straight fiber under perpendicular exits (socket-depth spec).
+    for (let seed = 1; seed <= 200; seed++) {
+      const frame = generateFrame(seed);
+      for (const fiber of frame.fibers) {
+        const a = frame.leds[fiber.startLedIndex];
+        const b = frame.leds[fiber.endLedIndex];
+        const opposite =
+          a.normal.x + b.normal.x === 0 && a.normal.y + b.normal.y === 0;
+        if (!opposite) continue;
+        const cross =
+          a.normal.x !== 0
+            ? Math.abs(a.position.y - b.position.y)
+            : Math.abs(a.position.x - b.position.x);
+        expect(cross).toBeGreaterThan(1e-6);
+      }
+    }
+  });
 });
 
 describe("generateFrame with FiberStyle", () => {

@@ -132,9 +132,30 @@ function pairScore(a: Led, b: Led): number {
 }
 
 /**
+ * Exactly-facing pair: opposite parallel edges with the same cross-axis
+ * coordinate. Perpendicular exits make a single cubic between such LEDs
+ * dead straight (all four defining points collinear), so the matcher
+ * excludes them. Normals are exact axis units, so the sums are exact; the
+ * epsilon absorbs float noise in mirrored edge positions (t vs 1 − t).
+ */
+const FACING_EPS = 1e-6;
+
+function isFacing(a: Led, b: Led): boolean {
+  if (a.normal.x + b.normal.x !== 0 || a.normal.y + b.normal.y !== 0) {
+    return false;
+  }
+  const cross =
+    a.normal.x !== 0
+      ? Math.abs(a.position.y - b.position.y)
+      : Math.abs(a.position.x - b.position.x);
+  return cross < FACING_EPS;
+}
+
+/**
  * One greedy matching attempt: walk a fresh shuffle, pair each unpaired LED
- * with a weighted-random partner on a different edge. Returns null on a
- * dead end (all remaining unpaired LEDs share the current LED's edge).
+ * with a weighted-random partner on a different edge (exactly-facing partners
+ * excluded). Returns null on a dead end (all remaining unpaired LEDs share the
+ * current LED's edge or face it exactly).
  */
 function tryMatchOnce(
   leds: Led[],
@@ -149,7 +170,9 @@ function tryMatchOnce(
     unpaired.delete(i);
     const candidates: number[] = [];
     for (const j of unpaired) {
-      if (leds[j].side !== leds[i].side) candidates.push(j);
+      if (leds[j].side !== leds[i].side && !isFacing(leds[i], leds[j])) {
+        candidates.push(j);
+      }
     }
     if (candidates.length === 0) return null;
     const weights = candidates.map(
