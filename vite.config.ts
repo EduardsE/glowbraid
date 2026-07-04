@@ -7,8 +7,8 @@ import viteReact from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
 const config = defineConfig({
-	resolve: { tsconfigPaths: true },
-	plugins: [devtools(), tailwindcss(), tanstackStart(), viteReact()],
+  resolve: { tsconfigPaths: true },
+  plugins: [devtools(), tailwindcss(), tanstackStart(), viteReact()],
 });
 
 export default config;

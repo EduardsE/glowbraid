@@ -6,25 +6,25 @@ import { useEffect } from "react";
  * (rAF is paused by browsers on hidden tabs).
  */
 export function useAnimationLoop(step: (dt: number) => void): void {
-	useEffect(() => {
-		let last: number | null = null;
-		let rafId = 0;
-		const tick = () => {
-			const now = performance.now();
-			const dt = last === null ? 0.016 : Math.min(0.05, (now - last) / 1000);
-			last = now;
-			// Schedule the next frame BEFORE running step(dt): if one frame's step
-			// throws, the loop still survives instead of being permanently killed.
-			rafId = requestAnimationFrame(tick);
-			if (!document.hidden) step(dt);
-		};
-		rafId = requestAnimationFrame(tick);
-		const fallback = window.setInterval(() => {
-			if (document.hidden) step(0.04);
-		}, 40);
-		return () => {
-			cancelAnimationFrame(rafId);
-			window.clearInterval(fallback);
-		};
-	}, [step]);
+  useEffect(() => {
+    let last: number | null = null;
+    let rafId = 0;
+    const tick = () => {
+      const now = performance.now();
+      const dt = last === null ? 0.016 : Math.min(0.05, (now - last) / 1000);
+      last = now;
+      // Schedule the next frame BEFORE running step(dt): if one frame's step
+      // throws, the loop still survives instead of being permanently killed.
+      rafId = requestAnimationFrame(tick);
+      if (!document.hidden) step(dt);
+    };
+    rafId = requestAnimationFrame(tick);
+    const fallback = window.setInterval(() => {
+      if (document.hidden) step(0.04);
+    }, 40);
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.clearInterval(fallback);
+    };
+  }, [step]);
 }

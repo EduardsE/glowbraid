@@ -8,15 +8,15 @@ export const DECAY = 1.95;
 export const MIN_SEGMENT_INTENSITY = 0.05;
 
 export interface SegmentLight {
-	color: RGB;
-	/** 0–1, before the user brightness multiplier */
-	intensity: number;
-	visible: boolean;
+  color: RGB;
+  /** 0–1, before the user brightness multiplier */
+  intensity: number;
+  visible: boolean;
 }
 
 /** Time at which a fiber point "sees" an LED `distance` away along the fiber. */
 export function delayedTime(time: number, distance: number): number {
-	return time - distance * TRAVEL;
+  return time - distance * TRAVEL;
 }
 
 /**
@@ -25,20 +25,20 @@ export function delayedTime(time: number, distance: number): number {
  * distance; colors blend weighted by contribution.
  */
 export function blendSegment(
-	start: LedLight,
-	end: LedLight,
-	um: number,
+  start: LedLight,
+  end: LedLight,
+  um: number,
 ): SegmentLight {
-	const iA = start.brightness * Math.exp(-um * DECAY);
-	const iB = end.brightness * Math.exp(-(1 - um) * DECAY);
-	const total = iA + iB;
-	if (total <= MIN_SEGMENT_INTENSITY) {
-		return { color: [0, 0, 0], intensity: 0, visible: false };
-	}
-	const color: RGB = [
-		(start.color[0] * iA + end.color[0] * iB) / total,
-		(start.color[1] * iA + end.color[1] * iB) / total,
-		(start.color[2] * iA + end.color[2] * iB) / total,
-	];
-	return { color, intensity: Math.min(1, total), visible: true };
+  const iA = start.brightness * Math.exp(-um * DECAY);
+  const iB = end.brightness * Math.exp(-(1 - um) * DECAY);
+  const total = iA + iB;
+  if (total <= MIN_SEGMENT_INTENSITY) {
+    return { color: [0, 0, 0], intensity: 0, visible: false };
+  }
+  const color: RGB = [
+    (start.color[0] * iA + end.color[0] * iB) / total,
+    (start.color[1] * iA + end.color[1] * iB) / total,
+    (start.color[2] * iA + end.color[2] * iB) / total,
+  ];
+  return { color, intensity: Math.min(1, total), visible: true };
 }

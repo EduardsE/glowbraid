@@ -1,8 +1,8 @@
 import {
-	countCrossings,
-	FIBER_SAMPLES,
-	polylineLength,
-	sampleCubicBezier,
+  countCrossings,
+  FIBER_SAMPLES,
+  polylineLength,
+  sampleCubicBezier,
 } from "./geometry";
 import { buildLeds } from "./leds";
 import { createRng } from "./random";
@@ -17,7 +17,7 @@ const CONTROL_MIN = 0.34;
 const CONTROL_RANGE = 0.42;
 
 function pairKey(a: number, b: number): string {
-	return a < b ? `${a}-${b}` : `${b}-${a}`;
+  return a < b ? `${a}-${b}` : `${b}-${a}`;
 }
 
 /**
@@ -26,70 +26,70 @@ function pairKey(a: number, b: number): string {
  * (spec §6). Fibers always connect exactly two LEDs.
  */
 export function generateFrame(seed: number, density: number): Frame {
-	const rnd = createRng(seed);
-	const leds = buildLeds();
-	const fibers: Fiber[] = [];
-	const usedPairs = new Set<string>();
+  const rnd = createRng(seed);
+  const leds = buildLeds();
+  const fibers: Fiber[] = [];
+  const usedPairs = new Set<string>();
 
-	for (let f = 0; f < density; f++) {
-		const startIndex = Math.floor(rnd() * leds.length);
-		const start = leds[startIndex];
-		let endIndex = startIndex;
-		let end = start;
-		let tries = 0;
-		do {
-			endIndex = Math.floor(rnd() * leds.length);
-			end = leds[endIndex];
-			tries++;
-		} while (
-			(end.side === start.side ||
-				Math.hypot(
-					start.position.x - end.position.x,
-					start.position.y - end.position.y,
-				) < MIN_ENDPOINT_DISTANCE ||
-				usedPairs.has(pairKey(startIndex, endIndex))) &&
-			tries < MAX_PICK_TRIES
-		);
-		usedPairs.add(pairKey(startIndex, endIndex));
+  for (let f = 0; f < density; f++) {
+    const startIndex = Math.floor(rnd() * leds.length);
+    const start = leds[startIndex];
+    let endIndex = startIndex;
+    let end = start;
+    let tries = 0;
+    do {
+      endIndex = Math.floor(rnd() * leds.length);
+      end = leds[endIndex];
+      tries++;
+    } while (
+      (end.side === start.side ||
+        Math.hypot(
+          start.position.x - end.position.x,
+          start.position.y - end.position.y,
+        ) < MIN_ENDPOINT_DISTANCE ||
+        usedPairs.has(pairKey(startIndex, endIndex))) &&
+      tries < MAX_PICK_TRIES
+    );
+    usedPairs.add(pairKey(startIndex, endIndex));
 
-		const dA = CONTROL_MIN + rnd() * CONTROL_RANGE;
-		const dB = CONTROL_MIN + rnd() * CONTROL_RANGE;
-		const p1 = {
-			x: start.position.x + start.normal.x * dA,
-			y: start.position.y + start.normal.y * dA,
-		};
-		const p2 = {
-			x: end.position.x + end.normal.x * dB,
-			y: end.position.y + end.normal.y * dB,
-		};
-		const path = sampleCubicBezier(
-			start.position,
-			p1,
-			p2,
-			end.position,
-			FIBER_SAMPLES,
-		);
+    const dA = CONTROL_MIN + rnd() * CONTROL_RANGE;
+    const dB = CONTROL_MIN + rnd() * CONTROL_RANGE;
+    const p1 = {
+      x: start.position.x + start.normal.x * dA,
+      y: start.position.y + start.normal.y * dA,
+    };
+    const p2 = {
+      x: end.position.x + end.normal.x * dB,
+      y: end.position.y + end.normal.y * dB,
+    };
+    const path = sampleCubicBezier(
+      start.position,
+      p1,
+      p2,
+      end.position,
+      FIBER_SAMPLES,
+    );
 
-		// Draw thickness BEFORE the push so the RNG draw order (start, end retries,
-		// dA, dB, thickness) stays stable — saved projects persist seeds and
-		// regenerate, so any reordering would change existing walls.
-		const thickness = 0.85 + rnd() * 0.5;
+    // Draw thickness BEFORE the push so the RNG draw order (start, end retries,
+    // dA, dB, thickness) stays stable — saved projects persist seeds and
+    // regenerate, so any reordering would change existing walls.
+    const thickness = 0.85 + rnd() * 0.5;
 
-		fibers.push({
-			id: `${seed}-${f}`,
-			startLedIndex: startIndex,
-			endLedIndex: endIndex,
-			path,
-			length: polylineLength(path),
-			thickness,
-			hueBase: (start.u + end.u) / 2,
-		});
-	}
+    fibers.push({
+      id: `${seed}-${f}`,
+      startLedIndex: startIndex,
+      endLedIndex: endIndex,
+      path,
+      length: polylineLength(path),
+      thickness,
+      hueBase: (start.u + end.u) / 2,
+    });
+  }
 
-	return {
-		seed,
-		leds,
-		fibers,
-		crossings: countCrossings(fibers.map((fiber) => fiber.path)),
-	};
+  return {
+    seed,
+    leds,
+    fibers,
+    crossings: countCrossings(fibers.map((fiber) => fiber.path)),
+  };
 }
