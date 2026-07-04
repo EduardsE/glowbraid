@@ -100,12 +100,26 @@
       <canvas ref="{{ canvasRef }}" style="position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;"></canvas>
 
       <sc-if value="{{ empty }}" hint-placeholder-val="{{ true }}">
-        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;background:radial-gradient(60% 60% at 50% 45%, rgba(10,11,14,0.2), rgba(10,11,14,0.75));z-index:5;">
-          <div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;animation:fil-float 6s ease-in-out infinite;">
-            <div style="font-size:26px;font-weight:600;letter-spacing:-0.01em;">Design light that flows.</div>
-            <div style="font-size:13.5px;color:rgba(233,234,240,0.5);max-width:400px;line-height:1.6;">Hidden LEDs around each frame inject colour into passive side-glow fibres. Generate a wall and watch the light travel.</div>
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:28px;background:radial-gradient(70% 70% at 50% 45%, rgba(10,11,14,0.05), rgba(10,11,14,0.62));z-index:5;">
+          <div style="width:min(548px,94%);display:flex;flex-direction:column;gap:16px;padding:24px 26px 22px;border:1px solid rgba(255,255,255,0.09);border-radius:20px;background:rgba(11,12,16,0.74);backdrop-filter:blur(18px);box-shadow:0 30px 80px rgba(0,0,0,0.55);">
+            <div style="display:flex;flex-direction:column;gap:9px;">
+              <span style="align-self:flex-start;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.16em;color:#c1b6ff;border:1px solid rgba(155,140,255,0.35);border-radius:999px;padding:5px 11px;">NEW PROJECT</span>
+              <div style="font-size:25px;font-weight:600;letter-spacing:-0.01em;line-height:1.12;">Design light that flows.</div>
+              <div style="font-size:12.5px;color:rgba(233,234,240,0.55);line-height:1.55;max-width:440px;">Hidden LEDs around each frame inject colour into passive side-glow fibres. Pick a starting point below — you can reshape the wall anytime.</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <sc-for list="{{ startPresets }}" as="p" hint-placeholder-count="4">
+                <button onClick="{{ p.onClick }}" style="{{ p.style }}" style-hover="border-color:rgba(155,140,255,0.5);background:rgba(155,140,255,0.08)">
+                  <span style="{{ p.bar }}"></span>
+                  <span style="display:flex;flex-direction:column;gap:3px;align-items:flex-start;justify-content:center;">
+                    <span style="font-size:13px;font-weight:600;color:#fff;">{{ p.name }}</span>
+                    <span style="font-size:10.5px;color:rgba(233,234,240,0.45);font-family:'Space Mono',monospace;letter-spacing:.02em;">{{ p.sub }}</span>
+                  </span>
+                </button>
+              </sc-for>
+            </div>
+            <button onClick="{{ onStart }}" style="height:40px;border:1px dashed rgba(255,255,255,0.16);background:transparent;color:rgba(233,234,240,0.72);border-radius:11px;cursor:pointer;font-size:12.5px;font-weight:500;font-family:'Space Grotesk',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;" style-hover="background:rgba(255,255,255,0.04);color:#fff">✦&nbsp; Start from a blank random wall</button>
           </div>
-          <button onClick="{{ onStart }}" style="height:46px;padding:0 26px;border:1px solid rgba(155,140,255,0.5);background:linear-gradient(180deg,rgba(155,140,255,0.28),rgba(155,140,255,0.12));color:#fff;border-radius:12px;cursor:pointer;font-size:14px;font-weight:600;font-family:'Space Grotesk',sans-serif;box-shadow:0 8px 30px rgba(155,140,255,0.28);" style-hover="background:linear-gradient(180deg,rgba(155,140,255,0.4),rgba(155,140,255,0.2))">Create New Wall</button>
         </div>
       </sc-if>
 
@@ -460,9 +474,12 @@ class Component extends DCLogic {
   }
 
   drawShowcase(ctx) {
-    const sz = Math.min(this.cw, this.ch) * 0.44, x = this.cw/2 - sz/2, y = this.ch/2 - sz/2 - 10;
-    if (!this.showFrame) this.showFrame = this.genFrame(2024, 18);
+    const sz = Math.min(this.cw, this.ch) * 0.72, x = this.cw/2 - sz/2, y = this.ch/2 - sz/2;
+    if (!this.showFrame) this.showFrame = this.genFrame(51840, 12);
+    ctx.save();
+    ctx.globalAlpha = 0.85;
     this.drawFrame(ctx, x, y, sz, this.showFrame, false, this.t, false, 0.5);
+    ctx.restore();
   }
 
   drawMap() {
@@ -555,6 +572,20 @@ class Component extends DCLogic {
     }
     const activeMode = (m) => `padding:6px 14px;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:500;font-family:'Space Grotesk',sans-serif;background:${st.mode===m?'rgba(155,140,255,0.22)':'transparent'};color:${st.mode===m?'#fff':'rgba(233,234,240,0.55)'};`;
 
+    const vgrad = (id) => { const s = this.PAL[id].stops; return 'linear-gradient(180deg,' + s.map((c,i)=>`rgb(${c[0]},${c[1]},${c[2]}) ${Math.round(i/(s.length-1)*100)}%`).join(',') + ')'; };
+    const presetDefs = [
+      { name:'Aurora Loft', grid:3, palette:'aurora', anim:'flow',     density:15, sub:'3×3 · Flowing' },
+      { name:'Neon Booth',  grid:2, palette:'neon',   anim:'rainbow',  density:14, sub:'2×2 · Rainbow' },
+      { name:'Sunset Hall', grid:4, palette:'sunset', anim:'gradient', density:18, sub:'4×4 · Gradient' },
+      { name:'Ember Nook',  grid:2, palette:'ember',  anim:'breathe',  density:12, sub:'2×2 · Breathing' },
+    ];
+    const startPresets = presetDefs.map(p => ({
+      name: p.name, sub: p.sub,
+      style: `display:flex;align-items:stretch;gap:11px;text-align:left;min-height:56px;padding:11px 12px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);border-radius:13px;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:border-color .12s,background .12s;`,
+      bar: `display:block;width:6px;flex:0 0 6px;border-radius:6px;background:${vgrad(p.palette)};box-shadow:0 0 14px rgba(155,140,255,0.25);`,
+      onClick: () => { self.frameSeeds = []; self.setState({ empty:false, gridSize:p.grid, palette:p.palette, anim:p.anim, fiberDensity:p.density, masterSeed:(Math.random()*99999)|0, selected:null, selFiber:null }, () => self.buildFrames()); },
+    }));
+
     return {
       empty: st.empty,
       wallLabel: `${st.gridSize} × ${st.gridSize}  ·  ${st.gridSize*st.gridSize} frames  ·  ${totalLeds} LEDs`,
@@ -574,6 +605,7 @@ class Component extends DCLogic {
       onLoad: () => { try { const d = JSON.parse(localStorage.getItem('filament.project')||'null'); if (!d) return; self.frameSeeds = d.seeds || []; self.setState({ gridSize:d.gridSize, frameSize:d.frameSize, fiberDensity:d.fiberDensity, masterSeed:d.masterSeed, anim:d.anim, speed:d.speed, brightness:d.brightness, palette:d.palette, mode:d.mode||'sim', empty:false, selected:null, selFiber:null }, () => self.buildFrames()); } catch(e){} },
       saveHint: st._saved ? 'Saved to this browser ✓' : 'Stores the current wall in this browser.',
 
+      startPresets,
       onStart: () => { self.frameSeeds = []; self.setState({ empty:false, masterSeed:(Math.random()*99999)|0 }, () => self.buildFrames()); },
       onZoomIn: () => self.setState({ zoom: Math.min(4, st.zoom*1.15) }),
       onZoomOut: () => self.setState({ zoom: Math.max(0.3, st.zoom/1.15) }),
