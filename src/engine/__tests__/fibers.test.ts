@@ -115,14 +115,14 @@ describe("generateFrame", () => {
 });
 
 describe("generateFrame with FiberStyle", () => {
-  const TAUT: FiberStyle = { curviness: 0, randomness: 0.5 };
+  const TAUT: FiberStyle = { curviness: 0, randomness: 0.5, socketDepth: 0.4 };
 
   const STYLE_EXTREMES: FiberStyle[] = [
-    { curviness: 0, randomness: 0 },
-    { curviness: 0, randomness: 1 },
-    { curviness: 1, randomness: 0 },
-    { curviness: 1, randomness: 1 },
-    { curviness: 0.5, randomness: 0.5 },
+    { curviness: 0, randomness: 0, socketDepth: 0.4 },
+    { curviness: 0, randomness: 1, socketDepth: 0.4 },
+    { curviness: 1, randomness: 0, socketDepth: 0.4 },
+    { curviness: 1, randomness: 1, socketDepth: 0.4 },
+    { curviness: 0.5, randomness: 0.5, socketDepth: 0.4 },
   ];
 
   it("every path point stays inside the frame at all style extremes (seeds 1-100)", () => {
@@ -142,34 +142,56 @@ describe("generateFrame with FiberStyle", () => {
   });
 
   it("defaults match DEFAULT_FIBER_STYLE exactly", () => {
-    expect(DEFAULT_FIBER_STYLE).toEqual({ curviness: 0.5, randomness: 0.5 });
+    expect(DEFAULT_FIBER_STYLE).toEqual({
+      curviness: 0.5,
+      randomness: 0.5,
+      socketDepth: 0.4,
+    });
     expect(generateFrame(7431)).toEqual(
       generateFrame(7431, DEFAULT_FIBER_STYLE),
     );
   });
 
   it("is deterministic per (seed, style)", () => {
-    const style: FiberStyle = { curviness: 0.3, randomness: 0.8 };
+    const style: FiberStyle = {
+      curviness: 0.3,
+      randomness: 0.8,
+      socketDepth: 0.4,
+    };
     expect(generateFrame(7431, style)).toEqual(generateFrame(7431, style));
   });
 
   it("changing curviness changes fiber paths", () => {
-    const a = generateFrame(7431, { curviness: 0, randomness: 0.5 });
-    const b = generateFrame(7431, { curviness: 1, randomness: 0.5 });
+    const a = generateFrame(7431, {
+      curviness: 0,
+      randomness: 0.5,
+      socketDepth: 0.4,
+    });
+    const b = generateFrame(7431, {
+      curviness: 1,
+      randomness: 0.5,
+      socketDepth: 0.4,
+    });
     expect(a.fibers.map((f) => f.path)).not.toEqual(
       b.fibers.map((f) => f.path),
     );
   });
 
   it("clamps out-of-range style values to the extremes", () => {
-    expect(generateFrame(5, { curviness: -1, randomness: 2 })).toEqual(
-      generateFrame(5, { curviness: 0, randomness: 1 }),
+    expect(
+      generateFrame(5, { curviness: -1, randomness: 2, socketDepth: 0.4 }),
+    ).toEqual(
+      generateFrame(5, { curviness: 0, randomness: 1, socketDepth: 0.4 }),
     );
   });
 
   it("falls back to defaults for non-finite style values", () => {
     expect(
-      generateFrame(5, { curviness: Number.NaN, randomness: Number.NaN }),
+      generateFrame(5, {
+        curviness: Number.NaN,
+        randomness: Number.NaN,
+        socketDepth: Number.NaN,
+      }),
     ).toEqual(generateFrame(5));
   });
 
@@ -202,9 +224,11 @@ describe("generateFrame with FiberStyle", () => {
   it("changing randomness changes the pairing for some seeds", () => {
     const pairsAt = (r: number) =>
       Array.from({ length: 20 }, (_, i) =>
-        generateFrame(i + 1, { curviness: 0.5, randomness: r }).fibers.map(
-          (f) => [f.startLedIndex, f.endLedIndex],
-        ),
+        generateFrame(i + 1, {
+          curviness: 0.5,
+          randomness: r,
+          socketDepth: 0.4,
+        }).fibers.map((f) => [f.startLedIndex, f.endLedIndex]),
       );
     expect(pairsAt(0)).not.toEqual(pairsAt(1));
   });
@@ -212,7 +236,11 @@ describe("generateFrame with FiberStyle", () => {
   it("matching invariants hold at randomness extremes (seeds 1-50)", () => {
     for (const randomness of [0, 1]) {
       for (let seed = 1; seed <= 50; seed++) {
-        const frame = generateFrame(seed, { curviness: 0.5, randomness });
+        const frame = generateFrame(seed, {
+          curviness: 0.5,
+          randomness,
+          socketDepth: 0.4,
+        });
         const used = frame.fibers
           .flatMap((f) => [f.startLedIndex, f.endLedIndex])
           .sort((x, y) => x - y);

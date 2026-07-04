@@ -17,6 +17,7 @@ export const MAX_MATCHING_RESTARTS = 20;
 export const DEFAULT_FIBER_STYLE: FiberStyle = {
   curviness: 0.5,
   randomness: 0.5,
+  socketDepth: 0.4,
 };
 
 /**

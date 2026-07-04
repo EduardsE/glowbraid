@@ -34,6 +34,7 @@ interface StudioState {
   frameSize: number;
   curviness: number;
   randomness: number;
+  socketDepth: number;
   masterSeed: number;
   selectedFrame: number | null;
   selectedFiber: number | null;
@@ -54,6 +55,7 @@ const INITIAL_STATE: StudioState = {
   frameSize: 236,
   curviness: DEFAULT_FIBER_STYLE.curviness,
   randomness: DEFAULT_FIBER_STYLE.randomness,
+  socketDepth: DEFAULT_FIBER_STYLE.socketDepth,
   masterSeed: 7431,
   selectedFrame: null,
   selectedFiber: null,
@@ -77,14 +79,22 @@ function formatTime(seconds: number): string {
   return `${m}:${String(r).padStart(2, "0")}`;
 }
 
-function styleOf(s: { curviness: number; randomness: number }): FiberStyle {
-  return { curviness: s.curviness, randomness: s.randomness };
+function styleOf(s: {
+  curviness: number;
+  randomness: number;
+  socketDepth: number;
+}): FiberStyle {
+  return {
+    curviness: s.curviness,
+    randomness: s.randomness,
+    socketDepth: s.socketDepth,
+  };
 }
 
-/** Loader sanitizer: legacy/hand-edited snapshots → finite 0–1 or 0.5. */
-function styleAxis(value: unknown): number {
+/** Loader sanitizer: legacy/hand-edited snapshots → finite 0–1 or fallback. */
+function styleAxis(value: unknown, fallback: number): number {
   const n = Number(value);
-  return Number.isFinite(n) ? Math.min(1, Math.max(0, n)) : 0.5;
+  return Number.isFinite(n) ? Math.min(1, Math.max(0, n)) : fallback;
 }
 
 export function FilamentStudio() {
@@ -303,6 +313,7 @@ export function FilamentStudio() {
       palette: s.palette,
       curviness: s.curviness,
       randomness: s.randomness,
+      socketDepth: s.socketDepth,
       mode: s.mode,
     };
     if (saveProject(snapshot)) patch({ saved: true });
@@ -323,15 +334,25 @@ export function FilamentStudio() {
       6,
       Math.max(1, Math.round(Number(d.gridSize) || 3)),
     );
-    const curviness = styleAxis(d.curviness);
-    const randomness = styleAxis(d.randomness);
-    rebuild(gridSize, d.masterSeed, { curviness, randomness }, d.seeds);
+    const curviness = styleAxis(d.curviness, DEFAULT_FIBER_STYLE.curviness);
+    const randomness = styleAxis(d.randomness, DEFAULT_FIBER_STYLE.randomness);
+    const socketDepth = styleAxis(
+      d.socketDepth,
+      DEFAULT_FIBER_STYLE.socketDepth,
+    );
+    rebuild(
+      gridSize,
+      d.masterSeed,
+      { curviness, randomness, socketDepth },
+      d.seeds,
+    );
     patch({
       gridSize,
       frameSize: d.frameSize,
       masterSeed: d.masterSeed,
       curviness,
       randomness,
+      socketDepth,
       anim,
       speed: d.speed,
       brightness: d.brightness,

@@ -41,12 +41,17 @@ export interface Frame {
   crossings: number;
 }
 
-/** User-tunable fiber generation style; both axes 0–1. */
+/** User-tunable fiber generation style; all axes 0–1. */
 export interface FiberStyle {
   /** 0 = taut gentle C-arcs, 1 = big loopy sweeps with S-curves */
   curviness: number;
   /** 0 = orderly best-score routing, 1 = near-uniform chaotic routing */
   randomness: number;
+  /**
+   * Length of the straight perpendicular exit stub at each LED hole
+   * (the physical socket that grips the fiber). 0 = a few mm, 1 = deep.
+   */
+  socketDepth: number;
 }
 
 export interface WallConfig {
@@ -85,5 +90,7 @@ export interface ProjectSnapshot {
   /** FiberStyle axes, 0–1. Absent in legacy saves → loader defaults to 0.5. */
   curviness: number;
   randomness: number;
+  /** FiberStyle socket depth, 0–1. Absent in legacy saves → loader defaults to 0.4. */
+  socketDepth: number;
   mode: "edit" | "sim";
 }

@@ -41,7 +41,11 @@ describe("generateWall", () => {
   });
 
   it("forwards style to every frame", () => {
-    const style: FiberStyle = { curviness: 0.1, randomness: 0.9 };
+    const style: FiberStyle = {
+      curviness: 0.1,
+      randomness: 0.9,
+      socketDepth: 0.4,
+    };
     const frameSeeds = deriveFrameSeeds(7431, 4);
     const frames = generateWall({ gridSize: 2, frameSeeds, style });
     frames.forEach((frame, i) => {
