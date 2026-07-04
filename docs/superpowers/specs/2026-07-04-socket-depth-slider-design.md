@@ -142,8 +142,12 @@ Across seeds × `socketDepth ∈ {0, 0.4, 1}` (and existing style extremes):
   deviate from the normal ray by ≤ ε.
 - **Containment:** every sampled point within `[−ε, 1 + ε]` on both axes at
   `socketDepth` extremes.
-- **No straight fibers:** max chord deviation > 0.01 for every fiber
-  (regression for the facing-pair exclusion).
+- **No straight fibers:** max chord deviation > 0.005 for every fiber
+  (regression for the facing-pair exclusion). The floor drops from 0.01:
+  under perpendicular exits the bow of a near-facing opposite pair (minimum
+  cross-offset 0.085 between distinct LEDs) mathematically caps at ≈ 0.007,
+  so 0.01 is unattainable; 0.005 still rejects the excluded straight cases
+  (deviation ~0).
 - **No facing pairs matched:** over sampled seeds, no emitted pair is
   exactly facing (excluding the documented fallback path).
 - **Determinism & stability:** same `(seed, style)` → deep-equal frames;
