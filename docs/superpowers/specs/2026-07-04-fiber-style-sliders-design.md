@@ -1,7 +1,7 @@
 # Fiber Style Sliders (Curviness + Randomness) — Design
 
 Date: 2026-07-04
-Status: Approved (pending implementation)
+Status: Implemented
 Extends: `2026-07-04-fiber-perfect-matching-design.md`. The perfect-matching
 invariants (12 fibers, every LED used exactly once, different-edge endpoints,
 no straight fibers) remain in force at every slider setting.
