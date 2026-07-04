@@ -58,8 +58,16 @@ describe("generateFrame", () => {
     }
   });
 
-  it("no straight fibers: every path bows off its chord (seeds 1-50)", () => {
-    for (let seed = 1; seed <= 50; seed++) {
+  it("no straight fibers: every path bows off its chord (seeds 1-200 + known counterexamples)", () => {
+    // 38535, 40561, 38381 each produced a near-straight fiber (max chord
+    // deviation ~1e-4) before the PERP_FLOOR guarantee — pin them explicitly.
+    const seeds = [
+      ...Array.from({ length: 200 }, (_, i) => i + 1),
+      38535,
+      40561,
+      38381,
+    ];
+    for (const seed of seeds) {
       const frame = generateFrame(seed);
       for (const fiber of frame.fibers) {
         expect(maxChordDeviation(fiber.path)).toBeGreaterThan(0.01);

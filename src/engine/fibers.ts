@@ -17,15 +17,25 @@ const CONTROL_MIN = 0.34;
 const CONTROL_RANGE = 0.42;
 
 /**
- * Tangential bow of the control points. BOW_MIN guarantees every fiber
- * visibly curves (straightness test floor 0.01); the collinear multiplier
- * kicks in when the chord runs parallel to the endpoint normals (directly
- * opposite LEDs), where the plain normal offsets would degenerate to a
- * straight line. Tuned visually in Task 3.
+ * Tangential bow of the control points. BOW_MIN/BOW_VAR set the drawn bow
+ * magnitude and the collinear multiplier grows it for directly-opposite LEDs.
+ * The drawn bow alone does NOT guarantee visible curvature: because the
+ * control-point offset is `normal·d + tangent·s` with d and s independent,
+ * the two terms can cancel out the component perpendicular to the fiber's
+ * chord, collapsing the Bézier to a straight line. Straightness is instead
+ * guaranteed by PERP_FLOOR below, applied deterministically after the draws.
  */
 const BOW_MIN = 0.09;
 const BOW_VAR = 0.1;
 const BOW_COLLINEAR = 2.2;
+
+/**
+ * Minimum magnitude of each control point's offset component perpendicular to
+ * the chord. Enforced deterministically (no extra RNG) so every fiber bows
+ * off its chord; a worst-case opposing-sign S-curve at this floor still
+ * deviates ~0.28·PERP_FLOOR ≈ 0.022 > the 0.01 straightness-test floor.
+ */
+const PERP_FLOOR = 0.08;
 
 /** Soft-scoring penalty for near-collinear pairs; keeps score positive. */
 const COLLINEAR_PENALTY = 0.7;
@@ -118,6 +128,36 @@ function bowOffset(rnd: Rng, coll: number): number {
 }
 
 /**
+ * Build a control point offset from an endpoint by `normal·d + tangent·s`
+ * (tangent = normal rotated 90°: (x, y) → (−y, x)), then deterministically
+ * push it perpendicular to the chord (px, py) until that component clears
+ * PERP_FLOOR. The endpoint itself never moves — only the control point — and
+ * no RNG is drawn, so seeds stay reproducible. This is what actually
+ * guarantees a visible bow: without it, d and s can cancel the perpendicular
+ * component and the Bézier degenerates to a straight line.
+ */
+function controlPoint(
+  led: Led,
+  d: number,
+  s: number,
+  px: number,
+  py: number,
+): { x: number; y: number } {
+  let ox = led.normal.x * d - led.normal.y * s;
+  let oy = led.normal.y * d + led.normal.x * s;
+  const perp = ox * px + oy * py;
+  if (Math.abs(perp) < PERP_FLOOR) {
+    // Keep the intended bow direction (fall back to the drawn sign of s when
+    // the current perpendicular component is exactly zero).
+    const sign = perp > 0 || (perp === 0 && s >= 0) ? 1 : -1;
+    const deficit = sign * PERP_FLOOR - perp;
+    ox += deficit * px;
+    oy += deficit * py;
+  }
+  return { x: led.position.x + ox, y: led.position.y + oy };
+}
+
+/**
  * Deterministically generate one frame's fiber layout from a seed.
  * Perfect matching (spec 2026-07-04-fiber-perfect-matching): exactly 12
  * fibers, every LED used exactly once, endpoints on different edges,
@@ -152,15 +192,16 @@ export function generateFrame(seed: number): Frame {
     const sA = bowOffset(rnd, coll);
     const sB = bowOffset(rnd, coll);
 
-    // Tangent = normal rotated 90°: (x, y) → (−y, x). Sign is random via s.
-    const p1 = {
-      x: start.position.x + start.normal.x * dA - start.normal.y * sA,
-      y: start.position.y + start.normal.y * dA + start.normal.x * sA,
-    };
-    const p2 = {
-      x: end.position.x + end.normal.x * dB - end.normal.y * sB,
-      y: end.position.y + end.normal.y * dB + end.normal.x * sB,
-    };
+    // Chord unit and its perpendicular; used to floor each control point's
+    // perpendicular-to-chord offset so the Bézier can never go straight.
+    const cx = end.position.x - start.position.x;
+    const cy = end.position.y - start.position.y;
+    const clen = Math.hypot(cx, cy) || 1;
+    const px = -cy / clen;
+    const py = cx / clen;
+
+    const p1 = controlPoint(start, dA, sA, px, py);
+    const p2 = controlPoint(end, dB, sB, px, py);
     const path = sampleCubicBezier(
       start.position,
       p1,

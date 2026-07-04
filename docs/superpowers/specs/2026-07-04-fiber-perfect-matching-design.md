@@ -49,9 +49,9 @@ matching with a greedy randomized walk:
    Bounded at 20 restarts.
 5. **Termination fallback:** if all restarts are exhausted, pair the remaining
    LEDs arbitrarily in shuffle order, ignoring the different-edge rule. The
-   generator never throws and never loops forever. (With 6 LEDs per edge the
-   different-edge constraint is loose; in practice restarts almost never
-   trigger and the fallback is essentially unreachable.)
+   generator never throws and never loops forever. (Restarts are not rare —
+   about 22% of seeds trigger at least one restart — but the 20-restart budget
+   is ample: the fallback never fires in practice, 0 of 1,000,000 seeds.)
 
 Exported constants: `FIBERS_PER_FRAME = 12`, plus the restart bound. The RNG
 draw-order comment in `fibers.ts` is rewritten to document the new order; the
