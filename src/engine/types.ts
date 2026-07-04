@@ -52,6 +52,8 @@ export interface FiberStyle {
 export interface WallConfig {
   gridSize: number;
   frameSeeds: number[];
+  /** Omitted → DEFAULT_FIBER_STYLE. */
+  style?: FiberStyle;
 }
 
 export type AnimationId =

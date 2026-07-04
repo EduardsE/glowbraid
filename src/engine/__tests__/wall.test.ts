@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { FIBERS_PER_FRAME } from "../fibers";
+import { FIBERS_PER_FRAME, generateFrame } from "../fibers";
+import type { FiberStyle } from "../types";
 import { deriveFrameSeeds, generateWall } from "../wall";
 
 describe("deriveFrameSeeds", () => {
@@ -37,5 +38,14 @@ describe("generateWall", () => {
     expect(after[1]).toEqual(before[1]);
     expect(after[3]).toEqual(before[3]);
     expect(after[2]).not.toEqual(before[2]);
+  });
+
+  it("forwards style to every frame", () => {
+    const style: FiberStyle = { curviness: 0.1, randomness: 0.9 };
+    const frameSeeds = deriveFrameSeeds(7431, 4);
+    const frames = generateWall({ gridSize: 2, frameSeeds, style });
+    frames.forEach((frame, i) => {
+      expect(frame).toEqual(generateFrame(frameSeeds[i], style));
+    });
   });
 });

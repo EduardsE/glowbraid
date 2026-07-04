@@ -10,5 +10,5 @@ export function deriveFrameSeeds(masterSeed: number, count: number): number[] {
 }
 
 export function generateWall(config: WallConfig): Frame[] {
-  return config.frameSeeds.map((seed) => generateFrame(seed));
+  return config.frameSeeds.map((seed) => generateFrame(seed, config.style));
 }
