@@ -34,6 +34,7 @@ interface StudioState {
   frameSize: number;
   frameGap: number;
   boardPadding: number;
+  showMeasurements: boolean;
   curviness: number;
   randomness: number;
   socketDepth: number;
@@ -54,9 +55,10 @@ const INITIAL_STATE: StudioState = {
   empty: true,
   mode: "sim",
   gridSize: 3,
-  frameSize: 236,
-  frameGap: 20,
-  boardPadding: 40,
+  frameSize: 25,
+  frameGap: 2,
+  boardPadding: 4,
+  showMeasurements: false,
   curviness: DEFAULT_FIBER_STYLE.curviness,
   randomness: DEFAULT_FIBER_STYLE.randomness,
   socketDepth: DEFAULT_FIBER_STYLE.socketDepth,
@@ -440,6 +442,8 @@ export function FilamentStudio() {
           onFrameGap={(n) => patch({ frameGap: n })}
           boardPadding={ui.boardPadding}
           onBoardPadding={(n) => patch({ boardPadding: n })}
+          showMeasurements={ui.showMeasurements}
+          onShowMeasurements={(v) => patch({ showMeasurements: v })}
           curviness={ui.curviness}
           onCurviness={(v) => handleStyle({ curviness: v })}
           randomness={ui.randomness}

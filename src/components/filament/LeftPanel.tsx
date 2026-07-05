@@ -12,6 +12,8 @@ export interface LeftPanelProps {
   onFrameGap: (n: number) => void;
   boardPadding: number;
   onBoardPadding: (n: number) => void;
+  showMeasurements: boolean;
+  onShowMeasurements: (v: boolean) => void;
   curviness: number;
   onCurviness: (v: number) => void;
   randomness: number;
@@ -50,44 +52,57 @@ export function LeftPanel(props: LeftPanelProps) {
         </div>
       </div>
 
-      <SliderRow label="Frame size" value={`${props.frameSize}px`}>
+      <SliderRow label="Frame size" value={`${props.frameSize} cm`}>
         <input
           type="range"
           aria-label="Frame size"
-          min={150}
-          max={340}
-          step={2}
+          min={10}
+          max={40}
+          step={1}
           value={props.frameSize}
           onChange={(e) => props.onFrameSize(Number(e.target.value))}
           className="w-full"
         />
       </SliderRow>
 
-      <SliderRow label="Frame spacing" value={`${props.frameGap}px`}>
+      <SliderRow label="Frame spacing" value={`${props.frameGap} cm`}>
         <input
           type="range"
           aria-label="Frame spacing"
           min={0}
-          max={80}
-          step={2}
+          max={15}
+          step={1}
           value={props.frameGap}
           onChange={(e) => props.onFrameGap(Number(e.target.value))}
           className="w-full"
         />
       </SliderRow>
 
-      <SliderRow label="Board padding" value={`${props.boardPadding}px`}>
+      <SliderRow label="Board padding" value={`${props.boardPadding} cm`}>
         <input
           type="range"
           aria-label="Board padding"
           min={0}
-          max={120}
-          step={2}
+          max={20}
+          step={1}
           value={props.boardPadding}
           onChange={(e) => props.onBoardPadding(Number(e.target.value))}
           className="w-full"
         />
       </SliderRow>
+
+      <label className="flex cursor-pointer items-center justify-between">
+        <span className="text-xs text-[rgba(233,234,240,0.7)]">
+          Show measurements
+        </span>
+        <input
+          type="checkbox"
+          aria-label="Show measurements"
+          checked={props.showMeasurements}
+          onChange={(e) => props.onShowMeasurements(e.target.checked)}
+          className="h-3.5 w-3.5 cursor-pointer accent-[#9b8cff]"
+        />
+      </label>
 
       <Divider />
       <SectionLabel>FIBRES &amp; LEDS</SectionLabel>
