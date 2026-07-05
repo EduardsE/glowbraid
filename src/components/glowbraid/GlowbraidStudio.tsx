@@ -397,7 +397,9 @@ export function GlowbraidStudio() {
     if (s.selectedFrame == null) return;
     const seed = randomSeed();
     seedsRef.current[s.selectedFrame] = seed;
-    framesRef.current[s.selectedFrame] = generateFrame(seed, styleOf(s));
+    const frames = [...framesRef.current];
+    frames[s.selectedFrame] = generateFrame(seed, styleOf(s));
+    framesRef.current = frames;
     patch({ selectedFiber: null });
   };
   const handleFrameColor = (color: string) => {
