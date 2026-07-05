@@ -534,3 +534,12 @@ git commit -m "perf(renderer): skip additive fibre pass entirely on white boards
 
 Run: `npm run test && npm run check && npm run build`
 Expected: all pass. Report the observed FPS numbers and which board colours were checked — no success claims without having run these.
+
+---
+
+## Verification Results (2026-07-05, Task 3)
+
+- Visual sweep: 6/6 checks passed — dark `#101114` (edit+sim) identical to pre-change; white `#f6f6f8` legible pale strands + saturated bright stretches (edit+sim); mid-grey `#6b6b6b` both regimes coexist; crossfade smooth while dragging, no popping.
+- FPS (5×5 grid, white board, sim mode; rAF frame-count over 3s, best of 2, automation Chromium ~75Hz vsync): pre-fallback 34.6/34.1fps vs dark-board control 75.3fps → gate failed; Step 3 fallback applied (`ADDITIVE_FADE` 0.85 → 1.0, commit 4a52cde); post-fallback 62.5/62.8fps → gate met. Numbers are relative to the automation browser, not hardware-exact.
+- Final gate: `npm run test` 96/96, `npm run check` clean, `npm run build` OK.
+- Final whole-branch review (fable): Ready to merge, no Critical/Important. Deferred minors (triaged acceptable): loader accepts non-hex boardColor strings that fail-safe to dark rendering (unreachable from UI; fix belongs in handleLoad if ever needed); showcase lightFactor recomputed per tick (constant 0, nanoseconds); additive body strokes still drawn at f=1 (measured within budget).
