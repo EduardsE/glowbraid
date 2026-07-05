@@ -3,6 +3,7 @@ import { blendSegment, delayedTime } from "@/engine/light";
 import type { Palette } from "@/engine/palettes";
 import { samplePalette } from "@/engine/palettes";
 import type { AnimationId, Frame, Point } from "@/engine/types";
+import { computeDimensionSegments, drawDimensions } from "./dimensions";
 import { computeWallLayout, frameGradientPos, frameRect } from "./viewport";
 
 /** Global glow multiplier (design prop default). */
@@ -93,6 +94,7 @@ export interface WallDrawState {
   frameSize: number;
   frameGap: number;
   boardPadding: number;
+  showMeasurements: boolean;
   zoom: number;
   pan: Point;
   mode: "edit" | "sim";
@@ -186,6 +188,17 @@ export function drawWall(
       brightness: state.brightness,
       palette: state.palette,
     });
+  }
+
+  if (state.showMeasurements) {
+    drawDimensions(
+      ctx,
+      computeDimensionSegments(layout, {
+        frameSizeCm: state.frameSize,
+        frameGapCm: state.frameGap,
+        boardPaddingCm: state.boardPadding,
+      }),
+    );
   }
 }
 

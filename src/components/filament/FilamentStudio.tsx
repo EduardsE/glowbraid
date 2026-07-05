@@ -174,6 +174,7 @@ export function FilamentStudio() {
       frameSize: s.frameSize,
       frameGap: s.frameGap,
       boardPadding: s.boardPadding,
+      showMeasurements: s.showMeasurements,
       zoom: s.zoom,
       pan: panRef.current,
       mode: s.mode,

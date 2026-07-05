@@ -90,3 +90,56 @@ export function computeDimensionSegments(
 
   return segments;
 }
+
+const DIM_STROKE = "rgba(140, 180, 220, 0.5)";
+const DIM_TEXT = "rgba(140, 180, 220, 0.9)";
+const DIM_FONT = "10px ui-monospace, SFMono-Regular, Menlo, monospace";
+const TICK = 4;
+/** Extension lines stop this far short of the measured edge. */
+const EXT_GAP = 2;
+
+export function drawDimensions(
+  ctx: CanvasRenderingContext2D,
+  segments: DimSegment[],
+): void {
+  ctx.save();
+  ctx.strokeStyle = DIM_STROKE;
+  ctx.fillStyle = DIM_TEXT;
+  ctx.lineWidth = 1;
+  ctx.font = DIM_FONT;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  for (const seg of segments) {
+    const mx = (seg.a.x + seg.b.x) / 2;
+    const my = (seg.a.y + seg.b.y) / 2;
+    ctx.beginPath();
+    ctx.moveTo(seg.a.x, seg.a.y);
+    ctx.lineTo(seg.b.x, seg.b.y);
+    if (seg.orientation === "horizontal") {
+      // End ticks + extension lines toward the board edge.
+      for (const x of [seg.a.x, seg.b.x]) {
+        ctx.moveTo(x, seg.a.y - TICK);
+        ctx.lineTo(x, seg.a.y + TICK);
+        ctx.moveTo(x, seg.a.y + TICK);
+        ctx.lineTo(x, seg.edge - EXT_GAP);
+      }
+      ctx.stroke();
+      ctx.fillText(seg.label, mx, seg.a.y - 7);
+    } else {
+      for (const y of [seg.a.y, seg.b.y]) {
+        ctx.moveTo(seg.a.x - TICK, y);
+        ctx.lineTo(seg.a.x + TICK, y);
+        ctx.moveTo(seg.a.x + TICK, y);
+        ctx.lineTo(seg.edge - EXT_GAP, y);
+      }
+      ctx.stroke();
+      ctx.save();
+      ctx.translate(seg.a.x - 7, my);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText(seg.label, 0, 0);
+      ctx.restore();
+    }
+  }
+  ctx.restore();
+}
