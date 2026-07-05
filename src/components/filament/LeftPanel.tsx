@@ -65,12 +65,12 @@ export function LeftPanel(props: LeftPanelProps) {
         />
       </SliderRow>
 
-      <SliderRow label="Frame spacing" value={`${props.frameGap} cm`}>
+      <SliderRow label="Frame spacing" value={`${props.frameGap} mm`}>
         <input
           type="range"
           aria-label="Frame spacing"
           min={0}
-          max={15}
+          max={30}
           step={1}
           value={props.frameGap}
           onChange={(e) => props.onFrameGap(Number(e.target.value))}
