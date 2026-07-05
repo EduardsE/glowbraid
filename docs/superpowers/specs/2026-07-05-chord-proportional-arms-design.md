@@ -34,18 +34,35 @@ fibre's chord, applied to **all** fibres (not just corner pairs):
    dB *= scale
    ```
 
-   `ARM_CHORD_FACTOR = 0.5`, a new named constant in `fibers.ts`.
+   `ARM_CHORD_FACTOR = 1.0`, a new named exported constant in `fibers.ts`.
 3. Everything else — matching, stubs, perpendicular exits, control-point
    direction along the LED normals, `clampAxis` — is unchanged.
 
+### Why k = 1.0 (measured, 2026-07-05)
+
+An empirical sweep (seeds 1–1000 × 18 style combinations ≈ 216k fibres,
+strict segment self-intersection test on the sampled paths) found:
+
+| k | self-intersections | default-style fibres reshaped (seeds 1–200) |
+|---|---|---|
+| 0.5 | 0 | 100% |
+| 1.0 | 0 | ~15% |
+| 1.3 | 0 | — |
+| 1.4 | 19 (first: seed 154, curviness 1, socketDepth 1) | — |
+
+So k = 1.0 — "a control arm never exceeds the fibre's span" — eliminates
+every observed knot with a 40% margin to the first failure, while ~85% of
+existing default-style fibres stay pixel-identical. k = 0.5 (the original
+draft value) would have silently reshaped the entire wall. Corner arcs at
+k = 1.0 come out at 1–2× the circular-arc ideal: a slightly fuller arc than
+the minimal tube, still physically plausible and clearly knot-free.
+
 ### Why this shape of fix
 
-- A near-circular arc between the perpendicular exit tangents of a corner
-  pair needs arms of ~0.4× the chord; 0.5 leaves a little organic bow while
-  making self-overshoot geometrically impossible.
-- Long fibres where `k·chord ≥ maxArm` get `scale = 1` and are
-  **pixel-identical to today** — only pairs short enough to physically
-  overshoot are reshaped.
+- Fibres where `k·chord ≥ maxArm` get `scale = 1` and are **pixel-identical
+  to today** (`x * 1 === x` in IEEE arithmetic) — at the default style that
+  is every pair with chord ≥ 0.635, ~85% of fibres. Only pairs short enough
+  to physically overshoot are reshaped.
 - Both arms shrink by the same proportional factor rather than clamping to
   a ceiling, so short fibres keep their per-fibre random variation instead
   of all collapsing to one identical arc.
@@ -56,6 +73,9 @@ fibre's chord, applied to **all** fibres (not just corner pairs):
 
 - **Hard cap per arm** (`dA = min(dA, k·chord)`): simpler to state, but every
   short fibre saturates at the cap and all corner arcs become identical.
+- **k = 0.5**: approved in the first draft of this spec, then rejected after
+  measurement showed it reshapes 100% of default-style fibres (see table
+  above) for no additional knot protection.
 - **True bend-radius model** (sample curvature, retry until under a minimum
   radius): most faithful, but adds an iteration loop to a hot deterministic
   path for a visual result the rescale already achieves.
@@ -88,8 +108,10 @@ New cases in `src/engine/__tests__/fibers.test.ts`:
 
 1. **No self-intersection**: across seeds 1–200 at style extremes
    (curviness 0/1 × socketDepth 0/1), no fibre's sampled path intersects
-   itself (segment-pair check in the style of `countCrossings`, applied to a
-   single path, skipping adjacent segments).
+   itself (strict segment-pair orientation test on a single path, skipping
+   adjacent segments). Pre-fix this fails hard: 1001 self-intersecting
+   fibre instances across that sweep, including at the default style for
+   seeds 2, 3, 4, 5 — genuine TDD red.
 2. **Arms respect the chord limit**: every sampled path point lies within
    `stub + ARM_CHORD_FACTOR · chord` of the chord segment between the two
    stub tips (follows from the Bézier convex-hull property; small numeric
