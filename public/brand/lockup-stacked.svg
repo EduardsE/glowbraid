@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="220" viewBox="0 0 320 220">
+  <defs>
+    <filter id="glow-outer" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+    </filter>
+    <filter id="glow-mid" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3.4" result="blur" />
+      <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+    </filter>
+    <filter id="glow-inner" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2.8" result="blur" />
+      <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+    </filter>
+  </defs>
+  <rect width="320" height="220" fill="#0b0c0f" />
+  <g transform="translate(160,88)">
+    <circle cx="0" cy="0" r="41.5" fill="none" stroke="#ff6b9d" stroke-width="5" filter="url(#glow-outer)" />
+    <circle cx="0" cy="0" r="29.9" fill="none" stroke="#6bd8ff" stroke-width="3.6" filter="url(#glow-mid)" />
+    <circle cx="0" cy="0" r="19.1" fill="none" stroke="#9b8cff" stroke-width="2.3" filter="url(#glow-inner)" />
+  </g>
+  <text x="160" y="180" text-anchor="middle" font-family="'Space Grotesk', system-ui, sans-serif" font-size="26" font-weight="600" letter-spacing="0.8" fill="#e9eaf0">GLOWBRAID</text>
+</svg>
