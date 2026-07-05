@@ -7,6 +7,7 @@ This project is a digital companion to a real physical build: [Fiber Optic and L
 ## Video showcase
 
 ![Demo](docs/demo.gif)
+![3D](docs/3d.gif)
 
 ## Development
 
