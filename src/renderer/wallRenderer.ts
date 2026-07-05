@@ -155,10 +155,20 @@ export function drawWall(
   // gaps and around the outer edge per `boardPadding`.
   ctx.save();
   ctx.fillStyle = "#101114";
-  ctx.fillRect(layout.boardX, layout.boardY, layout.boardSize, layout.boardSize);
+  ctx.fillRect(
+    layout.boardX,
+    layout.boardY,
+    layout.boardSize,
+    layout.boardSize,
+  );
   ctx.strokeStyle = "rgba(255,255,255,0.06)";
   ctx.lineWidth = 1;
-  ctx.strokeRect(layout.boardX, layout.boardY, layout.boardSize, layout.boardSize);
+  ctx.strokeRect(
+    layout.boardX,
+    layout.boardY,
+    layout.boardSize,
+    layout.boardSize,
+  );
   ctx.restore();
 
   const edit = state.mode === "edit";

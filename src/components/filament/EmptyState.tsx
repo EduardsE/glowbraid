@@ -73,9 +73,9 @@ export function EmptyState({
             Design light that flows.
           </div>
           <div className="max-w-[440px] text-[12.5px] leading-[1.55] text-[rgba(233,234,240,0.55)]">
-            Hidden LEDs around each frame inject colour into passive
-            side-glow fibres. Pick a starting point below — you can reshape
-            the wall anytime.
+            Hidden LEDs around each frame inject colour into passive side-glow
+            fibres. Pick a starting point below — you can reshape the wall
+            anytime.
           </div>
         </div>
 
