@@ -15,7 +15,11 @@ import { deriveFrameSeeds, generateWall } from "@/engine/wall";
 import type { MapGeometry } from "@/renderer/mapRenderer";
 import { drawConnectionMap, pickMapFiber } from "@/renderer/mapRenderer";
 import { computeWallLayout, pickFrame } from "@/renderer/viewport";
-import { drawShowcaseFrame, drawWall } from "@/renderer/wallRenderer";
+import {
+  DEFAULT_BOARD_COLOR,
+  drawShowcaseFrame,
+  drawWall,
+} from "@/renderer/wallRenderer";
 import { EmptyState, type EmptyStatePreset } from "./EmptyState";
 import { Header } from "./Header";
 import { InspectorPanel } from "./InspectorPanel";
@@ -34,6 +38,8 @@ interface StudioState {
   frameSize: number;
   frameGap: number;
   boardPadding: number;
+  boardColor: string;
+  frameColors: (string | null)[];
   showMeasurements: boolean;
   curviness: number;
   randomness: number;
@@ -58,6 +64,8 @@ const INITIAL_STATE: StudioState = {
   frameSize: 25,
   frameGap: 20,
   boardPadding: 4,
+  boardColor: DEFAULT_BOARD_COLOR,
+  frameColors: [],
   showMeasurements: false,
   curviness: DEFAULT_FIBER_STYLE.curviness,
   randomness: DEFAULT_FIBER_STYLE.randomness,
@@ -187,6 +195,8 @@ export function FilamentStudio() {
       frameSize: s.frameSize,
       frameGap: s.frameGap,
       boardPadding: s.boardPadding,
+      boardColor: s.boardColor,
+      frameColors: s.frameColors,
       showMeasurements: s.showMeasurements,
       zoom: s.zoom,
       pan: panRef.current,

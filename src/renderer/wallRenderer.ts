@@ -114,6 +114,8 @@ export interface WallDrawState {
   /** Millimetres. */
   frameGap: number;
   boardPadding: number;
+  boardColor: string;
+  frameColors: (string | null)[];
   showMeasurements: boolean;
   zoom: number;
   pan: Point;
@@ -131,6 +133,8 @@ interface FrameDrawOptions {
   selected: boolean;
   selectedFiber: number | null;
   edit: boolean;
+  color: string | null;
+  boardColor: string;
   gpos: number;
   time: number;
   anim: AnimationId;
@@ -176,7 +180,7 @@ export function drawWall(
   // Backing board — sits behind the frame grid, visible in the inter-frame
   // gaps and around the outer edge per `boardPadding`.
   ctx.save();
-  ctx.fillStyle = "#101114";
+  ctx.fillStyle = state.boardColor;
   ctx.fillRect(
     layout.boardX,
     layout.boardY,
@@ -201,6 +205,8 @@ export function drawWall(
       selected,
       selectedFiber: selected ? state.selectedFiber : null,
       edit,
+      color: state.frameColors[index] ?? null,
+      boardColor: state.boardColor,
       gpos: frameGradientPos(index, state.gridSize),
       time: state.time,
       anim: state.anim,
@@ -248,6 +254,8 @@ export function drawShowcaseFrame(
     selected: false,
     selectedFiber: null,
     edit: false,
+    color: null,
+    boardColor: DEFAULT_BOARD_COLOR,
     gpos: 0.5,
     ...opts,
   });
@@ -266,6 +274,8 @@ function drawFrame(
     selected,
     selectedFiber,
     edit,
+    color,
+    boardColor,
     gpos,
     time,
     anim,
@@ -278,7 +288,14 @@ function drawFrame(
   // bezel
   ctx.save();
   roundRect(ctx, x - sz * 0.03, y - sz * 0.03, sz * 1.06, sz * 1.06, r * 1.5);
-  ctx.fillStyle = edit ? "#181a20" : "#141519";
+  ctx.fillStyle =
+    color == null
+      ? edit
+        ? "#181a20"
+        : "#141519"
+      : edit
+        ? color
+        : shadeForSim(color);
   ctx.fill();
   ctx.strokeStyle = "rgba(255,255,255,0.05)";
   ctx.lineWidth = 1;
@@ -289,7 +306,7 @@ function drawFrame(
   ctx.save();
   roundRect(ctx, x, y, sz, sz, r);
   ctx.clip();
-  ctx.fillStyle = "#07080b";
+  ctx.fillStyle = boardColor;
   ctx.fillRect(x, y, sz, sz);
   const amb = samplePalette(palette, (time * 0.03) % 1);
   const ambientGradient = ctx.createRadialGradient(
