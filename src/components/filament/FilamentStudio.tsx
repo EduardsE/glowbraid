@@ -103,6 +103,19 @@ function styleAxis(value: unknown, fallback: number): number {
   return Number.isFinite(n) ? Math.min(1, Math.max(0, n)) : fallback;
 }
 
+/** Loader sanitizer: cm dimension → integer within [min, max], else fallback. */
+function cmField(
+  value: unknown,
+  fallback: number,
+  min: number,
+  max: number,
+): number {
+  const n = Number(value);
+  return Number.isFinite(n)
+    ? Math.min(max, Math.max(min, Math.round(n)))
+    : fallback;
+}
+
 export function FilamentStudio() {
   const [ui, setUi] = useState<StudioState>(INITIAL_STATE);
   const uiRef = useRef(ui);
@@ -331,6 +344,7 @@ export function FilamentStudio() {
       frameSize: s.frameSize,
       frameGap: s.frameGap,
       boardPadding: s.boardPadding,
+      showMeasurements: s.showMeasurements,
       masterSeed: s.masterSeed,
       seeds: seedsRef.current,
       anim: s.anim,
@@ -360,12 +374,9 @@ export function FilamentStudio() {
       6,
       Math.max(1, Math.round(Number(d.gridSize) || 3)),
     );
-    const frameGap = Number.isFinite(Number(d.frameGap))
-      ? Number(d.frameGap)
-      : 20;
-    const boardPadding = Number.isFinite(Number(d.boardPadding))
-      ? Number(d.boardPadding)
-      : 40;
+    const frameSize = cmField(d.frameSize, 25, 10, 40);
+    const frameGap = cmField(d.frameGap, 2, 0, 15);
+    const boardPadding = cmField(d.boardPadding, 4, 0, 20);
     const curviness = styleAxis(d.curviness, DEFAULT_FIBER_STYLE.curviness);
     const randomness = styleAxis(d.randomness, DEFAULT_FIBER_STYLE.randomness);
     const socketDepth = styleAxis(
@@ -380,9 +391,10 @@ export function FilamentStudio() {
     );
     patch({
       gridSize,
-      frameSize: d.frameSize,
+      frameSize,
       frameGap,
       boardPadding,
+      showMeasurements: d.showMeasurements === true,
       masterSeed: d.masterSeed,
       curviness,
       randomness,

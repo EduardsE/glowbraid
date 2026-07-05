@@ -80,11 +80,14 @@ export interface LedLight {
 /** Shape persisted to localStorage under "filament.project" */
 export interface ProjectSnapshot {
   gridSize: number;
+  /** Frame edge length in centimetres (10–40). */
   frameSize: number;
-  /** Pixel gap between adjacent frames. Absent in legacy saves → loader defaults to 20. */
+  /** Gap between adjacent frames in centimetres (0–15). Absent in legacy saves → loader defaults to 2. */
   frameGap: number;
-  /** Pixel padding between the frame grid's outer edge and the board edge. Absent in legacy saves → loader defaults to 40. */
+  /** Padding between the frame grid's outer edge and the board edge in centimetres (0–20). Absent in legacy saves → loader defaults to 4. */
   boardPadding: number;
+  /** Blueprint dimension overlay toggle. Absent in legacy saves → loader defaults to false. */
+  showMeasurements: boolean;
   masterSeed: number;
   seeds: number[];
   anim: AnimationId;
