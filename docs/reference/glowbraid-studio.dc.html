@@ -27,7 +27,7 @@
     <div style="display:flex;align-items:center;gap:12px;">
       <div style="width:26px;height:26px;border-radius:8px;background:conic-gradient(from 210deg, #ff6b9d, #ffb36b, #9b8cff, #6bd8ff, #ff6b9d);box-shadow:0 0 18px rgba(155,140,255,0.5);"></div>
       <div style="display:flex;flex-direction:column;line-height:1.05;">
-        <span style="font-weight:600;font-size:14px;letter-spacing:.01em;">Filament</span>
+        <span style="font-weight:600;font-size:14px;letter-spacing:.01em;">Glowbraid</span>
         <span style="font-size:10px;color:rgba(233,234,240,0.42);letter-spacing:.06em;">FIBRE OPTIC WALL STUDIO</span>
       </div>
     </div>
@@ -601,8 +601,8 @@ class Component extends DCLogic {
       onDensity: e => self.setState({ fiberDensity: +e.target.value }, () => self.buildFrames()),
       onRandomize: () => { self.setState({ masterSeed: (Math.random()*99999)|0 }, () => { self.frameSeeds = []; self.buildFrames(); self.forceUpdate(); }); },
       onGenerate: () => { self.frameSeeds = []; self.setState({ masterSeed: (Math.random()*99999)|0, selected: null, selFiber: null, empty: false }, () => self.buildFrames()); },
-      onSave: () => { try { localStorage.setItem('filament.project', JSON.stringify({ gridSize:st.gridSize, frameSize:st.frameSize, fiberDensity:st.fiberDensity, masterSeed:st.masterSeed, seeds:self.frameSeeds, anim:st.anim, speed:st.speed, brightness:st.brightness, palette:st.palette, mode:st.mode })); self.setState({ _saved: Date.now() }); } catch(e){} },
-      onLoad: () => { try { const d = JSON.parse(localStorage.getItem('filament.project')||'null'); if (!d) return; self.frameSeeds = d.seeds || []; self.setState({ gridSize:d.gridSize, frameSize:d.frameSize, fiberDensity:d.fiberDensity, masterSeed:d.masterSeed, anim:d.anim, speed:d.speed, brightness:d.brightness, palette:d.palette, mode:d.mode||'sim', empty:false, selected:null, selFiber:null }, () => self.buildFrames()); } catch(e){} },
+      onSave: () => { try { localStorage.setItem('glowbraid.project', JSON.stringify({ gridSize:st.gridSize, frameSize:st.frameSize, fiberDensity:st.fiberDensity, masterSeed:st.masterSeed, seeds:self.frameSeeds, anim:st.anim, speed:st.speed, brightness:st.brightness, palette:st.palette, mode:st.mode })); self.setState({ _saved: Date.now() }); } catch(e){} },
+      onLoad: () => { try { const d = JSON.parse(localStorage.getItem('glowbraid.project')||'null'); if (!d) return; self.frameSeeds = d.seeds || []; self.setState({ gridSize:d.gridSize, frameSize:d.frameSize, fiberDensity:d.fiberDensity, masterSeed:d.masterSeed, anim:d.anim, speed:d.speed, brightness:d.brightness, palette:d.palette, mode:d.mode||'sim', empty:false, selected:null, selFiber:null }, () => self.buildFrames()); } catch(e){} },
       saveHint: st._saved ? 'Saved to this browser ✓' : 'Stores the current wall in this browser.',
 
       startPresets,
