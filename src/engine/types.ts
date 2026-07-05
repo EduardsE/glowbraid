@@ -83,6 +83,8 @@ export interface ProjectSnapshot {
   frameSize: number;
   /** Pixel gap between adjacent frames. Absent in legacy saves → loader defaults to 20. */
   frameGap: number;
+  /** Pixel padding between the frame grid's outer edge and the board edge. Absent in legacy saves → loader defaults to 40. */
+  boardPadding: number;
   masterSeed: number;
   seeds: number[];
   anim: AnimationId;
