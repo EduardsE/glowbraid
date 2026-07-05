@@ -355,6 +355,13 @@ export function FilamentStudio() {
     frameColors[s.selectedFrame] = color;
     patch({ frameColors });
   };
+  const handleApplyColorToAll = () => {
+    const s = uiRef.current;
+    if (s.selectedFrame == null) return;
+    const color = s.frameColors[s.selectedFrame];
+    if (color == null) return;
+    patch({ frameColors: Array(s.gridSize * s.gridSize).fill(color) });
+  };
   const handleStyle = (partial: Partial<FiberStyle>) => {
     const s = uiRef.current;
     const style = { ...styleOf(s), ...partial };
@@ -548,6 +555,7 @@ export function FilamentStudio() {
               : null
           }
           onFrameColor={handleFrameColor}
+          onApplyToAll={handleApplyColorToAll}
           anim={ui.anim}
           onAnim={(anim) => patch({ anim })}
           speed={ui.speed}

@@ -15,6 +15,7 @@ export interface InspectorPanelProps {
   onReseed: () => void;
   frameColor: string | null;
   onFrameColor: (c: string) => void;
+  onApplyToAll: () => void;
   anim: AnimationId;
   onAnim: (anim: AnimationId) => void;
   speed: number;
@@ -90,6 +91,18 @@ function SelectedFrame(
           onChange={props.onFrameColor}
           ariaLabel="Frame color"
         />
+        <button
+          type="button"
+          onClick={props.onApplyToAll}
+          disabled={props.frameColor == null}
+          className={
+            props.frameColor == null
+              ? "cursor-not-allowed self-start text-[11px] text-[rgba(233,234,240,0.3)]"
+              : "cursor-pointer self-start text-[11px] text-[#9b8cff] hover:text-white"
+          }
+        >
+          Apply to all frames
+        </button>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
