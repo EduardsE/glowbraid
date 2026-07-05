@@ -250,7 +250,6 @@ function drawFrame(
   ctx.fillRect(x, y, sz, sz);
 
   ctx.globalCompositeOperation = "lighter";
-  ctx.lineCap = "round";
   for (const fiber of frame.fibers) {
     const pts = fiber.path;
     const n = pts.length;
@@ -259,6 +258,7 @@ function drawFrame(
 
     // passive plastic light-guide (faint tinted body — continuous, no dots)
     const bodyColor = samplePalette(palette, fiber.hueBase);
+    ctx.lineCap = "round";
     ctx.beginPath();
     for (let i = 0; i < n; i++) {
       const px = x + pts[i].x * sz;
@@ -273,7 +273,11 @@ function drawFrame(
     ctx.lineWidth = fiber.thickness * sz * 0.01;
     ctx.stroke();
 
-    // injected light from both LED ends
+    // injected light from both LED ends — segments are stroked one at a
+    // time (colour varies per-sample), so caps must be "butt": with the
+    // additive "lighter" composite, round caps double up brightness where
+    // adjacent segments' end-caps overlap, showing up as bead-like circles.
+    ctx.lineCap = "butt";
     let prevX = x + pts[0].x * sz;
     let prevY = y + pts[0].y * sz;
     for (let i = 1; i < n; i++) {
