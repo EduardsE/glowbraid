@@ -1,3 +1,5 @@
+import { BrandMark } from "./BrandMark";
+
 export interface HeaderProps {
   mode: "edit" | "sim";
   onModeChange: (mode: "edit" | "sim") => void;
@@ -20,7 +22,7 @@ export function Header({
   return (
     <header className="z-20 flex h-[54px] flex-none items-center justify-between border-b border-white/[0.06] bg-[rgba(14,15,20,0.6)] px-[18px] backdrop-blur-[14px]">
       <div className="flex items-center gap-3">
-        <div className="h-[26px] w-[26px] rounded-lg shadow-[0_0_18px_rgba(155,140,255,0.5)] [background:conic-gradient(from_210deg,#ff6b9d,#ffb36b,#9b8cff,#6bd8ff,#ff6b9d)]" />
+        <BrandMark size={26} />
         <div className="flex flex-col leading-[1.05]">
           <span className="text-sm font-semibold tracking-[0.01em]">
             Glowbraid
