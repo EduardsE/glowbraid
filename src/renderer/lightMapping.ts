@@ -17,8 +17,13 @@ import type { RGB } from "@/engine/types";
 export const CROSSFADE_START = 0.22;
 /** …and completes CROSSFADE_RANGE above it. */
 export const CROSSFADE_RANGE = 0.4;
-/** Fraction of the additive pass faded out at full light-board factor. */
-export const ADDITIVE_FADE = 0.85;
+/**
+ * Fraction of the additive pass faded out at full light-board factor.
+ * 1.0 = fully skipped on white boards (perf fallback approved in the spec:
+ * at high factor the additive contribution is visually negligible, and
+ * skipping it restores ~2 strokes/segment).
+ */
+export const ADDITIVE_FADE = 1.0;
 /** Minimum displayed intensity on light boards — dim fibre never vanishes. */
 export const INTENSITY_FLOOR = 0.22;
 /** Saturation push for graphic-pass colours (additive colours read pale). */
