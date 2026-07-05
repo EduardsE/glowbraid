@@ -300,12 +300,20 @@ export function FilamentStudio() {
 
   const handleGridSize = (n: number) => {
     rebuild(n, ui.masterSeed, styleOf(ui));
-    patch({ gridSize: n, selectedFrame: null, selectedFiber: null });
+    patch({
+      gridSize: n,
+      selectedFrame: null,
+      selectedFiber: null,
+      frameColors: Array(n * n).fill(null),
+    });
   };
   const handleReroute = () => {
     const seed = randomSeed();
     rebuild(ui.gridSize, seed, styleOf(ui));
-    patch({ masterSeed: seed });
+    patch({
+      masterSeed: seed,
+      frameColors: Array(ui.gridSize * ui.gridSize).fill(null),
+    });
   };
   const handleGenerate = () => {
     const seed = randomSeed();
@@ -315,6 +323,7 @@ export function FilamentStudio() {
       empty: false,
       selectedFrame: null,
       selectedFiber: null,
+      frameColors: Array(ui.gridSize * ui.gridSize).fill(null),
     });
   };
   const handlePreset = (preset: EmptyStatePreset) => {
@@ -328,6 +337,7 @@ export function FilamentStudio() {
       empty: false,
       selectedFrame: null,
       selectedFiber: null,
+      frameColors: Array(preset.gridSize * preset.gridSize).fill(null),
     });
   };
   const handleReseed = () => {
@@ -337,6 +347,13 @@ export function FilamentStudio() {
     seedsRef.current[s.selectedFrame] = seed;
     framesRef.current[s.selectedFrame] = generateFrame(seed, styleOf(s));
     patch({ selectedFiber: null });
+  };
+  const handleFrameColor = (color: string) => {
+    const s = uiRef.current;
+    if (s.selectedFrame == null) return;
+    const frameColors = [...s.frameColors];
+    frameColors[s.selectedFrame] = color;
+    patch({ frameColors });
   };
   const handleStyle = (partial: Partial<FiberStyle>) => {
     const s = uiRef.current;
@@ -355,6 +372,7 @@ export function FilamentStudio() {
       frameGap: s.frameGap,
       boardPadding: s.boardPadding,
       boardColor: s.boardColor,
+      frameColors: s.frameColors,
       showMeasurements: s.showMeasurements,
       masterSeed: s.masterSeed,
       seeds: seedsRef.current,
@@ -390,6 +408,13 @@ export function FilamentStudio() {
     const boardPadding = cmField(d.boardPadding, 4, 0, 20);
     const boardColor =
       typeof d.boardColor === "string" ? d.boardColor : DEFAULT_BOARD_COLOR;
+    const frameCount = gridSize * gridSize;
+    const frameColors: (string | null)[] =
+      Array.isArray(d.frameColors) &&
+      d.frameColors.length === frameCount &&
+      d.frameColors.every((c) => c === null || typeof c === "string")
+        ? d.frameColors
+        : Array(frameCount).fill(null);
     const curviness = styleAxis(d.curviness, DEFAULT_FIBER_STYLE.curviness);
     const randomness = styleAxis(d.randomness, DEFAULT_FIBER_STYLE.randomness);
     const socketDepth = styleAxis(
@@ -408,6 +433,7 @@ export function FilamentStudio() {
       frameGap,
       boardPadding,
       boardColor,
+      frameColors,
       showMeasurements: d.showMeasurements === true,
       masterSeed: d.masterSeed,
       curviness,
@@ -516,6 +542,12 @@ export function FilamentStudio() {
           mapCanvasRef={mapCanvasRef}
           onMapClick={handleMapClick}
           onReseed={handleReseed}
+          frameColor={
+            ui.selectedFrame != null
+              ? (ui.frameColors[ui.selectedFrame] ?? null)
+              : null
+          }
+          onFrameColor={handleFrameColor}
           anim={ui.anim}
           onAnim={(anim) => patch({ anim })}
           speed={ui.speed}

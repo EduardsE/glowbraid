@@ -2,6 +2,7 @@ import type { MouseEvent, ReactNode, RefObject } from "react";
 import { ANIMATIONS } from "@/engine/animation";
 import { PALETTE_IDS, PALETTES } from "@/engine/palettes";
 import type { AnimationId, Frame, PaletteId } from "@/engine/types";
+import { ColorSwatchPicker } from "./ColorSwatchPicker";
 
 export interface InspectorPanelProps {
   frame: Frame | null;
@@ -12,6 +13,8 @@ export interface InspectorPanelProps {
   mapCanvasRef: RefObject<HTMLCanvasElement | null>;
   onMapClick: (e: MouseEvent<HTMLCanvasElement>) => void;
   onReseed: () => void;
+  frameColor: string | null;
+  onFrameColor: (c: string) => void;
   anim: AnimationId;
   onAnim: (anim: AnimationId) => void;
   speed: number;
@@ -78,6 +81,15 @@ function SelectedFrame(
         >
           ⟳
         </button>
+      </div>
+
+      <div className="flex flex-col gap-[7px]">
+        <div className="text-xs text-[rgba(233,234,240,0.7)]">Frame color</div>
+        <ColorSwatchPicker
+          value={props.frameColor}
+          onChange={props.onFrameColor}
+          ariaLabel="Frame color"
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-2">
