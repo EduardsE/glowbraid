@@ -1,8 +1,8 @@
 import { BrandMark } from "./BrandMark";
 
 export interface HeaderProps {
-  mode: "edit" | "sim";
-  onModeChange: (mode: "edit" | "sim") => void;
+  mode: "edit" | "sim" | "3d";
+  onModeChange: (mode: "edit" | "sim" | "3d") => void;
   wallLabel: string;
   zoomPct: string;
   onZoomIn: () => void;
@@ -42,6 +42,11 @@ export function Header({
           active={mode === "sim"}
           label="▶  Simulate"
           onClick={() => onModeChange("sim")}
+        />
+        <ModeButton
+          active={mode === "3d"}
+          label="◈  3D"
+          onClick={() => onModeChange("3d")}
         />
       </div>
       <div className="flex items-center gap-2.5">

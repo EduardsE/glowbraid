@@ -103,5 +103,6 @@ export interface ProjectSnapshot {
   randomness: number;
   /** FiberStyle socket depth, 0–1. Absent in legacy saves → loader defaults to 0.4. */
   socketDepth: number;
-  mode: "edit" | "sim";
+  /** Unknown values in legacy/hand-edited saves → loader falls back to "sim". */
+  mode: "edit" | "sim" | "3d";
 }
