@@ -1,0 +1,345 @@
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
+import type { Palette } from "@/engine/palettes";
+import type { AnimationId, Frame } from "@/engine/types";
+import { shadeForSim } from "@/renderer/wallRenderer";
+import {
+  RADIAL_SEGMENTS,
+  TUBULAR_SEGMENTS,
+  writeWallFiberColors,
+} from "./fiberColors";
+import {
+  computeWorldLayout,
+  fiberWorldPoints,
+  frameOrigin,
+  type WorldLayout,
+} from "./fiberGeometry";
+
+export interface Wall3DState {
+  frames: Frame[];
+  gridSize: number;
+  frameSize: number;
+  /** Millimetres, like WallDrawState. */
+  frameGap: number;
+  boardPadding: number;
+  boardColor: string;
+  frameColors: (string | null)[];
+  time: number;
+  anim: AnimationId;
+  speed: number;
+  brightness: number;
+  palette: Palette;
+}
+
+export interface Wall3D {
+  render(state: Wall3DState): void;
+  resetCamera(): void;
+  dollyIn(): void;
+  dollyOut(): void;
+  dispose(): void;
+}
+
+/** Board slab thickness, cm. */
+const BOARD_DEPTH = 1.5;
+/** Bezel extrusion depth off the board face, cm. */
+const BEZEL_DEPTH = 2;
+/** Fibre tube radius at thickness 1, cm (~2mm side-glow strand). */
+const FIBER_RADIUS = 0.1;
+/** Default bezel color — matches the 2D sim-mode bezel. */
+const DEFAULT_BEZEL = "#141519";
+/** Home camera: direction from board center and distance in board sizes. */
+const HOME_DIR = new THREE.Vector3(0.35, 0.3, 1).normalize();
+const HOME_DISTANCE = 1.6;
+const DOLLY_STEP = 1.15;
+/** Bloom tuning — threshold sits above the board/bezel luminance. */
+const BLOOM_STRENGTH = 0.9;
+const BLOOM_RADIUS = 0.4;
+const BLOOM_THRESHOLD = 0.55;
+
+function gradientBackground(): THREE.Texture {
+  const c = document.createElement("canvas");
+  c.width = 2;
+  c.height = 256;
+  const g = c.getContext("2d");
+  if (g) {
+    const grad = g.createLinearGradient(0, 0, 0, 256);
+    grad.addColorStop(0, "#14151b");
+    grad.addColorStop(1, "#08090c");
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 2, 256);
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+/** Square ring (outer frame minus light panel), extruded toward the viewer. */
+function bezelGeometry(layout: WorldLayout): THREE.ExtrudeGeometry {
+  const s = layout.frameSize;
+  const b = layout.border;
+  const shape = new THREE.Shape([
+    new THREE.Vector2(0, 0),
+    new THREE.Vector2(s, 0),
+    new THREE.Vector2(s, -s),
+    new THREE.Vector2(0, -s),
+  ]);
+  shape.holes.push(
+    new THREE.Path([
+      new THREE.Vector2(b, -b),
+      new THREE.Vector2(s - b, -b),
+      new THREE.Vector2(s - b, -(s - b)),
+      new THREE.Vector2(b, -(s - b)),
+    ]),
+  );
+  return new THREE.ExtrudeGeometry(shape, {
+    depth: BEZEL_DEPTH,
+    bevelEnabled: false,
+  });
+}
+
+function bezelColor(frameColors: (string | null)[], index: number): string {
+  const custom = frameColors[index];
+  return custom == null ? DEFAULT_BEZEL : shadeForSim(custom);
+}
+
+export function createWall3D(canvas: HTMLCanvasElement): Wall3D {
+  // Throws if WebGL is unavailable — the studio catches and falls back to sim.
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+
+  const scene = new THREE.Scene();
+  scene.background = gradientBackground();
+  const camera = new THREE.PerspectiveCamera(45, 1, 1, 2000);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+  const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+  scene.add(dirLight);
+
+  const controls = new OrbitControls(camera, canvas);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+
+  // MSAA target: EffectComposer's default target has no multisampling and
+  // thin tubes alias badly without it.
+  const composer = new EffectComposer(
+    renderer,
+    new THREE.WebGLRenderTarget(1, 1, {
+      samples: 4,
+      type: THREE.HalfFloatType,
+    }),
+  );
+  composer.addPass(new RenderPass(scene, camera));
+  composer.addPass(
+    new UnrealBloomPass(
+      new THREE.Vector2(1, 1),
+      BLOOM_STRENGTH,
+      BLOOM_RADIUS,
+      BLOOM_THRESHOLD,
+    ),
+  );
+  composer.addPass(new OutputPass());
+
+  // --- mutable wall state, replaced on rebuild ---
+  let layout: WorldLayout = computeWorldLayout(1, 25, 20, 4);
+  let group = new THREE.Group();
+  let boardMat: THREE.MeshStandardMaterial | null = null;
+  let bezelMats: THREE.MeshStandardMaterial[] = [];
+  let colorArray = new Float32Array(0);
+  let colorAttr: THREE.BufferAttribute | null = null;
+  const fiberMat = new THREE.MeshBasicMaterial({
+    vertexColors: true,
+    toneMapped: false,
+  });
+  let builtFrames: Frame[] | null = null;
+  let builtKey = "";
+  let firstBuild = true;
+  scene.add(group);
+
+  function disposeGroup(): void {
+    scene.remove(group);
+    group.traverse((obj) => {
+      if (obj instanceof THREE.Mesh) {
+        obj.geometry.dispose();
+        // fiberMat is shared and reused across rebuilds; dispose the rest.
+        if (obj.material !== fiberMat) {
+          (obj.material as THREE.Material).dispose();
+        }
+      }
+    });
+    group = new THREE.Group();
+    scene.add(group);
+  }
+
+  function rebuild(state: Wall3DState): void {
+    disposeGroup();
+    layout = computeWorldLayout(
+      state.gridSize,
+      state.frameSize,
+      state.frameGap,
+      state.boardPadding,
+    );
+
+    const boardGeo = new THREE.BoxGeometry(
+      layout.boardSize,
+      layout.boardSize,
+      BOARD_DEPTH,
+    );
+    boardMat = new THREE.MeshStandardMaterial({
+      color: state.boardColor,
+      roughness: 0.9,
+      metalness: 0.05,
+    });
+    const board = new THREE.Mesh(boardGeo, boardMat);
+    board.position.z = -BOARD_DEPTH / 2; // front face flush with z = 0
+    group.add(board);
+
+    const bezelGeo = bezelGeometry(layout);
+    bezelMats = [];
+    for (let i = 0; i < state.frames.length; i++) {
+      const mat = new THREE.MeshStandardMaterial({
+        color: bezelColor(state.frameColors, i),
+        roughness: 0.8,
+        metalness: 0.15,
+      });
+      bezelMats.push(mat);
+      const mesh = new THREE.Mesh(bezelGeo, mat);
+      const o = frameOrigin(layout, i);
+      mesh.position.set(o.x, o.y, 0);
+      group.add(mesh);
+    }
+
+    const tubes: THREE.BufferGeometry[] = [];
+    for (let i = 0; i < state.frames.length; i++) {
+      for (const fiber of state.frames[i].fibers) {
+        const flat = fiberWorldPoints(fiber, i, layout);
+        const pts: THREE.Vector3[] = [];
+        for (let p = 0; p < flat.length; p += 3) {
+          pts.push(new THREE.Vector3(flat[p], flat[p + 1], flat[p + 2]));
+        }
+        tubes.push(
+          new THREE.TubeGeometry(
+            new THREE.CatmullRomCurve3(pts),
+            TUBULAR_SEGMENTS,
+            FIBER_RADIUS * fiber.thickness,
+            RADIAL_SEGMENTS,
+            false,
+          ),
+        );
+      }
+    }
+    if (tubes.length > 0) {
+      const fiberGeo = mergeGeometries(tubes);
+      for (const t of tubes) t.dispose();
+      colorArray = new Float32Array(
+        fiberGeo.getAttribute("position").count * 3,
+      );
+      colorAttr = new THREE.BufferAttribute(colorArray, 3);
+      colorAttr.setUsage(THREE.DynamicDrawUsage);
+      fiberGeo.setAttribute("color", colorAttr);
+      group.add(new THREE.Mesh(fiberGeo, fiberMat));
+    } else {
+      colorArray = new Float32Array(0);
+      colorAttr = null;
+    }
+
+    dirLight.position.set(
+      layout.boardSize * 0.6,
+      layout.boardSize * 0.8,
+      layout.boardSize,
+    );
+    controls.minDistance = layout.boardSize * 0.35;
+    controls.maxDistance = layout.boardSize * 4;
+    camera.near = layout.boardSize * 0.01;
+    camera.far = layout.boardSize * 20;
+    camera.updateProjectionMatrix();
+    if (firstBuild) {
+      firstBuild = false;
+      resetCamera();
+    }
+  }
+
+  function resetCamera(): void {
+    controls.target.set(0, 0, 0);
+    camera.position
+      .copy(HOME_DIR)
+      .multiplyScalar(layout.boardSize * HOME_DISTANCE);
+    controls.update();
+  }
+
+  function dolly(factor: number): void {
+    const offset = camera.position.clone().sub(controls.target);
+    offset.setLength(
+      THREE.MathUtils.clamp(
+        offset.length() * factor,
+        controls.minDistance,
+        controls.maxDistance,
+      ),
+    );
+    camera.position.copy(controls.target).add(offset);
+  }
+
+  function render(state: Wall3DState): void {
+    const key = `${state.gridSize}|${state.frameSize}|${state.frameGap}|${state.boardPadding}`;
+    if (state.frames !== builtFrames || key !== builtKey) {
+      builtFrames = state.frames;
+      builtKey = key;
+      rebuild(state);
+    }
+    boardMat?.color.set(state.boardColor);
+    for (let i = 0; i < bezelMats.length; i++) {
+      bezelMats[i].color.set(bezelColor(state.frameColors, i));
+    }
+    if (colorAttr) {
+      writeWallFiberColors(
+        colorArray,
+        state.frames,
+        state.gridSize,
+        state.time,
+        state.anim,
+        state.speed,
+        state.brightness,
+        state.palette,
+      );
+      colorAttr.needsUpdate = true;
+    }
+    controls.update();
+    composer.render();
+  }
+
+  const ro = new ResizeObserver(() => {
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width < 2 || rect.height < 2) return; // hidden (display:none)
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    renderer.setPixelRatio(dpr);
+    renderer.setSize(rect.width, rect.height, false);
+    composer.setPixelRatio(dpr);
+    composer.setSize(rect.width, rect.height);
+    camera.aspect = rect.width / rect.height;
+    camera.updateProjectionMatrix();
+  });
+  ro.observe(canvas);
+
+  // preventDefault on loss lets the browser fire "restored", after which
+  // three re-initializes its GL state automatically.
+  const onContextLost = (e: Event) => e.preventDefault();
+  canvas.addEventListener("webglcontextlost", onContextLost);
+
+  return {
+    render,
+    resetCamera,
+    dollyIn: () => dolly(1 / DOLLY_STEP),
+    dollyOut: () => dolly(DOLLY_STEP),
+    dispose: () => {
+      ro.disconnect();
+      canvas.removeEventListener("webglcontextlost", onContextLost);
+      controls.dispose();
+      disposeGroup();
+      fiberMat.dispose();
+      composer.dispose();
+      renderer.dispose();
+    },
+  };
+}
