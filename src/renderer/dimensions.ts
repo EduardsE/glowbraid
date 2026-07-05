@@ -14,6 +14,7 @@ export interface DimSegment {
 export interface DimensionCm {
   frameSizeCm: number;
   frameGapCm: number;
+  frameGapMm: number;
   boardPaddingCm: number;
 }
 
@@ -83,7 +84,7 @@ export function computeDimensionSegments(
       a: { x: first.x + first.size, y: nearY },
       b: { x: second.x, y: nearY },
       orientation: "horizontal",
-      label: `${cm.frameGapCm} cm`,
+      label: `${cm.frameGapMm} mm`,
       edge: boardY,
     });
   }

@@ -6,7 +6,7 @@ import {
 } from "../dimensions";
 import { computeWallLayout, frameRect } from "../viewport";
 
-const CM = { frameSizeCm: 25, frameGapCm: 2, boardPaddingCm: 4 };
+const CM = { frameSizeCm: 25, frameGapCm: 2, frameGapMm: 20, boardPaddingCm: 4 };
 
 function layoutFor(gridSize: number, cm = CM) {
   return computeWallLayout({
@@ -66,7 +66,7 @@ describe("computeDimensionSegments", () => {
     expect(frame.b.x).toBeCloseTo(first.x + first.size);
     expect(frame.a.y).toBeCloseTo(nearY);
 
-    expect(gap.label).toBe("2 cm");
+    expect(gap.label).toBe("20 mm");
     expect(gap.a.x).toBeCloseTo(first.x + first.size);
     expect(gap.b.x).toBeCloseTo(second.x);
     expect(gap.a.y).toBeCloseTo(nearY);
@@ -77,11 +77,11 @@ describe("computeDimensionSegments", () => {
     const segments = computeDimensionSegments(layout, CM);
     // totalW, totalH, padding, frame — no gap
     expect(segments).toHaveLength(4);
-    expect(segments.map((s) => s.label)).not.toContain("2 cm");
+    expect(segments.map((s) => s.label)).not.toContain("20 mm");
   });
 
   it("skips zero-valued gap and padding segments", () => {
-    const cm = { frameSizeCm: 25, frameGapCm: 0, boardPaddingCm: 0 };
+    const cm = { frameSizeCm: 25, frameGapCm: 0, frameGapMm: 0, boardPaddingCm: 0 };
     const layout = layoutFor(3, cm);
     const segments = computeDimensionSegments(layout, cm);
     // totalW, totalH, frame — no padding, no gap
