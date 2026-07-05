@@ -6,7 +6,12 @@ import {
 } from "../dimensions";
 import { computeWallLayout, frameRect } from "../viewport";
 
-const CM = { frameSizeCm: 25, frameGapCm: 2, frameGapMm: 20, boardPaddingCm: 4 };
+const CM = {
+  frameSizeCm: 25,
+  frameGapCm: 2,
+  frameGapMm: 20,
+  boardPaddingCm: 4,
+};
 
 function layoutFor(gridSize: number, cm = CM) {
   return computeWallLayout({
@@ -81,7 +86,12 @@ describe("computeDimensionSegments", () => {
   });
 
   it("skips zero-valued gap and padding segments", () => {
-    const cm = { frameSizeCm: 25, frameGapCm: 0, frameGapMm: 0, boardPaddingCm: 0 };
+    const cm = {
+      frameSizeCm: 25,
+      frameGapCm: 0,
+      frameGapMm: 0,
+      boardPaddingCm: 0,
+    };
     const layout = layoutFor(3, cm);
     const segments = computeDimensionSegments(layout, cm);
     // totalW, totalH, frame — no padding, no gap
