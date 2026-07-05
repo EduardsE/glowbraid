@@ -1,6 +1,5 @@
 import { ledColor } from "@/engine/animation";
-import type { SegmentLight } from "@/engine/light";
-import { blendSegment, delayedTime } from "@/engine/light";
+import { fiberSegmentLights } from "@/engine/light";
 import type { Palette } from "@/engine/palettes";
 import { samplePalette } from "@/engine/palettes";
 import type { AnimationId, Frame, Point } from "@/engine/types";
@@ -403,27 +402,16 @@ function drawFrame(
     };
 
     // Light at each segment, computed once and shared by both passes below.
-    const segs: SegmentLight[] = [];
-    for (let i = 1; i < n; i++) {
-      const um = (i - 0.5) / (n - 1);
-      const lightA = ledColor(
-        ledA,
-        gpos,
-        delayedTime(time, um * fiber.length),
-        anim,
-        speed,
-        palette,
-      );
-      const lightB = ledColor(
-        ledB,
-        gpos,
-        delayedTime(time, (1 - um) * fiber.length),
-        anim,
-        speed,
-        palette,
-      );
-      segs.push(blendSegment(lightA, lightB, um));
-    }
+    const segs = fiberSegmentLights(
+      fiber,
+      ledA,
+      ledB,
+      gpos,
+      time,
+      anim,
+      speed,
+      palette,
+    );
 
     const bodyColor = samplePalette(palette, fiber.hueBase);
 

@@ -1,4 +1,6 @@
-import type { LedLight, RGB } from "./types";
+import { ledColor } from "./animation";
+import type { Palette } from "./palettes";
+import type { AnimationId, Fiber, Led, LedLight, RGB } from "./types";
 
 /** Seconds of color travel delay per unit of fibre length (design reference). */
 export const TRAVEL = 1.15;
@@ -41,4 +43,45 @@ export function blendSegment(
     (start.color[2] * iA + end.color[2] * iB) / total,
   ];
   return { color, intensity: Math.min(1, total), visible: true };
+}
+
+/**
+ * Light along a passive fibre at time `time`: one SegmentLight per polyline
+ * segment (path.length - 1 entries), each sampled at the segment midpoint
+ * `um = (i - 0.5) / (path.length - 1)` from both delayed LED ends.
+ * Shared by the 2D and 3D renderers so segment colors never drift.
+ */
+export function fiberSegmentLights(
+  fiber: Fiber,
+  startLed: Led,
+  endLed: Led,
+  gpos: number,
+  time: number,
+  anim: AnimationId,
+  speed: number,
+  palette: Palette,
+): SegmentLight[] {
+  const n = fiber.path.length;
+  const segs: SegmentLight[] = [];
+  for (let i = 1; i < n; i++) {
+    const um = (i - 0.5) / (n - 1);
+    const lightA = ledColor(
+      startLed,
+      gpos,
+      delayedTime(time, um * fiber.length),
+      anim,
+      speed,
+      palette,
+    );
+    const lightB = ledColor(
+      endLed,
+      gpos,
+      delayedTime(time, (1 - um) * fiber.length),
+      anim,
+      speed,
+      palette,
+    );
+    segs.push(blendSegment(lightA, lightB, um));
+  }
+  return segs;
 }
