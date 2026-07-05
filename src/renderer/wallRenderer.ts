@@ -100,6 +100,39 @@ function ledGlowSprite(
 export const DEFAULT_BOARD_COLOR = "#101114";
 
 /**
+ * Fraction of the frame's outer size occupied by the decorative bezel border
+ * on each side. The light panel (and edge LEDs) sit inset by this amount so
+ * the bezel stays within the frame's own footprint — grid spacing is defined
+ * between these outer edges, so bleeding the bezel beyond them would make
+ * adjacent frames overlap at zero spacing.
+ */
+export const FRAME_BEZEL_RATIO = 0.03;
+
+export interface FrameGeometry {
+  outerX: number;
+  outerY: number;
+  outerSize: number;
+  panelX: number;
+  panelY: number;
+  panelSize: number;
+  border: number;
+}
+
+/** Splits a frame's allotted rect into its outer (bezel) bounds and inset light panel. */
+export function frameGeometry(x: number, y: number, sz: number): FrameGeometry {
+  const border = sz * FRAME_BEZEL_RATIO;
+  return {
+    outerX: x,
+    outerY: y,
+    outerSize: sz,
+    panelX: x + border,
+    panelY: y + border,
+    panelSize: sz - 2 * border,
+    border,
+  };
+}
+
+/**
  * Approximates the app's existing edit→sim bezel darkening (the hardcoded
  * #181a20 → #141519 pair) for an arbitrary base color, so custom/preset frame
  * colors get the same relative dimming in sim mode. The original pair's
@@ -299,10 +332,12 @@ function drawFrame(
   } = opts;
   const f = lightFactor;
   const r = sz * 0.045;
+  const { panelX, panelY, panelSize, border } = frameGeometry(x, y, sz);
 
-  // bezel
+  // bezel — spans the frame's full outer footprint; grid spacing is measured
+  // between these outer edges, so it must not bleed past (x, y, sz).
   ctx.save();
-  roundRect(ctx, x - sz * 0.03, y - sz * 0.03, sz * 1.06, sz * 1.06, r * 1.5);
+  roundRect(ctx, x, y, sz, sz, r * 1.5);
   ctx.fillStyle =
     color == null
       ? edit
@@ -317,20 +352,20 @@ function drawFrame(
   ctx.stroke();
   ctx.restore();
 
-  // panel + fibres (clipped)
+  // panel + fibres (clipped), inset within the bezel border
   ctx.save();
-  roundRect(ctx, x, y, sz, sz, r);
+  roundRect(ctx, panelX, panelY, panelSize, panelSize, r);
   ctx.clip();
   ctx.fillStyle = boardColor;
-  ctx.fillRect(x, y, sz, sz);
+  ctx.fillRect(panelX, panelY, panelSize, panelSize);
   const amb = samplePalette(palette, (time * 0.03) % 1);
   const ambientGradient = ctx.createRadialGradient(
-    x + sz * 0.5,
-    y + sz * 0.55,
-    sz * 0.05,
-    x + sz * 0.5,
-    y + sz * 0.55,
-    sz * 0.75,
+    panelX + panelSize * 0.5,
+    panelY + panelSize * 0.55,
+    panelSize * 0.05,
+    panelX + panelSize * 0.5,
+    panelY + panelSize * 0.55,
+    panelSize * 0.75,
   );
   ambientGradient.addColorStop(
     0,
@@ -338,7 +373,7 @@ function drawFrame(
   );
   ambientGradient.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = ambientGradient;
-  ctx.fillRect(x, y, sz, sz);
+  ctx.fillRect(panelX, panelY, panelSize, panelSize);
 
   for (const fiber of frame.fibers) {
     const pts = fiber.path;
@@ -349,16 +384,19 @@ function drawFrame(
     const tracePath = () => {
       ctx.beginPath();
       for (let i = 0; i < n; i++) {
-        const px = x + pts[i].x * sz;
-        const py = y + pts[i].y * sz;
+        const px = panelX + pts[i].x * panelSize;
+        const py = panelY + pts[i].y * panelSize;
         if (i) ctx.lineTo(px, py);
         else ctx.moveTo(px, py);
       }
     };
     const strokeSeg = (i: number, style: string, width: number) => {
       ctx.beginPath();
-      ctx.moveTo(x + pts[i - 1].x * sz, y + pts[i - 1].y * sz);
-      ctx.lineTo(x + pts[i].x * sz, y + pts[i].y * sz);
+      ctx.moveTo(
+        panelX + pts[i - 1].x * panelSize,
+        panelY + pts[i - 1].y * panelSize,
+      );
+      ctx.lineTo(panelX + pts[i].x * panelSize, panelY + pts[i].y * panelSize);
       ctx.strokeStyle = style;
       ctx.lineWidth = width;
       ctx.stroke();
@@ -397,10 +435,10 @@ function drawFrame(
     ctx.lineCap = "round";
     tracePath();
     ctx.strokeStyle = `rgba(${bodyColor[0] | 0},${bodyColor[1] | 0},${bodyColor[2] | 0},0.07)`;
-    ctx.lineWidth = fiber.thickness * sz * 0.028;
+    ctx.lineWidth = fiber.thickness * panelSize * 0.028;
     ctx.stroke();
     ctx.strokeStyle = "rgba(180,190,210,0.05)";
-    ctx.lineWidth = fiber.thickness * sz * 0.01;
+    ctx.lineWidth = fiber.thickness * panelSize * 0.01;
     ctx.stroke();
 
     // injected light from both LED ends — segments are stroked one at a
@@ -418,12 +456,12 @@ function drawFrame(
         strokeSeg(
           i,
           `rgba(${cr | 0},${cg | 0},${cb | 0},${(inten * 0.16 * GLOW).toFixed(3)})`,
-          fiber.thickness * sz * 0.05 * GLOW,
+          fiber.thickness * panelSize * 0.05 * GLOW,
         );
         strokeSeg(
           i,
           `rgba(${Math.min(255, cr + 70) | 0},${Math.min(255, cg + 70) | 0},${Math.min(255, cb + 70) | 0},${Math.min(1, inten).toFixed(3)})`,
-          fiber.thickness * sz * 0.014,
+          fiber.thickness * panelSize * 0.014,
         );
       }
     }
@@ -437,10 +475,10 @@ function drawFrame(
       ctx.lineCap = "round";
       tracePath();
       ctx.strokeStyle = `rgba(${bodyColor[0] | 0},${bodyColor[1] | 0},${bodyColor[2] | 0},${(0.1 * f).toFixed(3)})`;
-      ctx.lineWidth = fiber.thickness * sz * 0.028;
+      ctx.lineWidth = fiber.thickness * panelSize * 0.028;
       ctx.stroke();
       ctx.strokeStyle = `rgba(180,190,210,${(0.1 * f).toFixed(3)})`;
-      ctx.lineWidth = fiber.thickness * sz * 0.01;
+      ctx.lineWidth = fiber.thickness * panelSize * 0.01;
       ctx.stroke();
 
       ctx.lineCap = "butt";
@@ -455,12 +493,12 @@ function drawFrame(
         strokeSeg(
           i,
           `rgba(${sat[0] | 0},${sat[1] | 0},${sat[2] | 0},${(0.45 * ip * f).toFixed(3)})`,
-          fiber.thickness * sz * 0.05,
+          fiber.thickness * panelSize * 0.05,
         );
         strokeSeg(
           i,
           `rgba(${(sat[0] * 0.82) | 0},${(sat[1] * 0.82) | 0},${(sat[2] * 0.82) | 0},${(Math.min(1, ip) * f).toFixed(3)})`,
-          fiber.thickness * sz * 0.016,
+          fiber.thickness * panelSize * 0.016,
         );
       }
     }
@@ -477,8 +515,8 @@ function drawFrame(
     const pts = frame.fibers[selectedFiber].path;
     ctx.beginPath();
     for (let i = 0; i < pts.length; i++) {
-      const px = x + pts[i].x * sz;
-      const py = y + pts[i].y * sz;
+      const px = panelX + pts[i].x * panelSize;
+      const py = panelY + pts[i].y * panelSize;
       if (i) ctx.lineTo(px, py);
       else ctx.moveTo(px, py);
     }
@@ -492,7 +530,7 @@ function drawFrame(
 
   // panel border
   ctx.save();
-  roundRect(ctx, x, y, sz, sz, r);
+  roundRect(ctx, panelX, panelY, panelSize, panelSize, r);
   if (selected) {
     ctx.strokeStyle = "rgba(155,140,255,0.9)";
     ctx.lineWidth = 2;
@@ -512,15 +550,17 @@ function drawFrame(
     for (let s = 0; s < frame.leds.length; s += 3) {
       const first = frame.leds[s];
       const last = frame.leds[s + 2];
-      const ax = x + first.position.x * sz - first.normal.x * sz * 0.03;
-      const ay = y + first.position.y * sz - first.normal.y * sz * 0.03;
-      const cx = x + last.position.x * sz - last.normal.x * sz * 0.03;
-      const cy = y + last.position.y * sz - last.normal.y * sz * 0.03;
+      const ax =
+        panelX + first.position.x * panelSize - first.normal.x * border;
+      const ay =
+        panelY + first.position.y * panelSize - first.normal.y * border;
+      const cx = panelX + last.position.x * panelSize - last.normal.x * border;
+      const cy = panelY + last.position.y * panelSize - last.normal.y * border;
       ctx.beginPath();
       ctx.moveTo(ax, ay);
       ctx.lineTo(cx, cy);
       ctx.strokeStyle = "rgba(255,255,255,0.14)";
-      ctx.lineWidth = sz * 0.012;
+      ctx.lineWidth = panelSize * 0.012;
       ctx.lineCap = "round";
       ctx.stroke();
     }
@@ -531,10 +571,10 @@ function drawFrame(
     for (const led of frame.leds) {
       const light = ledColor(led, gpos, time, anim, speed, palette);
       const [lr, lg, lb] = light.color;
-      const bx = x + led.position.x * sz - led.normal.x * sz * 0.03;
-      const by = y + led.position.y * sz - led.normal.y * sz * 0.03;
+      const bx = panelX + led.position.x * panelSize - led.normal.x * border;
+      const by = panelY + led.position.y * panelSize - led.normal.y * border;
       ctx.beginPath();
-      ctx.arc(bx, by, sz * 0.017, 0, 6.283);
+      ctx.arc(bx, by, panelSize * 0.017, 0, 6.283);
       ctx.fillStyle = "#0a0b0e";
       ctx.fill();
       ctx.strokeStyle = "rgba(255,255,255,0.12)";
@@ -542,10 +582,10 @@ function drawFrame(
       ctx.stroke();
       // Glow: blit a cached radial-gradient sprite instead of a per-LED
       // shadowBlur fill (see glowSpriteCache above). Sized so the solid
-      // core matches the old core radius (sz * 0.0095) and the halo
+      // core matches the old core radius (panelSize * 0.0095) and the halo
       // reaches roughly the old blur extent beyond it.
-      const coreWorld = sz * 0.0095;
-      const haloWorld = sz * 0.03 * (0.4 + 0.6 * light.brightness);
+      const coreWorld = panelSize * 0.0095;
+      const haloWorld = panelSize * 0.03 * (0.4 + 0.6 * light.brightness);
       const glowWorld = coreWorld + haloWorld;
       const sprite = ledGlowSprite(lr, lg, lb, light.brightness);
       ctx.drawImage(
@@ -561,7 +601,7 @@ function drawFrame(
           selFiber.endLedIndex === led.index)
       ) {
         ctx.beginPath();
-        ctx.arc(bx, by, sz * 0.022, 0, 6.283);
+        ctx.arc(bx, by, panelSize * 0.022, 0, 6.283);
         ctx.strokeStyle = "#fff";
         ctx.lineWidth = 1.6;
         ctx.stroke();
