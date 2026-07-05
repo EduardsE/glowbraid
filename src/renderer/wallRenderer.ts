@@ -92,6 +92,7 @@ export interface WallDrawState {
   frames: Frame[];
   gridSize: number;
   frameSize: number;
+  /** Millimetres. */
   frameGap: number;
   boardPadding: number;
   showMeasurements: boolean;
@@ -145,7 +146,7 @@ export function drawWall(
   const layout = computeWallLayout({
     gridSize: state.gridSize,
     frameSize: state.frameSize,
-    frameGap: state.frameGap,
+    frameGap: state.frameGap / 10,
     boardPadding: state.boardPadding,
     zoom: state.zoom,
     pan: state.pan,
@@ -195,7 +196,8 @@ export function drawWall(
       ctx,
       computeDimensionSegments(layout, {
         frameSizeCm: state.frameSize,
-        frameGapCm: state.frameGap,
+        frameGapCm: state.frameGap / 10,
+        frameGapMm: state.frameGap,
         boardPaddingCm: state.boardPadding,
       }),
     );
