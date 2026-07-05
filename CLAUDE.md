@@ -48,5 +48,4 @@ Per-LED `ctx.shadowBlur` was the historical perf killer; `wallRenderer.ts` repla
 
 ## Docs
 
-- `docs/superpowers/specs/` and `docs/superpowers/plans/` — dated design specs and implementation plans for each feature.
 - `docs/reference/filament-studio.dc.html` — visual design reference imported from claude.ai/design; the local copy can go stale, so re-fetch before porting "new" design work from it. The engine intentionally diverges from it in one place: fibre count is fixed at 12/frame (perfect matching), not the design's `fiberDensity` slider.
