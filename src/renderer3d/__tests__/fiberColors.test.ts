@@ -104,4 +104,37 @@ describe("writeWallFiberColors", () => {
       expect(v).toBeLessThanOrEqual(0.08 + 1e-6);
     }
   });
+
+  it("writes frames in array order", () => {
+    const frame2 = generateFrame(1337, DEFAULT_FIBER_STYLE);
+    const multiSize = 2 * 12 * VERTS_PER_FIBER * 3;
+    const target = new Float32Array(multiSize);
+    writeWallFiberColors(
+      target,
+      [frame, frame2],
+      2,
+      2.5,
+      "flow",
+      1,
+      0.9,
+      palette,
+    );
+    const fiber2 = frame2.fibers[0];
+    const segs2 = fiberSegmentLights(
+      fiber2,
+      frame2.leds[fiber2.startLedIndex],
+      frame2.leds[fiber2.endLedIndex],
+      frameGradientPos(1, 2),
+      2.5,
+      "flow",
+      1,
+      palette,
+    );
+    const body2 = samplePalette(palette, fiber2.hueBase);
+    const expected = ringColor(segs2[0], body2, 0.9);
+    const base = 12 * VERTS_PER_FIBER * 3;
+    expect(target[base]).toBeCloseTo(expected[0], 6);
+    expect(target[base + 1]).toBeCloseTo(expected[1], 6);
+    expect(target[base + 2]).toBeCloseTo(expected[2], 6);
+  });
 });

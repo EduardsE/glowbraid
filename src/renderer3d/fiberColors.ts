@@ -68,6 +68,10 @@ export function writeWallFiberColors(
       );
       const body = samplePalette(palette, fiber.hueBase);
       for (let j = 0; j < RINGS_PER_FIBER; j++) {
+        // TubeGeometry places rings uniformly by arclength, while segments
+        // are indexed by path point — so with non-uniform point spacing a
+        // ring's color may come from the adjacent segment. Visually
+        // negligible: 2D/3D parity is per-segment, not per-pixel.
         const seg =
           segs[
             Math.min(

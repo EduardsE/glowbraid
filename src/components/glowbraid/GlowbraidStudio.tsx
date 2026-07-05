@@ -133,6 +133,8 @@ export function GlowbraidStudio() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const glCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const wall3dRef = useRef<Wall3D | null>(null);
+  const disposedRef = useRef(false);
+  const noticeTimerRef = useRef(0);
   const [notice, setNotice] = useState<string | null>(null);
   const mapCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const scrubRef = useRef<HTMLInputElement | null>(null);
@@ -155,13 +157,14 @@ export function GlowbraidStudio() {
     try {
       const mod = await import("@/renderer3d/wall3d");
       const canvas = glCanvasRef.current;
-      if (!wall3dRef.current && canvas) {
+      if (!disposedRef.current && !wall3dRef.current && canvas) {
         wall3dRef.current = mod.createWall3D(canvas);
       }
     } catch {
-      setUi((prev) => ({ ...prev, mode: "sim" }));
+      setUi((prev) => (prev.mode === "3d" ? { ...prev, mode: "sim" } : prev));
       setNotice("3D view unavailable");
-      window.setTimeout(() => setNotice(null), 5000);
+      window.clearTimeout(noticeTimerRef.current);
+      noticeTimerRef.current = window.setTimeout(() => setNotice(null), 5000);
     }
   }, []);
 
@@ -344,6 +347,8 @@ export function GlowbraidStudio() {
 
   useEffect(
     () => () => {
+      disposedRef.current = true;
+      window.clearTimeout(noticeTimerRef.current);
       wall3dRef.current?.dispose();
       wall3dRef.current = null;
     },

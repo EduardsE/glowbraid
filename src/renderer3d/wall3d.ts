@@ -112,7 +112,8 @@ export function createWall3D(canvas: HTMLCanvasElement): Wall3D {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 
   const scene = new THREE.Scene();
-  scene.background = gradientBackground();
+  const background = gradientBackground();
+  scene.background = background;
   const camera = new THREE.PerspectiveCamera(45, 1, 1, 2000);
   scene.add(new THREE.AmbientLight(0xffffff, 0.5));
   const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
@@ -132,15 +133,15 @@ export function createWall3D(canvas: HTMLCanvasElement): Wall3D {
     }),
   );
   composer.addPass(new RenderPass(scene, camera));
-  composer.addPass(
-    new UnrealBloomPass(
-      new THREE.Vector2(1, 1),
-      BLOOM_STRENGTH,
-      BLOOM_RADIUS,
-      BLOOM_THRESHOLD,
-    ),
+  const bloomPass = new UnrealBloomPass(
+    new THREE.Vector2(1, 1),
+    BLOOM_STRENGTH,
+    BLOOM_RADIUS,
+    BLOOM_THRESHOLD,
   );
-  composer.addPass(new OutputPass());
+  composer.addPass(bloomPass);
+  const outputPass = new OutputPass();
+  composer.addPass(outputPass);
 
   // --- mutable wall state, replaced on rebuild ---
   let layout: WorldLayout = computeWorldLayout(1, 25, 20, 4);
@@ -338,6 +339,9 @@ export function createWall3D(canvas: HTMLCanvasElement): Wall3D {
       controls.dispose();
       disposeGroup();
       fiberMat.dispose();
+      bloomPass.dispose();
+      outputPass.dispose();
+      background.dispose();
       composer.dispose();
       renderer.dispose();
     },
