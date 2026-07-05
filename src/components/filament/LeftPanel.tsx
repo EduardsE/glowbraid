@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { ColorSwatchPicker } from "./ColorSwatchPicker";
 
 const GRID_OPTIONS = [1, 2, 3, 4, 5, 6];
 const LED_DOTS = Array.from({ length: 12 }, (_, i) => `dot-${i}`);
@@ -14,6 +15,8 @@ export interface LeftPanelProps {
   onBoardPadding: (n: number) => void;
   showMeasurements: boolean;
   onShowMeasurements: (v: boolean) => void;
+  boardColor: string;
+  onBoardColor: (c: string) => void;
   curviness: number;
   onCurviness: (v: number) => void;
   randomness: number;
@@ -103,6 +106,15 @@ export function LeftPanel(props: LeftPanelProps) {
           className="h-3.5 w-3.5 cursor-pointer accent-[#9b8cff]"
         />
       </label>
+
+      <div className="flex flex-col gap-[7px]">
+        <div className="text-xs text-[rgba(233,234,240,0.7)]">Board color</div>
+        <ColorSwatchPicker
+          value={props.boardColor}
+          onChange={props.onBoardColor}
+          ariaLabel="Board color"
+        />
+      </div>
 
       <Divider />
       <SectionLabel>FIBRES &amp; LEDS</SectionLabel>

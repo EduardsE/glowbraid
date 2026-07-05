@@ -354,6 +354,7 @@ export function FilamentStudio() {
       frameSize: s.frameSize,
       frameGap: s.frameGap,
       boardPadding: s.boardPadding,
+      boardColor: s.boardColor,
       showMeasurements: s.showMeasurements,
       masterSeed: s.masterSeed,
       seeds: seedsRef.current,
@@ -387,6 +388,8 @@ export function FilamentStudio() {
     const frameSize = cmField(d.frameSize, 25, 10, 40);
     const frameGap = cmField(d.frameGap, 20, 0, 30);
     const boardPadding = cmField(d.boardPadding, 4, 0, 20);
+    const boardColor =
+      typeof d.boardColor === "string" ? d.boardColor : DEFAULT_BOARD_COLOR;
     const curviness = styleAxis(d.curviness, DEFAULT_FIBER_STYLE.curviness);
     const randomness = styleAxis(d.randomness, DEFAULT_FIBER_STYLE.randomness);
     const socketDepth = styleAxis(
@@ -404,6 +407,7 @@ export function FilamentStudio() {
       frameSize,
       frameGap,
       boardPadding,
+      boardColor,
       showMeasurements: d.showMeasurements === true,
       masterSeed: d.masterSeed,
       curviness,
@@ -467,6 +471,8 @@ export function FilamentStudio() {
           onBoardPadding={(n) => patch({ boardPadding: n })}
           showMeasurements={ui.showMeasurements}
           onShowMeasurements={(v) => patch({ showMeasurements: v })}
+          boardColor={ui.boardColor}
+          onBoardColor={(c) => patch({ boardColor: c })}
           curviness={ui.curviness}
           onCurviness={(v) => handleStyle({ curviness: v })}
           randomness={ui.randomness}
