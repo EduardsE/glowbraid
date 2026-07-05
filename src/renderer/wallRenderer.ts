@@ -92,6 +92,7 @@ export interface WallDrawState {
   gridSize: number;
   frameSize: number;
   frameGap: number;
+  boardPadding: number;
   zoom: number;
   pan: Point;
   mode: "edit" | "sim";
@@ -143,11 +144,23 @@ export function drawWall(
     gridSize: state.gridSize,
     frameSize: state.frameSize,
     frameGap: state.frameGap,
+    boardPadding: state.boardPadding,
     zoom: state.zoom,
     pan: state.pan,
     canvasWidth: width,
     canvasHeight: height,
   });
+
+  // Backing board — sits behind the frame grid, visible in the inter-frame
+  // gaps and around the outer edge per `boardPadding`.
+  ctx.save();
+  ctx.fillStyle = "#101114";
+  ctx.fillRect(layout.boardX, layout.boardY, layout.boardSize, layout.boardSize);
+  ctx.strokeStyle = "rgba(255,255,255,0.06)";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(layout.boardX, layout.boardY, layout.boardSize, layout.boardSize);
+  ctx.restore();
+
   const edit = state.mode === "edit";
   for (let index = 0; index < state.frames.length; index++) {
     const rect = frameRect(layout, index);
