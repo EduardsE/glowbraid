@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { blendSegment, delayedTime, TRAVEL } from "../light";
+import { ledColor } from "../animation";
+import { DEFAULT_FIBER_STYLE, generateFrame } from "../fibers";
+import {
+  blendSegment,
+  delayedTime,
+  fiberSegmentLights,
+  TRAVEL,
+} from "../light";
+import { PALETTES } from "../palettes";
 import type { LedLight } from "../types";
 
 const red: LedLight = { color: [255, 0, 0], brightness: 1 };
@@ -53,5 +61,81 @@ describe("delayedTime", () => {
   it("subtracts travel delay proportional to distance", () => {
     expect(delayedTime(10, 2)).toBeCloseTo(10 - 2 * TRAVEL, 10);
     expect(delayedTime(0, 1)).toBeCloseTo(-TRAVEL, 10);
+  });
+});
+
+describe("fiberSegmentLights", () => {
+  const frame = generateFrame(1234, DEFAULT_FIBER_STYLE);
+  const palette = PALETTES.sunset;
+
+  it("matches the per-segment blend of both delayed LED ends", () => {
+    const fiber = frame.fibers[0];
+    const ledA = frame.leds[fiber.startLedIndex];
+    const ledB = frame.leds[fiber.endLedIndex];
+    const time = 3.2;
+    const gpos = 0.25;
+    const speed = 1.4;
+    const segs = fiberSegmentLights(
+      fiber,
+      ledA,
+      ledB,
+      gpos,
+      time,
+      "flow",
+      speed,
+      palette,
+    );
+    const n = fiber.path.length;
+    expect(segs).toHaveLength(n - 1);
+    for (const i of [1, 9, n - 1]) {
+      const um = (i - 0.5) / (n - 1);
+      const expected = blendSegment(
+        ledColor(
+          ledA,
+          gpos,
+          delayedTime(time, um * fiber.length),
+          "flow",
+          speed,
+          palette,
+        ),
+        ledColor(
+          ledB,
+          gpos,
+          delayedTime(time, (1 - um) * fiber.length),
+          "flow",
+          speed,
+          palette,
+        ),
+        um,
+      );
+      expect(segs[i - 1]).toEqual(expected);
+    }
+  });
+
+  it("is deterministic", () => {
+    const fiber = frame.fibers[3];
+    const ledA = frame.leds[fiber.startLedIndex];
+    const ledB = frame.leds[fiber.endLedIndex];
+    const a = fiberSegmentLights(
+      fiber,
+      ledA,
+      ledB,
+      0.5,
+      7.7,
+      "pulse",
+      1,
+      palette,
+    );
+    const b = fiberSegmentLights(
+      fiber,
+      ledA,
+      ledB,
+      0.5,
+      7.7,
+      "pulse",
+      1,
+      palette,
+    );
+    expect(a).toEqual(b);
   });
 });
