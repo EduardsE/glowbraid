@@ -1,9 +1,17 @@
 import { ledColor } from "@/engine/animation";
+import type { SegmentLight } from "@/engine/light";
 import { blendSegment, delayedTime } from "@/engine/light";
 import type { Palette } from "@/engine/palettes";
 import { samplePalette } from "@/engine/palettes";
 import type { AnimationId, Frame, Point } from "@/engine/types";
 import { computeDimensionSegments, drawDimensions } from "./dimensions";
+import {
+  ADDITIVE_FADE,
+  boostSaturation,
+  floorIntensity,
+  lightBoardFactor,
+  SATURATION_BOOST,
+} from "./lightMapping";
 import { computeWallLayout, frameGradientPos, frameRect } from "./viewport";
 
 /** Global glow multiplier (design prop default). */
@@ -135,6 +143,8 @@ interface FrameDrawOptions {
   edit: boolean;
   color: string | null;
   boardColor: string;
+  /** 0 dark board → 1 light board; drives the additive↔graphic crossfade. */
+  lightFactor: number;
   gpos: number;
   time: number;
   anim: AnimationId;
@@ -198,6 +208,7 @@ export function drawWall(
   ctx.restore();
 
   const edit = state.mode === "edit";
+  const lightFactor = lightBoardFactor(state.boardColor);
   for (let index = 0; index < state.frames.length; index++) {
     const rect = frameRect(layout, index);
     const selected = index === state.selectedFrame;
@@ -207,6 +218,7 @@ export function drawWall(
       edit,
       color: state.frameColors[index] ?? null,
       boardColor: state.boardColor,
+      lightFactor,
       gpos: frameGradientPos(index, state.gridSize),
       time: state.time,
       anim: state.anim,
@@ -256,6 +268,7 @@ export function drawShowcaseFrame(
     edit: false,
     color: null,
     boardColor: DEFAULT_BOARD_COLOR,
+    lightFactor: lightBoardFactor(DEFAULT_BOARD_COLOR),
     gpos: 0.5,
     ...opts,
   });
@@ -276,6 +289,7 @@ function drawFrame(
     edit,
     color,
     boardColor,
+    lightFactor,
     gpos,
     time,
     anim,
@@ -283,6 +297,7 @@ function drawFrame(
     brightness,
     palette,
   } = opts;
+  const f = lightFactor;
   const r = sz * 0.045;
 
   // bezel
@@ -319,46 +334,39 @@ function drawFrame(
   );
   ambientGradient.addColorStop(
     0,
-    `rgba(${amb[0] | 0},${amb[1] | 0},${amb[2] | 0},0.14)`,
+    `rgba(${amb[0] | 0},${amb[1] | 0},${amb[2] | 0},${(0.14 * (1 - f)).toFixed(3)})`,
   );
   ambientGradient.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = ambientGradient;
   ctx.fillRect(x, y, sz, sz);
 
-  ctx.globalCompositeOperation = "lighter";
   for (const fiber of frame.fibers) {
     const pts = fiber.path;
     const n = pts.length;
     const ledA = frame.leds[fiber.startLedIndex];
     const ledB = frame.leds[fiber.endLedIndex];
 
-    // passive plastic light-guide (faint tinted body — continuous, no dots)
-    const bodyColor = samplePalette(palette, fiber.hueBase);
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    for (let i = 0; i < n; i++) {
-      const px = x + pts[i].x * sz;
-      const py = y + pts[i].y * sz;
-      if (i) ctx.lineTo(px, py);
-      else ctx.moveTo(px, py);
-    }
-    ctx.strokeStyle = `rgba(${bodyColor[0] | 0},${bodyColor[1] | 0},${bodyColor[2] | 0},0.07)`;
-    ctx.lineWidth = fiber.thickness * sz * 0.028;
-    ctx.stroke();
-    ctx.strokeStyle = "rgba(180,190,210,0.05)";
-    ctx.lineWidth = fiber.thickness * sz * 0.01;
-    ctx.stroke();
+    const tracePath = () => {
+      ctx.beginPath();
+      for (let i = 0; i < n; i++) {
+        const px = x + pts[i].x * sz;
+        const py = y + pts[i].y * sz;
+        if (i) ctx.lineTo(px, py);
+        else ctx.moveTo(px, py);
+      }
+    };
+    const strokeSeg = (i: number, style: string, width: number) => {
+      ctx.beginPath();
+      ctx.moveTo(x + pts[i - 1].x * sz, y + pts[i - 1].y * sz);
+      ctx.lineTo(x + pts[i].x * sz, y + pts[i].y * sz);
+      ctx.strokeStyle = style;
+      ctx.lineWidth = width;
+      ctx.stroke();
+    };
 
-    // injected light from both LED ends — segments are stroked one at a
-    // time (colour varies per-sample), so caps must be "butt": with the
-    // additive "lighter" composite, round caps double up brightness where
-    // adjacent segments' end-caps overlap, showing up as bead-like circles.
-    ctx.lineCap = "butt";
-    let prevX = x + pts[0].x * sz;
-    let prevY = y + pts[0].y * sz;
+    // Light at each segment, computed once and shared by both passes below.
+    const segs: SegmentLight[] = [];
     for (let i = 1; i < n; i++) {
-      const px = x + pts[i].x * sz;
-      const py = y + pts[i].y * sz;
       const um = (i - 0.5) / (n - 1);
       const lightA = ledColor(
         ledA,
@@ -376,25 +384,85 @@ function drawFrame(
         speed,
         palette,
       );
-      const seg = blendSegment(lightA, lightB, um);
-      if (seg.visible) {
+      segs.push(blendSegment(lightA, lightB, um));
+    }
+
+    const bodyColor = samplePalette(palette, fiber.hueBase);
+
+    // Additive pass — the dark-room look; fades out as the board brightens,
+    // where adding light to an already-bright board cannot produce contrast.
+    ctx.globalCompositeOperation = "lighter";
+
+    // passive plastic light-guide (faint tinted body — continuous, no dots)
+    ctx.lineCap = "round";
+    tracePath();
+    ctx.strokeStyle = `rgba(${bodyColor[0] | 0},${bodyColor[1] | 0},${bodyColor[2] | 0},0.07)`;
+    ctx.lineWidth = fiber.thickness * sz * 0.028;
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(180,190,210,0.05)";
+    ctx.lineWidth = fiber.thickness * sz * 0.01;
+    ctx.stroke();
+
+    // injected light from both LED ends — segments are stroked one at a
+    // time (colour varies per-sample), so caps must be "butt": with the
+    // additive "lighter" composite, round caps double up brightness where
+    // adjacent segments' end-caps overlap, showing up as bead-like circles.
+    ctx.lineCap = "butt";
+    const addScale = 1 - ADDITIVE_FADE * f;
+    if (addScale > 0.02) {
+      for (let i = 1; i < n; i++) {
+        const seg = segs[i - 1];
+        if (!seg.visible) continue;
         const [cr, cg, cb] = seg.color;
-        const inten = seg.intensity * brightness;
-        ctx.beginPath();
-        ctx.moveTo(prevX, prevY);
-        ctx.lineTo(px, py);
-        ctx.strokeStyle = `rgba(${cr | 0},${cg | 0},${cb | 0},${(inten * 0.16 * GLOW).toFixed(3)})`;
-        ctx.lineWidth = fiber.thickness * sz * 0.05 * GLOW;
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(prevX, prevY);
-        ctx.lineTo(px, py);
-        ctx.strokeStyle = `rgba(${Math.min(255, cr + 70) | 0},${Math.min(255, cg + 70) | 0},${Math.min(255, cb + 70) | 0},${Math.min(1, inten).toFixed(3)})`;
-        ctx.lineWidth = fiber.thickness * sz * 0.014;
-        ctx.stroke();
+        const inten = seg.intensity * brightness * addScale;
+        strokeSeg(
+          i,
+          `rgba(${cr | 0},${cg | 0},${cb | 0},${(inten * 0.16 * GLOW).toFixed(3)})`,
+          fiber.thickness * sz * 0.05 * GLOW,
+        );
+        strokeSeg(
+          i,
+          `rgba(${Math.min(255, cr + 70) | 0},${Math.min(255, cg + 70) | 0},${Math.min(255, cb + 70) | 0},${Math.min(1, inten).toFixed(3)})`,
+          fiber.thickness * sz * 0.014,
+        );
       }
-      prevX = px;
-      prevY = py;
+    }
+
+    // Graphic pass — opaque saturated strokes with a legibility floor, so
+    // the wall stays readable on light boards. Culled (invisible) segments
+    // still draw at the floor, tinted with the fibre's body hue, keeping the
+    // whole path faintly present like a real side-glow fibre in a lit room.
+    ctx.globalCompositeOperation = "source-over";
+    if (f > 0.01) {
+      ctx.lineCap = "round";
+      tracePath();
+      ctx.strokeStyle = `rgba(${bodyColor[0] | 0},${bodyColor[1] | 0},${bodyColor[2] | 0},${(0.1 * f).toFixed(3)})`;
+      ctx.lineWidth = fiber.thickness * sz * 0.028;
+      ctx.stroke();
+      ctx.strokeStyle = `rgba(180,190,210,${(0.1 * f).toFixed(3)})`;
+      ctx.lineWidth = fiber.thickness * sz * 0.01;
+      ctx.stroke();
+
+      ctx.lineCap = "butt";
+      for (let i = 1; i < n; i++) {
+        const seg = segs[i - 1];
+        const raw = seg.visible ? seg.intensity * brightness : 0;
+        const ip = floorIntensity(raw);
+        const sat = boostSaturation(
+          seg.visible ? seg.color : bodyColor,
+          SATURATION_BOOST,
+        );
+        strokeSeg(
+          i,
+          `rgba(${sat[0] | 0},${sat[1] | 0},${sat[2] | 0},${(0.45 * ip * f).toFixed(3)})`,
+          fiber.thickness * sz * 0.05,
+        );
+        strokeSeg(
+          i,
+          `rgba(${(sat[0] * 0.82) | 0},${(sat[1] * 0.82) | 0},${(sat[2] * 0.82) | 0},${(Math.min(1, ip) * f).toFixed(3)})`,
+          fiber.thickness * sz * 0.016,
+        );
+      }
     }
   }
   ctx.globalCompositeOperation = "source-over";
