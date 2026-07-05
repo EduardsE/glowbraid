@@ -33,6 +33,7 @@ interface StudioState {
   gridSize: number;
   frameSize: number;
   frameGap: number;
+  boardPadding: number;
   curviness: number;
   randomness: number;
   socketDepth: number;
@@ -55,6 +56,7 @@ const INITIAL_STATE: StudioState = {
   gridSize: 3,
   frameSize: 236,
   frameGap: 20,
+  boardPadding: 40,
   curviness: DEFAULT_FIBER_STYLE.curviness,
   randomness: DEFAULT_FIBER_STYLE.randomness,
   socketDepth: DEFAULT_FIBER_STYLE.socketDepth,
@@ -169,6 +171,7 @@ export function FilamentStudio() {
       gridSize: s.gridSize,
       frameSize: s.frameSize,
       frameGap: s.frameGap,
+      boardPadding: s.boardPadding,
       zoom: s.zoom,
       pan: panRef.current,
       mode: s.mode,
@@ -255,6 +258,7 @@ export function FilamentStudio() {
         gridSize: s.gridSize,
         frameSize: s.frameSize,
         frameGap: s.frameGap,
+        boardPadding: s.boardPadding,
         zoom: s.zoom,
         pan: panRef.current,
         canvasWidth: sizeRef.current.width,
@@ -323,6 +327,7 @@ export function FilamentStudio() {
       gridSize: s.gridSize,
       frameSize: s.frameSize,
       frameGap: s.frameGap,
+      boardPadding: s.boardPadding,
       masterSeed: s.masterSeed,
       seeds: seedsRef.current,
       anim: s.anim,
@@ -355,6 +360,9 @@ export function FilamentStudio() {
     const frameGap = Number.isFinite(Number(d.frameGap))
       ? Number(d.frameGap)
       : 20;
+    const boardPadding = Number.isFinite(Number(d.boardPadding))
+      ? Number(d.boardPadding)
+      : 40;
     const curviness = styleAxis(d.curviness, DEFAULT_FIBER_STYLE.curviness);
     const randomness = styleAxis(d.randomness, DEFAULT_FIBER_STYLE.randomness);
     const socketDepth = styleAxis(
@@ -371,6 +379,7 @@ export function FilamentStudio() {
       gridSize,
       frameSize: d.frameSize,
       frameGap,
+      boardPadding,
       masterSeed: d.masterSeed,
       curviness,
       randomness,
