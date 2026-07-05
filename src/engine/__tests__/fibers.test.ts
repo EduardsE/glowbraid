@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  ARM_CHORD_FACTOR,
   DEFAULT_FIBER_STYLE,
   FIBERS_PER_FRAME,
   generateFrame,
@@ -21,6 +22,47 @@ function maxChordDeviation(path: Point[]): number {
     if (d > max) max = d;
   }
   return max;
+}
+
+/** Strict segment-crossing test; shared endpoints and touches don't count. */
+function segmentsCross(a: Point, b: Point, c: Point, d: Point): boolean {
+  const orient = (o: Point, p: Point, q: Point) =>
+    (p.x - o.x) * (q.y - o.y) - (p.y - o.y) * (q.x - o.x);
+  const d1 = orient(c, d, a);
+  const d2 = orient(c, d, b);
+  const d3 = orient(a, b, c);
+  const d4 = orient(a, b, d);
+  return (
+    ((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) &&
+    ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0))
+  );
+}
+
+/** True if any two non-adjacent segments of the polyline cross. */
+function pathSelfIntersects(path: Point[]): boolean {
+  for (let i = 0; i < path.length - 1; i++) {
+    for (let j = i + 2; j < path.length - 1; j++) {
+      if (segmentsCross(path[i], path[i + 1], path[j], path[j + 1])) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+/** Distance from p to the segment ab. */
+function distanceToSegment(p: Point, a: Point, b: Point): number {
+  const abx = b.x - a.x;
+  const aby = b.y - a.y;
+  const len2 = abx * abx + aby * aby;
+  const t =
+    len2 === 0
+      ? 0
+      : Math.max(
+          0,
+          Math.min(1, ((p.x - a.x) * abx + (p.y - a.y) * aby) / len2),
+        );
+  return Math.hypot(p.x - (a.x + t * abx), p.y - (a.y + t * aby));
 }
 
 describe("generateFrame", () => {
@@ -390,5 +432,67 @@ describe("generateFrame socket depth (perpendicular exits)", () => {
         socketDepth: Number.NaN,
       }),
     ).toEqual(generateFrame(5, depthStyle(0.4)));
+  });
+});
+
+describe("generateFrame chord-proportional arms (no knots)", () => {
+  // Style corners that produced knots before the ARM_CHORD_FACTOR limit:
+  // 1001 self-intersecting fibres across this sweep, e.g. seeds 2-5 at the
+  // default style (spec 2026-07-05-chord-proportional-arms-design).
+  const KNOT_STYLES: FiberStyle[] = [
+    { curviness: 0, randomness: 0, socketDepth: 0.4 },
+    { curviness: 0, randomness: 1, socketDepth: 0.4 },
+    { curviness: 1, randomness: 0, socketDepth: 0.4 },
+    { curviness: 1, randomness: 1, socketDepth: 0.4 },
+    { curviness: 0.5, randomness: 0.5, socketDepth: 0.4 },
+    { curviness: 1, randomness: 1, socketDepth: 0 },
+    { curviness: 1, randomness: 1, socketDepth: 1 },
+  ];
+
+  /** Engine's stub-length mapping: L = lerp(0, 0.12, socketDepth). */
+  const stubLength = (socketDepth: number) => 0.12 * socketDepth;
+
+  it("no fiber path self-intersects (seeds 1-200, style extremes)", () => {
+    for (const style of KNOT_STYLES) {
+      for (let seed = 1; seed <= 200; seed++) {
+        const frame = generateFrame(seed, style);
+        for (const fiber of frame.fibers) {
+          expect(pathSelfIntersects(fiber.path)).toBe(false);
+        }
+      }
+    }
+  });
+
+  it("every path point stays inside the chord envelope (seeds 1-200, style extremes)", () => {
+    // Convex-hull bound: the cubic lies in hull{stubA, p1, p2, stubB}; the
+    // arms are ≤ ARM_CHORD_FACTOR·chord, so no curve sample strays farther
+    // than that from the stub-tip segment, and the hole→stub legs add at
+    // most the stub length.
+    for (const style of KNOT_STYLES) {
+      const L = stubLength(style.socketDepth);
+      for (let seed = 1; seed <= 200; seed++) {
+        const frame = generateFrame(seed, style);
+        for (const fiber of frame.fibers) {
+          const a = frame.leds[fiber.startLedIndex];
+          const b = frame.leds[fiber.endLedIndex];
+          const tipA = {
+            x: a.position.x + a.normal.x * L,
+            y: a.position.y + a.normal.y * L,
+          };
+          const tipB = {
+            x: b.position.x + b.normal.x * L,
+            y: b.position.y + b.normal.y * L,
+          };
+          const chord = Math.hypot(tipB.x - tipA.x, tipB.y - tipA.y);
+          const bound = ARM_CHORD_FACTOR * chord + L + 1e-9;
+          let worst = 0;
+          for (const p of fiber.path) {
+            const d = distanceToSegment(p, tipA, tipB);
+            if (d > worst) worst = d;
+          }
+          expect(worst).toBeLessThanOrEqual(bound);
+        }
+      }
+    }
   });
 });

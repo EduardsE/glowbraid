@@ -46,6 +46,18 @@ const STUB_MAX = 0.12;
 const ARM_TUCK = 0.3;
 const ARM_RAMP_END = DEFAULT_FIBER_STYLE.socketDepth;
 
+/**
+ * A control arm never exceeds ARM_CHORD_FACTOR × the stub-tip chord, so a
+ * short (same-corner) pair renders as a short arc instead of an
+ * overshooting knot — a real fibre tube cannot fold back on itself. At 1.0
+ * ("an arm never exceeds the fibre's span") an empirical sweep of seeds
+ * 1–1000 × 18 style combos found zero self-intersecting paths (first knots
+ * appear at 1.4×), while every fibre whose chord already fits the style's
+ * maximum arm stays bit-identical. Spec:
+ * docs/superpowers/specs/2026-07-05-chord-proportional-arms-design.md.
+ */
+export const ARM_CHORD_FACTOR = 1;
+
 function clampAxis(v: number): number {
   return Math.min(1 - MARGIN, Math.max(MARGIN, v));
 }
@@ -196,6 +208,9 @@ function fallbackPairs(count: number, rnd: Rng): Array<[number, number]> {
  * at each LED hole (and, below the default depth, compresses the control
  * arms so shallow sockets bend right after the hole). All axes clamp to
  * [0, 1]. Exits are always perpendicular at every depth.
+ * Arms are additionally capped at ARM_CHORD_FACTOR × the stub-tip chord
+ * (spec 2026-07-05-chord-proportional-arms) so short same-corner pairs
+ * arc instead of knotting.
  *
  * RNG draw order (stable — saved projects persist seeds and regenerate):
  * per matching attempt one 24-element shuffle then one weighted pick per
@@ -240,18 +255,6 @@ export function generateFrame(
     const start = leds[startIndex];
     const end = leds[endIndex];
 
-    const dA = (shape.controlMin + rnd() * shape.controlRange) * armScale;
-    const dB = (shape.controlMin + rnd() * shape.controlRange) * armScale;
-    // Four draws kept from the retired tangent-bow machinery (magA,
-    // signDrawA, magB, signDrawB) — consumed so persisted seeds keep their
-    // matching and thickness across engine versions, but perpendicular
-    // exits leave them nothing to steer.
-    rnd();
-    rnd();
-    rnd();
-    rnd();
-    const thickness = 0.85 + rnd() * 0.5;
-
     // Straight socket stub: the fiber leaves the hole along the LED normal.
     const stubA = {
       x: start.position.x + start.normal.x * stub,
@@ -261,6 +264,27 @@ export function generateFrame(
       x: end.position.x + end.normal.x * stub,
       y: end.position.y + end.normal.y * stub,
     };
+    // Both arms shrink in proportion when the chord is short (same-corner
+    // pairs), keeping per-fiber variation; armFit is exactly 1 — and the
+    // output bit-identical — whenever the style's maximum possible arm
+    // already fits the chord.
+    const chord = Math.hypot(stubB.x - stubA.x, stubB.y - stubA.y);
+    const maxArm = (shape.controlMin + shape.controlRange) * armScale;
+    const armFit = Math.min(1, (ARM_CHORD_FACTOR * chord) / maxArm);
+
+    const dA =
+      (shape.controlMin + rnd() * shape.controlRange) * armScale * armFit;
+    const dB =
+      (shape.controlMin + rnd() * shape.controlRange) * armScale * armFit;
+    // Four draws kept from the retired tangent-bow machinery (magA,
+    // signDrawA, magB, signDrawB) — consumed so persisted seeds keep their
+    // matching and thickness across engine versions, but perpendicular
+    // exits leave them nothing to steer.
+    rnd();
+    rnd();
+    rnd();
+    rnd();
+    const thickness = 0.85 + rnd() * 0.5;
     // Control points on the normals: the cubic's end tangents continue the
     // stubs exactly — perpendicular exit, no kink at the joint.
     const p1 = {
