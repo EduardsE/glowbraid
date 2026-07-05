@@ -81,6 +81,8 @@ export interface LedLight {
 export interface ProjectSnapshot {
   gridSize: number;
   frameSize: number;
+  /** Pixel gap between adjacent frames. Absent in legacy saves → loader defaults to 20. */
+  frameGap: number;
   masterSeed: number;
   seeds: number[];
   anim: AnimationId;

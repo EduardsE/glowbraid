@@ -91,6 +91,7 @@ export interface WallDrawState {
   frames: Frame[];
   gridSize: number;
   frameSize: number;
+  frameGap: number;
   zoom: number;
   pan: Point;
   mode: "edit" | "sim";
@@ -141,6 +142,7 @@ export function drawWall(
   const layout = computeWallLayout({
     gridSize: state.gridSize,
     frameSize: state.frameSize,
+    frameGap: state.frameGap,
     zoom: state.zoom,
     pan: state.pan,
     canvasWidth: width,

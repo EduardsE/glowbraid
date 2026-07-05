@@ -3,6 +3,7 @@ import type { Point } from "@/engine/types";
 export interface ViewportInput {
   gridSize: number;
   frameSize: number;
+  frameGap: number;
   zoom: number;
   pan: Point;
   canvasWidth: number;
@@ -20,16 +21,16 @@ export interface WallLayout {
 
 /** Wall fills 82% of the canvas at zoom 1, centered plus pan offset. */
 export function computeWallLayout(input: ViewportInput): WallLayout {
-  const { gridSize, frameSize, zoom, pan, canvasWidth, canvasHeight } = input;
-  const gap = frameSize * 0.09;
-  const wall = gridSize * frameSize + (gridSize - 1) * gap;
+  const { gridSize, frameSize, frameGap, zoom, pan, canvasWidth, canvasHeight } =
+    input;
+  const wall = gridSize * frameSize + (gridSize - 1) * frameGap;
   const base = Math.min(
     (canvasWidth * 0.82) / wall,
     (canvasHeight * 0.82) / wall,
   );
   const scale = base * zoom;
   return {
-    gap,
+    gap: frameGap,
     scale,
     frameSize,
     gridSize,

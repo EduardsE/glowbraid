@@ -32,6 +32,7 @@ interface StudioState {
   mode: "edit" | "sim";
   gridSize: number;
   frameSize: number;
+  frameGap: number;
   curviness: number;
   randomness: number;
   socketDepth: number;
@@ -53,6 +54,7 @@ const INITIAL_STATE: StudioState = {
   mode: "sim",
   gridSize: 3,
   frameSize: 236,
+  frameGap: 20,
   curviness: DEFAULT_FIBER_STYLE.curviness,
   randomness: DEFAULT_FIBER_STYLE.randomness,
   socketDepth: DEFAULT_FIBER_STYLE.socketDepth,
@@ -166,6 +168,7 @@ export function FilamentStudio() {
       frames: framesRef.current,
       gridSize: s.gridSize,
       frameSize: s.frameSize,
+      frameGap: s.frameGap,
       zoom: s.zoom,
       pan: panRef.current,
       mode: s.mode,
@@ -251,6 +254,7 @@ export function FilamentStudio() {
       const layout = computeWallLayout({
         gridSize: s.gridSize,
         frameSize: s.frameSize,
+        frameGap: s.frameGap,
         zoom: s.zoom,
         pan: panRef.current,
         canvasWidth: sizeRef.current.width,
@@ -318,6 +322,7 @@ export function FilamentStudio() {
     const snapshot: ProjectSnapshot = {
       gridSize: s.gridSize,
       frameSize: s.frameSize,
+      frameGap: s.frameGap,
       masterSeed: s.masterSeed,
       seeds: seedsRef.current,
       anim: s.anim,
@@ -347,6 +352,9 @@ export function FilamentStudio() {
       6,
       Math.max(1, Math.round(Number(d.gridSize) || 3)),
     );
+    const frameGap = Number.isFinite(Number(d.frameGap))
+      ? Number(d.frameGap)
+      : 20;
     const curviness = styleAxis(d.curviness, DEFAULT_FIBER_STYLE.curviness);
     const randomness = styleAxis(d.randomness, DEFAULT_FIBER_STYLE.randomness);
     const socketDepth = styleAxis(
@@ -362,6 +370,7 @@ export function FilamentStudio() {
     patch({
       gridSize,
       frameSize: d.frameSize,
+      frameGap,
       masterSeed: d.masterSeed,
       curviness,
       randomness,
@@ -418,6 +427,8 @@ export function FilamentStudio() {
           onGridSize={handleGridSize}
           frameSize={ui.frameSize}
           onFrameSize={(n) => patch({ frameSize: n })}
+          frameGap={ui.frameGap}
+          onFrameGap={(n) => patch({ frameGap: n })}
           curviness={ui.curviness}
           onCurviness={(v) => handleStyle({ curviness: v })}
           randomness={ui.randomness}
