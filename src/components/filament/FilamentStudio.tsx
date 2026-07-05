@@ -56,7 +56,7 @@ const INITIAL_STATE: StudioState = {
   mode: "sim",
   gridSize: 3,
   frameSize: 25,
-  frameGap: 2,
+  frameGap: 20,
   boardPadding: 4,
   showMeasurements: false,
   curviness: DEFAULT_FIBER_STYLE.curviness,
@@ -273,7 +273,7 @@ export function FilamentStudio() {
       const layout = computeWallLayout({
         gridSize: s.gridSize,
         frameSize: s.frameSize,
-        frameGap: s.frameGap,
+        frameGap: s.frameGap / 10,
         boardPadding: s.boardPadding,
         zoom: s.zoom,
         pan: panRef.current,
@@ -375,7 +375,7 @@ export function FilamentStudio() {
       Math.max(1, Math.round(Number(d.gridSize) || 3)),
     );
     const frameSize = cmField(d.frameSize, 25, 10, 40);
-    const frameGap = cmField(d.frameGap, 2, 0, 15);
+    const frameGap = cmField(d.frameGap, 20, 0, 30);
     const boardPadding = cmField(d.boardPadding, 4, 0, 20);
     const curviness = styleAxis(d.curviness, DEFAULT_FIBER_STYLE.curviness);
     const randomness = styleAxis(d.randomness, DEFAULT_FIBER_STYLE.randomness);

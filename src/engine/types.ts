@@ -82,7 +82,7 @@ export interface ProjectSnapshot {
   gridSize: number;
   /** Frame edge length in centimetres (10–40). */
   frameSize: number;
-  /** Gap between adjacent frames in centimetres (0–15). Absent in legacy saves → loader defaults to 2. */
+  /** Gap between adjacent frames in millimetres (0–30). Absent in legacy saves → loader defaults to 20. */
   frameGap: number;
   /** Padding between the frame grid's outer edge and the board edge in centimetres (0–20). Absent in legacy saves → loader defaults to 4. */
   boardPadding: number;
