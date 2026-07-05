@@ -15,7 +15,7 @@ export const Route = createRootRoute({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "Filament — Fibre Optic Wall Studio",
+        title: "Glowbraid — Fibre Optic Wall Studio",
       },
     ],
     links: [

@@ -1,4 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { FilamentStudio } from "@/components/filament/FilamentStudio";
+import { GlowbraidStudio } from "@/components/glowbraid/GlowbraidStudio";
 
-export const Route = createFileRoute("/")({ component: FilamentStudio });
+export const Route = createFileRoute("/")({ component: GlowbraidStudio });

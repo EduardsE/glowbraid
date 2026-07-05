@@ -23,7 +23,7 @@ export function Header({
         <div className="h-[26px] w-[26px] rounded-lg shadow-[0_0_18px_rgba(155,140,255,0.5)] [background:conic-gradient(from_210deg,#ff6b9d,#ffb36b,#9b8cff,#6bd8ff,#ff6b9d)]" />
         <div className="flex flex-col leading-[1.05]">
           <span className="text-sm font-semibold tracking-[0.01em]">
-            Filament
+            Glowbraid
           </span>
           <span className="text-[10px] tracking-[0.06em] text-[rgba(233,234,240,0.42)]">
             FIBRE OPTIC WALL STUDIO

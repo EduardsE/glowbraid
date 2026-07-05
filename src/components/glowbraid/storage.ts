@@ -1,6 +1,8 @@
 import type { ProjectSnapshot } from "@/engine/types";
 
-const STORAGE_KEY = "filament.project";
+const STORAGE_KEY = "glowbraid.project";
+/** Pre-rename key; still read on load so existing saves aren't orphaned. */
+const LEGACY_STORAGE_KEY = "filament.project";
 
 export function saveProject(snapshot: ProjectSnapshot): boolean {
   try {
@@ -13,7 +15,9 @@ export function saveProject(snapshot: ProjectSnapshot): boolean {
 
 export function loadProject(): ProjectSnapshot | null {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw =
+      localStorage.getItem(STORAGE_KEY) ??
+      localStorage.getItem(LEGACY_STORAGE_KEY);
     return raw ? (JSON.parse(raw) as ProjectSnapshot) : null;
   } catch {
     return null;

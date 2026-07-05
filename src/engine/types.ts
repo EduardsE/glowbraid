@@ -77,7 +77,7 @@ export interface LedLight {
   brightness: number;
 }
 
-/** Shape persisted to localStorage under "filament.project" */
+/** Shape persisted to localStorage under "glowbraid.project" */
 export interface ProjectSnapshot {
   gridSize: number;
   /** Frame edge length in centimetres (10–40). */

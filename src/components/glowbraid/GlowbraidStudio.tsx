@@ -124,7 +124,7 @@ function cmField(
     : fallback;
 }
 
-export function FilamentStudio() {
+export function GlowbraidStudio() {
   const [ui, setUi] = useState<StudioState>(INITIAL_STATE);
   const uiRef = useRef(ui);
   uiRef.current = ui;

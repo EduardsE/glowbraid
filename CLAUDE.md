@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Filament Studio — a canvas simulator for a fibre-optic wall: a grid of square frames, each ringed by 24 hidden edge LEDs (two 3-LED strips per edge) injecting light into 12 passive side-glow fibres. Fibres carry no LEDs; light enters from both ends and decays exponentially (`src/engine/light.ts`). Everything is generated deterministically from seeds so a saved project regenerates pixel-for-pixel.
+Glowbraid — a canvas simulator for a fibre-optic wall: a grid of square frames, each ringed by 24 hidden edge LEDs (two 3-LED strips per edge) injecting light into 12 passive side-glow fibres. Fibres carry no LEDs; light enters from both ends and decays exponentially (`src/engine/light.ts`). Everything is generated deterministically from seeds so a saved project regenerates pixel-for-pixel.
 
 ## Commands
 
@@ -29,18 +29,18 @@ Strictly layered **engine → renderer → UI**; imports only point left.
 
 - `src/engine/` — pure, deterministic, React/DOM-free simulation: seeded RNG (`random.ts`), LED layout (`leds.ts`), fibre generation via perfect matching of the 24 LEDs into 12 fibres (`fibers.ts`), wall/seed derivation (`wall.ts`), light propagation (`light.ts`), animations and palettes. Kept framework-free on purpose — the same logic is meant to later drive real ESP32 LED hardware. Don't import React or DOM types here.
 - `src/renderer/` — Canvas2D drawing: `wallRenderer.ts` (wall + showcase frame), `mapRenderer.ts` (inspector connection map), `viewport.ts` (layout/zoom/pan math + hit testing).
-- `src/components/filament/` — React shell. `FilamentStudio.tsx` owns all state and wires everything; the other files are presentational panels and two hooks (`useAnimationLoop`, `useCanvasInteraction`).
+- `src/components/glowbraid/` — React shell. `GlowbraidStudio.tsx` owns all state and wires everything; the other files are presentational panels and two hooks (`useAnimationLoop`, `useCanvasInteraction`).
 
 ### Determinism is a persistence contract
 
-Saved projects store only seeds + settings (`ProjectSnapshot` in `src/engine/types.ts`, localStorage key `filament.project`) and regenerate geometry on load. Consequences:
+Saved projects store only seeds + settings (`ProjectSnapshot` in `src/engine/types.ts`, localStorage key `glowbraid.project`) and regenerate geometry on load. Consequences:
 
 - **RNG draw order in `fibers.ts` is load-bearing.** Reordering or adding `rng()` calls silently changes every saved wall. New randomness must come from new derived RNG streams or draw after existing calls.
-- New `ProjectSnapshot` fields must tolerate absence: the loader in `FilamentStudio.tsx` (`handleLoad`) sanitizes every field with a fallback for legacy/hand-edited saves. Follow that pattern when adding fields.
+- New `ProjectSnapshot` fields must tolerate absence: the loader in `GlowbraidStudio.tsx` (`handleLoad`) sanitizes every field with a fallback for legacy/hand-edited saves. Follow that pattern when adding fields.
 
 ### Render loop lives outside React state
 
-`FilamentStudio.tsx` keeps per-frame mutable data in refs (`tRef`, `panRef`, `framesRef`, `sizeRef`…) and redraws imperatively via `useAnimationLoop`; React state (`ui`) only holds things that change UI chrome. Scrub position and time readout are written directly to DOM nodes each tick — don't move animation-frequency data into `useState`.
+`GlowbraidStudio.tsx` keeps per-frame mutable data in refs (`tRef`, `panRef`, `framesRef`, `sizeRef`…) and redraws imperatively via `useAnimationLoop`; React state (`ui`) only holds things that change UI chrome. Scrub position and time readout are written directly to DOM nodes each tick — don't move animation-frequency data into `useState`.
 
 ### Canvas performance
 
