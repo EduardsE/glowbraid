@@ -10,6 +10,8 @@ export interface LeftPanelProps {
   onFrameSize: (n: number) => void;
   frameGap: number;
   onFrameGap: (n: number) => void;
+  boardPadding: number;
+  onBoardPadding: (n: number) => void;
   curviness: number;
   onCurviness: (v: number) => void;
   randomness: number;
@@ -70,6 +72,19 @@ export function LeftPanel(props: LeftPanelProps) {
           step={2}
           value={props.frameGap}
           onChange={(e) => props.onFrameGap(Number(e.target.value))}
+          className="w-full"
+        />
+      </SliderRow>
+
+      <SliderRow label="Board padding" value={`${props.boardPadding}px`}>
+        <input
+          type="range"
+          aria-label="Board padding"
+          min={0}
+          max={120}
+          step={2}
+          value={props.boardPadding}
+          onChange={(e) => props.onBoardPadding(Number(e.target.value))}
           className="w-full"
         />
       </SliderRow>

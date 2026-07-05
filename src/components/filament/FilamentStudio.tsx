@@ -438,6 +438,8 @@ export function FilamentStudio() {
           onFrameSize={(n) => patch({ frameSize: n })}
           frameGap={ui.frameGap}
           onFrameGap={(n) => patch({ frameGap: n })}
+          boardPadding={ui.boardPadding}
+          onBoardPadding={(n) => patch({ boardPadding: n })}
           curviness={ui.curviness}
           onCurviness={(v) => handleStyle({ curviness: v })}
           randomness={ui.randomness}
