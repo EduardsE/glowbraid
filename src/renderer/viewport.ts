@@ -4,6 +4,7 @@ export interface ViewportInput {
   gridSize: number;
   frameSize: number;
   frameGap: number;
+  boardPadding: number;
   zoom: number;
   pan: Point;
   canvasWidth: number;
@@ -17,25 +18,42 @@ export interface WallLayout {
   ty: number;
   frameSize: number;
   gridSize: number;
+  boardX: number;
+  boardY: number;
+  boardSize: number;
 }
 
-/** Wall fills 82% of the canvas at zoom 1, centered plus pan offset. */
+/** Board (frame grid + padding) fills 82% of the canvas at zoom 1, centered plus pan offset. */
 export function computeWallLayout(input: ViewportInput): WallLayout {
-  const { gridSize, frameSize, frameGap, zoom, pan, canvasWidth, canvasHeight } =
-    input;
+  const {
+    gridSize,
+    frameSize,
+    frameGap,
+    boardPadding,
+    zoom,
+    pan,
+    canvasWidth,
+    canvasHeight,
+  } = input;
   const wall = gridSize * frameSize + (gridSize - 1) * frameGap;
+  const boardExtent = wall + 2 * boardPadding;
   const base = Math.min(
-    (canvasWidth * 0.82) / wall,
-    (canvasHeight * 0.82) / wall,
+    (canvasWidth * 0.82) / boardExtent,
+    (canvasHeight * 0.82) / boardExtent,
   );
   const scale = base * zoom;
+  const boardX = canvasWidth / 2 + pan.x - (scale * boardExtent) / 2;
+  const boardY = canvasHeight / 2 + pan.y - (scale * boardExtent) / 2;
   return {
     gap: frameGap,
     scale,
     frameSize,
     gridSize,
-    tx: canvasWidth / 2 + pan.x - (scale * wall) / 2,
-    ty: canvasHeight / 2 + pan.y - (scale * wall) / 2,
+    tx: boardX + scale * boardPadding,
+    ty: boardY + scale * boardPadding,
+    boardX,
+    boardY,
+    boardSize: scale * boardExtent,
   };
 }
 
