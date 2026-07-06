@@ -46,6 +46,7 @@ interface StudioState {
   randomness: number;
   socketDepth: number;
   masterSeed: number;
+  geometryVersion: number;
   selectedFrame: number | null;
   selectedFiber: number | null;
   playing: boolean;
@@ -72,6 +73,7 @@ const INITIAL_STATE: StudioState = {
   randomness: DEFAULT_FIBER_STYLE.randomness,
   socketDepth: DEFAULT_FIBER_STYLE.socketDepth,
   masterSeed: 7431,
+  geometryVersion: 0,
   selectedFrame: null,
   selectedFiber: null,
   playing: true,
@@ -152,6 +154,7 @@ export function GlowbraidStudio() {
   const wall3dRef = useRef<Wall3D | null>(null);
   const disposedRef = useRef(false);
   const noticeTimerRef = useRef(0);
+  const saveTimerRef = useRef(0);
   const [notice, setNotice] = useState<string | null>(null);
   const mapCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const scrubRef = useRef<HTMLInputElement | null>(null);
@@ -365,6 +368,53 @@ export function GlowbraidStudio() {
     [],
   );
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: exhaustive list ensures autosave on any persisted field change
+  useEffect(() => {
+    window.clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = window.setTimeout(() => {
+      const s = uiRef.current;
+      const snapshot: ProjectSnapshot = {
+        gridSize: s.gridSize,
+        frameSize: s.frameSize,
+        frameGap: s.frameGap,
+        boardPadding: s.boardPadding,
+        boardColor: s.boardColor,
+        frameColors: s.frameColors,
+        showMeasurements: s.showMeasurements,
+        masterSeed: s.masterSeed,
+        seeds: seedsRef.current,
+        anim: s.anim,
+        speed: s.speed,
+        brightness: s.brightness,
+        palette: s.palette,
+        curviness: s.curviness,
+        randomness: s.randomness,
+        socketDepth: s.socketDepth,
+        mode: s.mode,
+      };
+      saveProject(snapshot);
+    }, 400);
+    return () => window.clearTimeout(saveTimerRef.current);
+  }, [
+    ui.gridSize,
+    ui.frameSize,
+    ui.frameGap,
+    ui.boardPadding,
+    ui.boardColor,
+    ui.frameColors,
+    ui.showMeasurements,
+    ui.masterSeed,
+    ui.geometryVersion,
+    ui.anim,
+    ui.speed,
+    ui.brightness,
+    ui.palette,
+    ui.curviness,
+    ui.randomness,
+    ui.socketDepth,
+    ui.mode,
+  ]);
+
   const handleGridSize = (n: number) => {
     rebuild(n, ui.masterSeed, styleOf(ui));
     patch({
@@ -415,7 +465,7 @@ export function GlowbraidStudio() {
     const frames = [...framesRef.current];
     frames[s.selectedFrame] = generateFrame(seed, styleOf(s));
     framesRef.current = frames;
-    patch({ selectedFiber: null });
+    patch({ selectedFiber: null, geometryVersion: s.geometryVersion + 1 });
   };
   const handleFrameColor = (color: string) => {
     const s = uiRef.current;
