@@ -2,6 +2,7 @@
   "name": "led-grid-generator",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@10.9.0",
   "imports": {
     "#/*": "./src/*"
   },
