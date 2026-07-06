@@ -417,15 +417,19 @@ export function GlowbraidStudio() {
     },
   });
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    // Reset on every effect setup: React can run this effect's cleanup and
+    // re-run it on the same instance (StrictMode-style double-invocation;
+    // TanStack Start does this for client-only routes). Without the reset,
+    // the flag latches true and ensure3D never creates the renderer.
+    disposedRef.current = false;
+    return () => {
       disposedRef.current = true;
       window.clearTimeout(noticeTimerRef.current);
       wall3dRef.current?.dispose();
       wall3dRef.current = null;
-    },
-    [],
-  );
+    };
+  }, []);
 
   useEffect(() => {
     if (uiRef.current.mode === "3d") void ensure3D();
