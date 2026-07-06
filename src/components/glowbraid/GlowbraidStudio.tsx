@@ -33,6 +33,9 @@ interface StudioState {
   frameSize: number;
   frameGap: number;
   boardPadding: number;
+  cornerRadius: number;
+  frameWidth: number;
+  frameOffset: number;
   boardColor: string;
   frameColors: (string | null)[];
   showMeasurements: boolean;
@@ -58,6 +61,9 @@ const INITIAL_STATE: StudioState = {
   frameSize: 25,
   frameGap: 20,
   boardPadding: 4,
+  cornerRadius: 15,
+  frameWidth: 8,
+  frameOffset: 2,
   boardColor: DEFAULT_BOARD_COLOR,
   frameColors: [],
   showMeasurements: false,
@@ -118,6 +124,17 @@ function cmField(
     : fallback;
 }
 
+/** Loader sanitizer: finite number clamped to [min, max] (no rounding), else fallback. */
+function numField(
+  value: unknown,
+  fallback: number,
+  min: number,
+  max: number,
+): number {
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
+}
+
 function deriveGeometry(
   gridSize: number,
   masterSeed: number,
@@ -167,6 +184,9 @@ function buildInitialProject(): InitialProject {
   const frameSize = cmField(d.frameSize, 25, 10, 40);
   const frameGap = cmField(d.frameGap, 20, 0, 30);
   const boardPadding = cmField(d.boardPadding, 4, 0, 20);
+  const cornerRadius = cmField(d.cornerRadius, 15, 0, frameSize * 5);
+  const frameWidth = cmField(d.frameWidth, 8, 1, frameSize * 5 - 1);
+  const frameOffset = numField(d.frameOffset, 2, 0, 10);
   const boardColor =
     typeof d.boardColor === "string" ? d.boardColor : DEFAULT_BOARD_COLOR;
   const frameCount = gridSize * gridSize;
@@ -194,6 +214,9 @@ function buildInitialProject(): InitialProject {
       frameSize,
       frameGap,
       boardPadding,
+      cornerRadius,
+      frameWidth,
+      frameOffset,
       boardColor,
       frameColors,
       showMeasurements: d.showMeasurements === true,
@@ -445,6 +468,9 @@ export function GlowbraidStudio() {
         frameSize: s.frameSize,
         frameGap: s.frameGap,
         boardPadding: s.boardPadding,
+        cornerRadius: s.cornerRadius,
+        frameWidth: s.frameWidth,
+        frameOffset: s.frameOffset,
         boardColor: s.boardColor,
         frameColors: s.frameColors,
         showMeasurements: s.showMeasurements,
@@ -467,6 +493,9 @@ export function GlowbraidStudio() {
     ui.frameSize,
     ui.frameGap,
     ui.boardPadding,
+    ui.cornerRadius,
+    ui.frameWidth,
+    ui.frameOffset,
     ui.boardColor,
     ui.frameColors,
     ui.showMeasurements,
