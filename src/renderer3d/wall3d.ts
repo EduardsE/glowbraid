@@ -28,6 +28,9 @@ export interface Wall3DState {
   /** Millimetres, like WallDrawState. */
   frameGap: number;
   boardPadding: number;
+  cornerRadius: number;
+  frameWidth: number;
+  frameOffset: number;
   boardColor: string;
   frameColors: (string | null)[];
   time: number;
@@ -119,7 +122,7 @@ export function createWall3D(canvas: HTMLCanvasElement): Wall3D {
   composer.addPass(outputPass);
 
   // --- mutable wall state, replaced on rebuild ---
-  let layout: WorldLayout = computeWorldLayout(1, 25, 20, 4);
+  let layout: WorldLayout = computeWorldLayout(1, 25, 20, 4, 8, 15, 2);
   let group = new THREE.Group();
   let boardMat: THREE.MeshStandardMaterial | null = null;
   let bezelMats: THREE.MeshStandardMaterial[] = [];
@@ -156,6 +159,9 @@ export function createWall3D(canvas: HTMLCanvasElement): Wall3D {
       state.frameSize,
       state.frameGap,
       state.boardPadding,
+      state.frameWidth,
+      state.cornerRadius,
+      state.frameOffset,
     );
 
     const boardGeo = new THREE.BoxGeometry(
@@ -183,7 +189,7 @@ export function createWall3D(canvas: HTMLCanvasElement): Wall3D {
       bezelMats.push(mat);
       const mesh = new THREE.Mesh(bezelGeo, mat);
       const o = frameOrigin(layout, i);
-      mesh.position.set(o.x, o.y, 0);
+      mesh.position.set(o.x, o.y, layout.frameOffset);
       group.add(mesh);
     }
 
@@ -258,7 +264,7 @@ export function createWall3D(canvas: HTMLCanvasElement): Wall3D {
   }
 
   function render(state: Wall3DState): void {
-    const key = `${state.gridSize}|${state.frameSize}|${state.frameGap}|${state.boardPadding}`;
+    const key = `${state.gridSize}|${state.frameSize}|${state.frameGap}|${state.boardPadding}|${state.frameWidth}|${state.cornerRadius}|${state.frameOffset}`;
     if (state.frames !== builtFrames || key !== builtKey) {
       builtFrames = state.frames;
       builtKey = key;
