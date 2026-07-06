@@ -11,6 +11,7 @@ import {
   FIBER_SOCKET_Z,
   fiberWorldPoints,
   frameOrigin,
+  roundedRectPoints,
 } from "../fiberGeometry";
 
 const frame = generateFrame(4242, DEFAULT_FIBER_STYLE);
@@ -170,5 +171,43 @@ describe("bezelGeometry", () => {
     expect(box?.max.z).toBeCloseTo(BEZEL_DEPTH, 6);
     // Outer edge spans the full frame; inner hole is inset by the border.
     expect(box?.max.x).toBeCloseTo(s, 6);
+  });
+});
+
+function signedArea(pts: THREE.Vector2[]): number {
+  let a = 0;
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i];
+    const q = pts[(i + 1) % pts.length];
+    a += p.x * q.y - q.x * p.y;
+  }
+  return a / 2;
+}
+
+describe("roundedRectPoints", () => {
+  it("returns the four sharp corners when radius is zero", () => {
+    const pts = roundedRectPoints(0, 0, 10, 10, 0, true);
+    expect(pts).toHaveLength(4);
+  });
+
+  it("winds clockwise (negative signed area) when clockwise=true", () => {
+    expect(signedArea(roundedRectPoints(0, 0, 10, 10, 2, true))).toBeLessThan(
+      0,
+    );
+  });
+
+  it("winds counter-clockwise when clockwise=false", () => {
+    expect(
+      signedArea(roundedRectPoints(0, 0, 10, 10, 2, false)),
+    ).toBeGreaterThan(0);
+  });
+
+  it("stays within the rectangle bounds", () => {
+    for (const p of roundedRectPoints(0, 0, 10, 10, 3, true)) {
+      expect(p.x).toBeGreaterThanOrEqual(-1e-9);
+      expect(p.x).toBeLessThanOrEqual(10 + 1e-9);
+      expect(p.y).toBeLessThanOrEqual(1e-9);
+      expect(p.y).toBeGreaterThanOrEqual(-10 - 1e-9);
+    }
   });
 });

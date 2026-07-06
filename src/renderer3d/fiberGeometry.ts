@@ -89,6 +89,57 @@ export const BEZEL_DEPTH = 2;
  */
 export const FIBER_SOCKET_Z = BEZEL_DEPTH / 2;
 /**
+ * Closed rounded-rectangle polygon in the frame's y-down convention: top-left
+ * corner at (x0, y0), extending to (x0+w, y0-h). Built clockwise (TL→TR→BR→BL,
+ * negative signed area — the winding ExtrudeGeometry needs for the outer
+ * contour); reversed for the counter-clockwise hole. r is clamped to half the
+ * shorter side; r=0 yields the four sharp corners.
+ */
+export function roundedRectPoints(
+  x0: number,
+  y0: number,
+  w: number,
+  h: number,
+  r: number,
+  clockwise: boolean,
+  cornerSegments = 6,
+): THREE.Vector2[] {
+  const l = x0;
+  const rt = x0 + w;
+  const t = y0;
+  const b = y0 - h;
+  const rr = Math.max(0, Math.min(r, w / 2, h / 2));
+  let pts: THREE.Vector2[];
+  if (rr === 0) {
+    pts = [
+      new THREE.Vector2(l, t),
+      new THREE.Vector2(rt, t),
+      new THREE.Vector2(rt, b),
+      new THREE.Vector2(l, b),
+    ];
+  } else {
+    const arc = (cx: number, cy: number, a0: number, a1: number) => {
+      const out: THREE.Vector2[] = [];
+      for (let i = 0; i <= cornerSegments; i++) {
+        const a = a0 + ((a1 - a0) * i) / cornerSegments;
+        out.push(
+          new THREE.Vector2(cx + rr * Math.cos(a), cy + rr * Math.sin(a)),
+        );
+      }
+      return out;
+    };
+    const H = Math.PI / 2;
+    pts = [
+      ...arc(rt - rr, t - rr, H, 0), // TR corner: 90°→0°
+      ...arc(rt - rr, b + rr, 0, -H), // BR corner: 0°→-90°
+      ...arc(l + rr, b + rr, -H, -Math.PI), // BL corner: -90°→-180°
+      ...arc(l + rr, t - rr, Math.PI, H), // TL corner: 180°→90°
+    ];
+  }
+  return clockwise ? pts : pts.slice().reverse();
+}
+
+/**
  * Square bezel ring (outer frame minus the light-panel hole) extruded toward
  * the viewer. The outer contour is wound clockwise and the hole
  * counter-clockwise: THREE.ExtrudeGeometry only normalizes hole winding when
@@ -99,19 +150,14 @@ export const FIBER_SOCKET_Z = BEZEL_DEPTH / 2;
 export function bezelGeometry(layout: WorldLayout): THREE.ExtrudeGeometry {
   const s = layout.frameSize;
   const b = layout.border;
-  const shape = new THREE.Shape([
-    new THREE.Vector2(0, 0),
-    new THREE.Vector2(s, 0),
-    new THREE.Vector2(s, -s),
-    new THREE.Vector2(0, -s),
-  ]);
+  const panel = layout.panelSize;
+  const shape = new THREE.Shape(
+    roundedRectPoints(0, 0, s, s, layout.outerRadius, true),
+  );
   shape.holes.push(
-    new THREE.Path([
-      new THREE.Vector2(b, -b),
-      new THREE.Vector2(b, -(s - b)),
-      new THREE.Vector2(s - b, -(s - b)),
-      new THREE.Vector2(s - b, -b),
-    ]),
+    new THREE.Path(
+      roundedRectPoints(b, -b, panel, panel, layout.innerRadius, false),
+    ),
   );
   return new THREE.ExtrudeGeometry(shape, {
     depth: BEZEL_DEPTH,
