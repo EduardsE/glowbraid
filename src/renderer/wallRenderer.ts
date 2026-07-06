@@ -184,6 +184,10 @@ export interface WallDrawState {
   frames: Frame[];
   gridSize: number;
   frameSize: number;
+  /** Corner radius, millimetres. */
+  cornerRadius: number;
+  /** Bezel wall thickness, millimetres. */
+  frameWidth: number;
   /** Millimetres. */
   frameGap: number;
   boardPadding: number;
@@ -206,6 +210,10 @@ interface FrameDrawOptions {
   selected: boolean;
   selectedFiber: number | null;
   edit: boolean;
+  cornerRadius: number;
+  frameWidth: number;
+  /** Frame edge length, cm — used to convert the mm radius/width to px. */
+  frameSizeCm: number;
   color: string | null;
   boardColor: string;
   /** 0 dark board → 1 light board; drives the additive↔graphic crossfade. */
@@ -281,6 +289,9 @@ export function drawWall(
       selected,
       selectedFiber: selected ? state.selectedFiber : null,
       edit,
+      cornerRadius: state.cornerRadius,
+      frameWidth: state.frameWidth,
+      frameSizeCm: state.frameSize,
       color: state.frameColors[index] ?? null,
       boardColor: state.boardColor,
       lightFactor,
@@ -318,6 +329,9 @@ function drawFrame(
     selected,
     selectedFiber,
     edit,
+    cornerRadius,
+    frameWidth,
+    frameSizeCm,
     color,
     boardColor,
     lightFactor,
@@ -329,13 +343,19 @@ function drawFrame(
     palette,
   } = opts;
   const f = lightFactor;
-  const r = sz * 0.045;
-  const { panelX, panelY, panelSize, border } = frameGeometry(x, y, sz);
+  const { borderPx, outerPx, innerPx } = frameCornerRadii(
+    cornerRadius,
+    frameWidth,
+    frameSizeCm,
+    sz,
+  );
+  const border = borderPx;
+  const { panelX, panelY, panelSize } = frameGeometry(x, y, sz, border);
 
   // bezel — spans the frame's full outer footprint; grid spacing is measured
   // between these outer edges, so it must not bleed past (x, y, sz).
   ctx.save();
-  roundRect(ctx, x, y, sz, sz, r * 1.5);
+  roundRect(ctx, x, y, sz, sz, outerPx);
   ctx.fillStyle =
     color == null
       ? edit
@@ -352,7 +372,7 @@ function drawFrame(
 
   // panel + fibres (clipped), inset within the bezel border
   ctx.save();
-  roundRect(ctx, panelX, panelY, panelSize, panelSize, r);
+  roundRect(ctx, panelX, panelY, panelSize, panelSize, innerPx);
   ctx.clip();
   ctx.fillStyle = boardColor;
   ctx.fillRect(panelX, panelY, panelSize, panelSize);
@@ -517,7 +537,7 @@ function drawFrame(
 
   // panel border
   ctx.save();
-  roundRect(ctx, panelX, panelY, panelSize, panelSize, r);
+  roundRect(ctx, panelX, panelY, panelSize, panelSize, innerPx);
   if (selected) {
     ctx.strokeStyle = "rgba(155,140,255,0.9)";
     ctx.lineWidth = 2;

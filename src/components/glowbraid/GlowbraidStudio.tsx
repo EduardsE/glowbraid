@@ -335,6 +335,8 @@ export function GlowbraidStudio() {
         frames: framesRef.current,
         gridSize: s.gridSize,
         frameSize: s.frameSize,
+        cornerRadius: s.cornerRadius,
+        frameWidth: s.frameWidth,
         frameGap: s.frameGap,
         boardPadding: s.boardPadding,
         boardColor: s.boardColor,
