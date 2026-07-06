@@ -8,7 +8,6 @@ export interface InspectorPanelProps {
   frame: Frame | null;
   /** 0-based index of the selected frame in the wall, or null */
   frameNumber: number | null;
-  empty: boolean;
   selectedFiber: number | null;
   mapCanvasRef: RefObject<HTMLCanvasElement | null>;
   onMapClick: (e: MouseEvent<HTMLCanvasElement>) => void;
@@ -32,7 +31,7 @@ export function InspectorPanel(props: InspectorPanelProps) {
     <aside className="z-10 flex w-[288px] flex-none flex-col overflow-y-auto border-l border-white/[0.05] bg-[rgba(12,13,17,0.4)]">
       {frame && frameNumber != null ? (
         <SelectedFrame {...props} frame={frame} frameNumber={frameNumber} />
-      ) : !props.empty ? (
+      ) : (
         <div className="flex h-full flex-1 flex-col items-center justify-center gap-2.5 p-[30px] text-center">
           <div className="h-[38px] w-[38px] rounded-[10px] border border-dashed border-white/[0.14]" />
           <div className="text-[12.5px] leading-relaxed text-[rgba(233,234,240,0.4)]">
@@ -41,7 +40,7 @@ export function InspectorPanel(props: InspectorPanelProps) {
             to edit its fibres &amp; LED pattern
           </div>
         </div>
-      ) : null}
+      )}
     </aside>
   );
 }

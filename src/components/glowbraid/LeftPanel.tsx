@@ -25,9 +25,6 @@ export interface LeftPanelProps {
   onSocketDepth: (v: number) => void;
   onReroute: () => void;
   onGenerate: () => void;
-  onSave: () => void;
-  onLoad: () => void;
-  saveHint: string;
 }
 
 export function LeftPanel(props: LeftPanelProps) {
@@ -206,28 +203,6 @@ export function LeftPanel(props: LeftPanelProps) {
         >
           ✦ Generate new wall
         </button>
-      </div>
-
-      <Divider />
-      <SectionLabel>PROJECT</SectionLabel>
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={props.onSave}
-          className="h-[34px] flex-1 cursor-pointer rounded-[9px] border border-white/10 bg-white/[0.03] text-xs text-[#e9eaf0] hover:bg-white/[0.08]"
-        >
-          Save
-        </button>
-        <button
-          type="button"
-          onClick={props.onLoad}
-          className="h-[34px] flex-1 cursor-pointer rounded-[9px] border border-white/10 bg-white/[0.03] text-xs text-[#e9eaf0] hover:bg-white/[0.08]"
-        >
-          Load
-        </button>
-      </div>
-      <div className="text-[10.5px] leading-normal text-[rgba(233,234,240,0.3)]">
-        {props.saveHint}
       </div>
 
       <div className="flex-1" />

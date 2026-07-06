@@ -273,40 +273,6 @@ export function drawWall(
   }
 }
 
-export interface ShowcaseOptions {
-  time: number;
-  anim: AnimationId;
-  speed: number;
-  brightness: number;
-  palette: Palette;
-}
-
-/** Single centered demo frame behind the empty-state overlay. */
-export function drawShowcaseFrame(
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  frame: Frame,
-  opts: ShowcaseOptions,
-): void {
-  const sz = Math.min(width, height) * 0.72;
-  const x = width / 2 - sz / 2;
-  const y = height / 2 - sz / 2;
-  ctx.save();
-  ctx.globalAlpha = 0.85;
-  drawFrame(ctx, x, y, sz, frame, {
-    selected: false,
-    selectedFiber: null,
-    edit: false,
-    color: null,
-    boardColor: DEFAULT_BOARD_COLOR,
-    lightFactor: lightBoardFactor(DEFAULT_BOARD_COLOR),
-    gpos: 0.5,
-    ...opts,
-  });
-  ctx.restore();
-}
-
 function drawFrame(
   ctx: CanvasRenderingContext2D,
   x: number,
