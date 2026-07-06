@@ -1,3 +1,4 @@
+import { MousePointerClick, RefreshCw } from "lucide-react";
 import type { MouseEvent, ReactNode, RefObject } from "react";
 import { ANIMATIONS } from "@/engine/animation";
 import { PALETTE_IDS, PALETTES } from "@/engine/palettes";
@@ -32,9 +33,11 @@ export function InspectorPanel(props: InspectorPanelProps) {
       {frame && frameNumber != null ? (
         <SelectedFrame {...props} frame={frame} frameNumber={frameNumber} />
       ) : (
-        <div className="flex h-full flex-1 flex-col items-center justify-center gap-2.5 p-[30px] text-center">
-          <div className="h-[38px] w-[38px] rounded-[10px] border border-dashed border-white/[0.14]" />
-          <div className="text-[12.5px] leading-relaxed text-[rgba(233,234,240,0.4)]">
+        <div className="animate-in fade-in flex h-full flex-1 flex-col items-center justify-center gap-3 p-[30px] text-center duration-300">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-dashed border-white/[0.14] text-ink/30">
+            <MousePointerClick size={17} aria-hidden="true" />
+          </div>
+          <div className="text-[12.5px] leading-relaxed text-ink/40">
             Select a frame on the wall
             <br />
             to edit its fibres &amp; LED pattern
@@ -63,13 +66,13 @@ function SelectedFrame(
   }
 
   return (
-    <div className="flex flex-col gap-4 px-3.5 py-4">
+    <div className="animate-in fade-in flex flex-col gap-4 px-3.5 py-4 duration-300">
       <div className="flex items-center justify-between">
         <div className="flex flex-col leading-[1.1]">
           <span className="text-[15px] font-semibold">
             Frame {String(props.frameNumber + 1).padStart(2, "0")}
           </span>
-          <span className="font-smono text-[10.5px] text-[rgba(233,234,240,0.4)]">
+          <span className="font-smono text-[10.5px] text-ink/40">
             seed {frame.seed}
           </span>
         </div>
@@ -77,14 +80,14 @@ function SelectedFrame(
           type="button"
           aria-label="Re-seed frame"
           onClick={props.onReseed}
-          className="h-8 w-8 cursor-pointer rounded-[9px] border border-white/10 bg-white/[0.03] text-sm text-[#e9eaf0] hover:bg-white/[0.08]"
+          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-[9px] border border-white/10 bg-white/[0.03] text-ink hover:bg-white/[0.08]"
         >
-          ⟳
+          <RefreshCw size={13} aria-hidden="true" />
         </button>
       </div>
 
       <div className="flex flex-col gap-[7px]">
-        <div className="text-xs text-[rgba(233,234,240,0.7)]">Frame color</div>
+        <div className="text-xs text-ink/70">Frame color</div>
         <ColorSwatchPicker
           value={props.frameColor}
           onChange={props.onFrameColor}
@@ -96,8 +99,8 @@ function SelectedFrame(
           disabled={props.frameColor == null}
           className={
             props.frameColor == null
-              ? "cursor-not-allowed self-start text-[11px] text-[rgba(233,234,240,0.3)]"
-              : "cursor-pointer self-start text-[11px] text-[#9b8cff] hover:text-white"
+              ? "cursor-not-allowed self-start text-[11px] text-ink/30"
+              : "cursor-pointer self-start text-[11px] text-glow hover:text-white"
           }
         >
           Apply to all frames
@@ -113,25 +116,23 @@ function SelectedFrame(
 
       <div>
         <div className="mb-[9px] flex items-center justify-between">
-          <span className="text-[10px] font-semibold tracking-[0.14em] text-[rgba(233,234,240,0.34)]">
+          <span className="text-[10px] font-semibold tracking-[0.14em] text-ink/35">
             CONNECTION MAP
           </span>
-          <span className="text-[9.5px] text-[rgba(233,234,240,0.3)]">
-            click a fibre
-          </span>
+          <span className="text-[9.5px] text-ink/30">click a fibre</span>
         </div>
         <canvas
           ref={props.mapCanvasRef}
           onClick={props.onMapClick}
           className="block h-[150px] w-full cursor-pointer rounded-xl border border-white/[0.07] bg-[#08090c]"
         />
-        <div className="font-smono mt-2 text-[11px] leading-normal text-[rgba(233,234,240,0.5)]">
+        <div className="font-smono mt-2 text-[11px] leading-normal text-ink/50">
           {fiberInspect}
         </div>
       </div>
 
       <div>
-        <div className="mb-[9px] text-[10px] font-semibold tracking-[0.14em] text-[rgba(233,234,240,0.34)]">
+        <div className="mb-[9px] text-[10px] font-semibold tracking-[0.14em] text-ink/35">
           LED DRIVE PATTERN
         </div>
         <div className="grid grid-cols-2 gap-1.5">
@@ -142,8 +143,8 @@ function SelectedFrame(
               onClick={() => props.onAnim(a.id)}
               className={
                 a.id === props.anim
-                  ? "h-[34px] cursor-pointer rounded-[9px] border border-[rgba(155,140,255,0.5)] bg-[rgba(155,140,255,0.16)] text-[11.5px] text-white"
-                  : "h-[34px] cursor-pointer rounded-[9px] border border-white/[0.08] bg-white/[0.02] text-[11.5px] text-[rgba(233,234,240,0.62)]"
+                  ? "h-[34px] cursor-pointer rounded-[9px] border border-glow/50 bg-glow/15 text-[11.5px] text-white"
+                  : "h-[34px] cursor-pointer rounded-[9px] border border-white/[0.08] bg-white/[0.02] text-[11.5px] text-ink/60 hover:bg-white/[0.06] hover:text-ink/90"
               }
             >
               {a.name}
@@ -181,7 +182,7 @@ function SelectedFrame(
       </SliderRow>
 
       <div>
-        <div className="mb-[9px] text-[10px] font-semibold tracking-[0.14em] text-[rgba(233,234,240,0.34)]">
+        <div className="mb-[9px] text-[10px] font-semibold tracking-[0.14em] text-ink/35">
           COLOUR PALETTE
         </div>
         <div className="flex flex-col gap-1.5">
@@ -201,8 +202,8 @@ function SelectedFrame(
                 onClick={() => props.onPalette(id)}
                 className={
                   active
-                    ? "flex h-[38px] cursor-pointer items-center gap-2.5 rounded-[10px] border border-[rgba(155,140,255,0.5)] bg-[rgba(155,140,255,0.12)] px-[11px] text-left text-xs text-white"
-                    : "flex h-[38px] cursor-pointer items-center gap-2.5 rounded-[10px] border border-white/[0.07] bg-white/[0.02] px-[11px] text-left text-xs text-[rgba(233,234,240,0.7)]"
+                    ? "flex h-[38px] cursor-pointer items-center gap-2.5 rounded-[10px] border border-glow/50 bg-glow/10 px-[11px] text-left text-xs text-white"
+                    : "flex h-[38px] cursor-pointer items-center gap-2.5 rounded-[10px] border border-white/[0.07] bg-white/[0.02] px-[11px] text-left text-xs text-ink/70 hover:bg-white/[0.06] hover:text-ink"
                 }
               >
                 <span
@@ -222,12 +223,10 @@ function SelectedFrame(
 function StatCard({ value, label }: { value: string; label: string }) {
   return (
     <div className="rounded-[11px] border border-white/[0.06] bg-white/[0.02] px-3 py-[11px]">
-      <div className="font-smono text-[19px] font-semibold text-[#e9eaf0]">
+      <div className="font-smono text-[19px] font-semibold tabular-nums text-ink">
         {value}
       </div>
-      <div className="mt-[2px] text-[10px] text-[rgba(233,234,240,0.42)]">
-        {label}
-      </div>
+      <div className="mt-[2px] text-[10px] text-ink/40">{label}</div>
     </div>
   );
 }
@@ -244,8 +243,8 @@ function SliderRow({
   return (
     <div className="flex flex-col gap-[7px]">
       <div className="flex items-baseline justify-between">
-        <span className="text-xs text-[rgba(233,234,240,0.7)]">{label}</span>
-        <span className="font-smono text-[11px] text-[#9b8cff]">{value}</span>
+        <span className="text-xs text-ink/70">{label}</span>
+        <span className="font-smono text-[11px] text-glow">{value}</span>
       </div>
       {children}
     </div>

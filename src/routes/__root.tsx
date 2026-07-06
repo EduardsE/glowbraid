@@ -17,6 +17,28 @@ export const Route = createRootRoute({
       {
         title: "Glowbraid — Fibre Optic Wall Studio",
       },
+      {
+        name: "description",
+        content:
+          "Design and simulate fibre-optic LED walls: generate braided fibre layouts, drive LED animations, and preview the installation in 2D and 3D.",
+      },
+      {
+        name: "theme-color",
+        content: "#0b0c0f",
+      },
+      {
+        property: "og:title",
+        content: "Glowbraid — Fibre Optic Wall Studio",
+      },
+      {
+        property: "og:description",
+        content:
+          "Design and simulate fibre-optic LED walls: generate braided fibre layouts, drive LED animations, and preview the installation in 2D and 3D.",
+      },
+      {
+        property: "og:type",
+        content: "website",
+      },
     ],
     links: [
       {

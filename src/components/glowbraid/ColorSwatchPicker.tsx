@@ -29,8 +29,8 @@ export function ColorSwatchPicker(props: ColorSwatchPickerProps) {
           style={{ background: p.hex }}
           className={
             value === p.hex
-              ? "h-[30px] w-[30px] cursor-pointer rounded-[7px] border border-white/15 outline outline-2 outline-offset-2 outline-[rgba(155,140,255,0.8)]"
-              : "h-[30px] w-[30px] cursor-pointer rounded-[7px] border border-white/15"
+              ? "h-[30px] w-[30px] cursor-pointer rounded-[7px] border border-white/15 outline outline-2 outline-offset-2 outline-glow/80"
+              : "h-[30px] w-[30px] cursor-pointer rounded-[7px] border border-white/15 hover:border-white/40"
           }
         />
       ))}
@@ -40,8 +40,8 @@ export function ColorSwatchPicker(props: ColorSwatchPickerProps) {
         style={isCustom ? { background: value } : undefined}
         className={
           isCustom
-            ? "relative flex h-[30px] w-[30px] cursor-pointer items-center justify-center rounded-[7px] border border-white/15 outline outline-2 outline-offset-2 outline-[rgba(155,140,255,0.8)]"
-            : "relative flex h-[30px] w-[30px] cursor-pointer items-center justify-center rounded-[7px] border border-white/15 bg-[repeating-conic-gradient(#2a2a2e_0%_25%,#1c1c1f_0%_50%)] bg-[length:10px_10px]"
+            ? "relative flex h-[30px] w-[30px] cursor-pointer items-center justify-center rounded-[7px] border border-white/15 outline outline-2 outline-offset-2 outline-glow/80"
+            : "relative flex h-[30px] w-[30px] cursor-pointer items-center justify-center rounded-[7px] border border-white/15 bg-[repeating-conic-gradient(#2a2a2e_0%_25%,#1c1c1f_0%_50%)] bg-[length:10px_10px] hover:border-white/40"
         }
       >
         {isCustom ? null : (

@@ -1,3 +1,4 @@
+import { Shuffle, Sparkles } from "lucide-react";
 import type { ReactNode } from "react";
 import { ColorSwatchPicker } from "./ColorSwatchPicker";
 
@@ -33,7 +34,7 @@ export function LeftPanel(props: LeftPanelProps) {
       <SectionLabel>WALL</SectionLabel>
 
       <div className="flex flex-col gap-[9px]">
-        <div className="text-xs text-[rgba(233,234,240,0.7)]">Grid size</div>
+        <div className="text-xs text-ink/70">Grid size</div>
         <div className="flex gap-[5px]">
           {GRID_OPTIONS.map((n) => (
             <button
@@ -42,8 +43,8 @@ export function LeftPanel(props: LeftPanelProps) {
               onClick={() => props.onGridSize(n)}
               className={
                 n === props.gridSize
-                  ? "h-8 flex-1 cursor-pointer rounded-lg border border-[rgba(155,140,255,0.5)] bg-[rgba(155,140,255,0.16)] text-xs text-white"
-                  : "h-8 flex-1 cursor-pointer rounded-lg border border-white/[0.09] bg-white/[0.02] text-xs text-[rgba(233,234,240,0.65)]"
+                  ? "h-8 flex-1 cursor-pointer rounded-lg border border-glow/50 bg-glow/15 text-xs text-white"
+                  : "h-8 flex-1 cursor-pointer rounded-lg border border-white/[0.09] bg-white/[0.02] text-xs text-ink/65 hover:bg-white/[0.06] hover:text-ink/90"
               }
             >
               {n}
@@ -91,21 +92,17 @@ export function LeftPanel(props: LeftPanelProps) {
         />
       </SliderRow>
 
-      <label className="flex cursor-pointer items-center justify-between">
-        <span className="text-xs text-[rgba(233,234,240,0.7)]">
-          Show measurements
-        </span>
-        <input
-          type="checkbox"
-          aria-label="Show measurements"
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-ink/70">Show measurements</span>
+        <Switch
           checked={props.showMeasurements}
-          onChange={(e) => props.onShowMeasurements(e.target.checked)}
-          className="h-3.5 w-3.5 cursor-pointer accent-[#9b8cff]"
+          onChange={props.onShowMeasurements}
+          ariaLabel="Show measurements"
         />
-      </label>
+      </div>
 
       <div className="flex flex-col gap-[7px]">
-        <div className="text-xs text-[rgba(233,234,240,0.7)]">Board color</div>
+        <div className="text-xs text-ink/70">Board color</div>
         <ColorSwatchPicker
           value={props.boardColor}
           onChange={props.onBoardColor}
@@ -121,23 +118,19 @@ export function LeftPanel(props: LeftPanelProps) {
           {LED_DOTS.map((id) => (
             <span
               key={id}
-              className="h-1 w-1 rounded-full bg-[#9b8cff] opacity-70"
+              className="h-1 w-1 rounded-full bg-glow opacity-70"
             />
           ))}
         </div>
         <div className="leading-[1.3]">
-          <div className="text-xs text-[#e9eaf0]">24 LEDs / frame</div>
-          <div className="text-[10px] text-[rgba(233,234,240,0.4)]">
-            6 per edge · fixed
-          </div>
+          <div className="text-xs text-ink">24 LEDs / frame</div>
+          <div className="text-[10px] text-ink/40">6 per edge · fixed</div>
         </div>
       </div>
 
       <div className="rounded-[11px] border border-white/[0.06] bg-white/[0.02] px-3 py-2.5 leading-[1.3]">
-        <div className="text-xs text-[#e9eaf0]">12 fibre runs / frame</div>
-        <div className="text-[10px] text-[rgba(233,234,240,0.4)]">
-          one per LED · fixed
-        </div>
+        <div className="text-xs text-ink">12 fibre runs / frame</div>
+        <div className="text-[10px] text-ink/40">one per LED · fixed</div>
       </div>
 
       <SliderRow
@@ -192,30 +185,65 @@ export function LeftPanel(props: LeftPanelProps) {
         <button
           type="button"
           onClick={props.onReroute}
-          className="flex h-[38px] cursor-pointer items-center justify-center gap-2 rounded-[10px] border border-white/10 bg-white/[0.03] text-[12.5px] font-medium text-[#e9eaf0] hover:bg-white/[0.08]"
+          className="flex h-[38px] cursor-pointer items-center justify-center gap-2 rounded-[10px] border border-white/10 bg-white/[0.03] text-[12.5px] font-medium text-ink hover:bg-white/[0.08]"
         >
-          ↻ Re-route fibres
+          <Shuffle size={13} aria-hidden="true" />
+          Re-route fibres
         </button>
         <button
           type="button"
           onClick={props.onGenerate}
-          className="h-10 cursor-pointer rounded-[10px] border border-[rgba(155,140,255,0.4)] bg-gradient-to-b from-[rgba(155,140,255,0.22)] to-[rgba(155,140,255,0.1)] text-[12.5px] font-semibold text-white shadow-[0_4px_18px_rgba(155,140,255,0.18)] hover:from-[rgba(155,140,255,0.32)] hover:to-[rgba(155,140,255,0.16)]"
+          className="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-[10px] border border-glow/40 bg-gradient-to-b from-glow/20 to-glow/10 text-[12.5px] font-semibold text-white shadow-[0_4px_18px_rgba(155,140,255,0.18)] hover:from-glow/30 hover:to-glow/15 hover:shadow-[0_4px_24px_rgba(155,140,255,0.28)]"
         >
-          ✦ Generate new wall
+          <Sparkles size={13} aria-hidden="true" />
+          Generate new wall
         </button>
       </div>
 
       <div className="flex-1" />
-      <div className="border-t border-white/[0.05] pt-2.5 text-[9.5px] leading-relaxed tracking-[0.05em] text-[rgba(233,234,240,0.22)]">
+      <div className="border-t border-white/[0.05] pt-2.5 text-[9.5px] leading-relaxed tracking-[0.05em] text-ink/20">
         SOON · Draw fibres · Move LEDs · Layers · ESP32 live · DMX
       </div>
     </aside>
   );
 }
 
+function Switch({
+  checked,
+  onChange,
+  ariaLabel,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  ariaLabel: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={ariaLabel}
+      onClick={() => onChange(!checked)}
+      className={
+        checked
+          ? "relative h-[18px] w-8 cursor-pointer rounded-full border border-glow/60 bg-glow/30"
+          : "relative h-[18px] w-8 cursor-pointer rounded-full border border-white/10 bg-white/[0.04] hover:border-white/20"
+      }
+    >
+      <span
+        className={
+          checked
+            ? "absolute left-0 top-[2px] h-3 w-3 translate-x-4 rounded-full bg-[#cfc6ff] transition-transform duration-200"
+            : "absolute left-0 top-[2px] h-3 w-3 translate-x-[2px] rounded-full bg-ink/40 transition-transform duration-200"
+        }
+      />
+    </button>
+  );
+}
+
 function SectionLabel({ children }: { children: ReactNode }) {
   return (
-    <div className="text-[10px] font-semibold tracking-[0.14em] text-[rgba(233,234,240,0.34)]">
+    <div className="text-[10px] font-semibold tracking-[0.14em] text-ink/35">
       {children}
     </div>
   );
@@ -237,8 +265,8 @@ function SliderRow({
   return (
     <div className="flex flex-col gap-[7px]">
       <div className="flex items-baseline justify-between">
-        <span className="text-xs text-[rgba(233,234,240,0.7)]">{label}</span>
-        <span className="font-smono text-[11px] text-[#9b8cff]">{value}</span>
+        <span className="text-xs text-ink/70">{label}</span>
+        <span className="font-smono text-[11px] text-glow">{value}</span>
       </div>
       {children}
     </div>

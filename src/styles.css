@@ -77,6 +77,12 @@
   --sidebar-ring: oklch(0.442 0.017 285.786);
 }
 
+@theme {
+  /* Glowbraid app tokens: ink = primary text, glow = single lavender accent */
+  --color-ink: #e9eaf0;
+  --color-glow: #9b8cff;
+}
+
 @theme inline {
   --font-sans: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
   --color-background: var(--background);
@@ -125,6 +131,23 @@
     background-color: var(--background);
     color: var(--foreground);
   }
+  button,
+  [role='switch'] {
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease,
+      box-shadow 0.2s ease,
+      opacity 0.2s ease,
+      transform 0.15s ease;
+  }
+  button:not(:disabled):active {
+    transform: scale(0.97);
+  }
+  :focus-visible {
+    outline: 2px solid rgba(155, 140, 255, 0.7);
+    outline-offset: 2px;
+  }
 }
 
 html,
@@ -149,7 +172,78 @@ body {
 }
 
 input[type="range"] {
-	accent-color: #9b8cff;
+	-webkit-appearance: none;
+	appearance: none;
+	height: 22px;
+	margin: 0;
+	background: transparent;
+	cursor: pointer;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+	height: 3px;
+	border-radius: 999px;
+	background: rgba(233, 234, 240, 0.12);
+}
+input[type="range"]::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	appearance: none;
+	margin-top: -5px;
+	height: 13px;
+	width: 13px;
+	border-radius: 999px;
+	background: #b9adff;
+	box-shadow:
+		0 0 0 3px rgba(155, 140, 255, 0.14),
+		0 0 10px rgba(155, 140, 255, 0.35);
+	transition:
+		box-shadow 0.2s ease,
+		transform 0.15s ease;
+}
+input[type="range"]:hover::-webkit-slider-thumb {
+	transform: scale(1.12);
+	box-shadow:
+		0 0 0 4px rgba(155, 140, 255, 0.2),
+		0 0 14px rgba(155, 140, 255, 0.5);
+}
+input[type="range"]:focus-visible {
+	outline: none;
+}
+input[type="range"]:focus-visible::-webkit-slider-thumb {
+	box-shadow:
+		0 0 0 2px #0b0c0f,
+		0 0 0 4px rgba(155, 140, 255, 0.8);
+}
+input[type="range"]::-moz-range-track {
+	height: 3px;
+	border-radius: 999px;
+	background: rgba(233, 234, 240, 0.12);
+}
+input[type="range"]::-moz-range-progress {
+	height: 3px;
+	border-radius: 999px;
+	background: rgba(155, 140, 255, 0.55);
+}
+input[type="range"]::-moz-range-thumb {
+	height: 13px;
+	width: 13px;
+	border: none;
+	border-radius: 999px;
+	background: #b9adff;
+	box-shadow:
+		0 0 0 3px rgba(155, 140, 255, 0.14),
+		0 0 10px rgba(155, 140, 255, 0.35);
+}
+input[type="range"]:focus-visible::-moz-range-thumb {
+	box-shadow:
+		0 0 0 2px #0b0c0f,
+		0 0 0 4px rgba(155, 140, 255, 0.8);
+}
+
+/* Film-grain overlay: breaks flat dark surfaces; static tile, no per-frame cost */
+.grain {
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+	background-size: 160px 160px;
+	opacity: 0.03;
 }
 
 .font-grotesk {
