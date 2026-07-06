@@ -71,6 +71,13 @@ describe("frameCornerRadii", () => {
     const r = frameCornerRadii(9999, 8, 25, 250);
     expect(r.outerPx).toBe(125);
   });
+
+  it("clamps the border to half the frame edge so the panel never goes negative", () => {
+    const r = frameCornerRadii(15, 999, 25, 250);
+    expect(r.borderPx).toBe(125);
+    expect(250 - 2 * r.borderPx).toBeGreaterThanOrEqual(0);
+    expect(r.innerPx).toBeGreaterThanOrEqual(0);
+  });
 });
 
 describe("shadeForSim", () => {

@@ -157,7 +157,10 @@ export function frameCornerRadii(
   szPx: number,
 ): FrameCornerRadii {
   const pxPerCm = szPx / frameSizeCm;
-  const borderPx = (frameWidthMm / 10) * pxPerCm;
+  // Clamp to half the on-screen frame size: a stale frameWidth left over from
+  // before frameSize was decreased must not push panelPx (szPx - 2*borderPx)
+  // negative, which would invert/degenerate the drawn panel.
+  const borderPx = Math.min((frameWidthMm / 10) * pxPerCm, szPx / 2);
   const outerPx = Math.min((cornerRadiusMm / 10) * pxPerCm, szPx / 2);
   const panelPx = szPx - 2 * borderPx;
   const innerPx = Math.max(0, Math.min(outerPx - borderPx, panelPx / 2));

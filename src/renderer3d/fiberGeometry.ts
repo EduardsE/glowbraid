@@ -41,7 +41,10 @@ export function computeWorldLayout(
   const gapCm = frameGapMm / 10;
   const boardSize =
     gridSize * frameSize + (gridSize - 1) * gapCm + 2 * boardPadding;
-  const border = frameWidthMm / 10;
+  // Clamp to half the frame size: a stale frameWidth left over from before
+  // frameSize was decreased must not push panelSize (frameSize - 2*border)
+  // negative, which would produce an inverted panel and an oversized 3D hole.
+  const border = Math.min(frameWidthMm / 10, frameSize / 2);
   const panelSize = frameSize - 2 * border;
   const outerRadius = Math.min(cornerRadiusMm / 10, frameSize / 2);
   const innerRadius = Math.max(

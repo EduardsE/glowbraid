@@ -42,6 +42,12 @@ describe("computeWorldLayout", () => {
     expect(thick.innerRadius).toBe(0);
   });
 
+  it("clamps the border to half the frame size so the panel never goes negative", () => {
+    const big = computeWorldLayout(1, 20, 0, 0, 999, 15, 0);
+    expect(big.border).toBeCloseTo(10, 6);
+    expect(big.panelSize).toBeGreaterThanOrEqual(0);
+  });
+
   it("handles a 1×1 grid with zero gap contribution", () => {
     const single = computeWorldLayout(1, 30, 20, 0, 8, 15, 2);
     expect(single.boardSize).toBe(30);
