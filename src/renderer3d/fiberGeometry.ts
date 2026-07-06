@@ -1,7 +1,6 @@
 import * as THREE from "three";
 import { hash } from "@/engine/random";
 import type { Fiber } from "@/engine/types";
-import { FRAME_BEZEL_RATIO } from "@/renderer/wallRenderer";
 
 /**
  * World-space wall layout in centimetres. The board is centered at the world
@@ -18,10 +17,16 @@ export interface WorldLayout {
   boardPadding: number;
   /** Full board edge length, cm. */
   boardSize: number;
-  /** Bezel width, cm — same FRAME_BEZEL_RATIO inset as the 2D renderer. */
+  /** Bezel width, cm — derived from the frame width setting. */
   border: number;
   /** Inner light-panel edge (fibres live here), cm. */
   panelSize: number;
+  /** Outer (bezel) corner radius, cm. */
+  outerRadius: number;
+  /** Inner (light-panel) corner radius, cm — concentric with the outer. */
+  innerRadius: number;
+  /** Frame standoff from the board face, cm. */
+  frameOffset: number;
 }
 
 export function computeWorldLayout(
@@ -29,11 +34,20 @@ export function computeWorldLayout(
   frameSize: number,
   frameGapMm: number,
   boardPadding: number,
+  frameWidthMm: number,
+  cornerRadiusMm: number,
+  frameOffsetCm: number,
 ): WorldLayout {
   const gapCm = frameGapMm / 10;
   const boardSize =
     gridSize * frameSize + (gridSize - 1) * gapCm + 2 * boardPadding;
-  const border = frameSize * FRAME_BEZEL_RATIO;
+  const border = frameWidthMm / 10;
+  const panelSize = frameSize - 2 * border;
+  const outerRadius = Math.min(cornerRadiusMm / 10, frameSize / 2);
+  const innerRadius = Math.max(
+    0,
+    Math.min(outerRadius - border, panelSize / 2),
+  );
   return {
     gridSize,
     frameSize,
@@ -41,7 +55,10 @@ export function computeWorldLayout(
     boardPadding,
     boardSize,
     border,
-    panelSize: frameSize - 2 * border,
+    panelSize,
+    outerRadius,
+    innerRadius,
+    frameOffset: frameOffsetCm,
   };
 }
 
@@ -144,7 +161,8 @@ export function fiberWorldPoints(
     const s = cum[i] / total;
     out[i * 3] = origin.x + layout.border + pts[i].x * layout.panelSize;
     out[i * 3 + 1] = origin.y - layout.border - pts[i].y * layout.panelSize;
-    out[i * 3 + 2] = FIBER_SOCKET_Z + h * Math.sin(Math.PI * s) ** 1.5;
+    out[i * 3 + 2] =
+      layout.frameOffset + FIBER_SOCKET_Z + h * Math.sin(Math.PI * s) ** 1.5;
   }
   return out;
 }
