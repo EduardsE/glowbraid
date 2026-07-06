@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { computeWallLayout, frameRect } from "../viewport";
-import { FRAME_BEZEL_RATIO, frameGeometry, shadeForSim } from "../wallRenderer";
+import {
+  FRAME_BEZEL_RATIO,
+  frameCornerRadii,
+  frameGeometry,
+  shadeForSim,
+} from "../wallRenderer";
 
 describe("frameGeometry", () => {
   it("bezel occupies exactly the passed-in rect (no outward bleed)", () => {
@@ -36,6 +41,35 @@ describe("frameGeometry", () => {
     const gb = frameGeometry(b.x, b.y, b.size);
     // Outer bezel edges meet exactly — no gap, no overlap.
     expect(ga.outerX + ga.outerSize).toBeCloseTo(gb.outerX);
+  });
+});
+
+describe("frameGeometry with explicit border", () => {
+  it("insets the panel by the passed border instead of the default ratio", () => {
+    const g = frameGeometry(10, 20, 100, 12);
+    expect(g.border).toBe(12);
+    expect(g.panelX).toBe(22);
+    expect(g.panelSize).toBe(76);
+  });
+});
+
+describe("frameCornerRadii", () => {
+  // 25cm frame drawn at 250px → 10px per cm → 1px per mm.
+  it("converts mm to px at the frame's on-screen scale", () => {
+    const r = frameCornerRadii(15, 8, 25, 250);
+    expect(r.borderPx).toBeCloseTo(8);
+    expect(r.outerPx).toBeCloseTo(15);
+    expect(r.innerPx).toBeCloseTo(7); // 15 - 8
+  });
+
+  it("clamps the inner radius to zero when the border exceeds the outer radius", () => {
+    const r = frameCornerRadii(5, 20, 25, 250);
+    expect(r.innerPx).toBe(0);
+  });
+
+  it("clamps the outer radius to half the frame edge", () => {
+    const r = frameCornerRadii(9999, 8, 25, 250);
+    expect(r.outerPx).toBe(125);
   });
 });
 
