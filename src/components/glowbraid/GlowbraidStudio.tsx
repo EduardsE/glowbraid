@@ -125,6 +125,23 @@ function cmField(
     : fallback;
 }
 
+function deriveGeometry(
+  gridSize: number,
+  masterSeed: number,
+  style: FiberStyle,
+  seeds?: number[],
+): { seeds: number[]; frames: Frame[] } {
+  const count = gridSize * gridSize;
+  const resolvedSeeds =
+    seeds && seeds.length === count
+      ? seeds
+      : deriveFrameSeeds(masterSeed, count);
+  return {
+    seeds: resolvedSeeds,
+    frames: generateWall({ gridSize, frameSeeds: resolvedSeeds, style }),
+  };
+}
+
 export function GlowbraidStudio() {
   const [ui, setUi] = useState<StudioState>(INITIAL_STATE);
   const uiRef = useRef(ui);
@@ -183,16 +200,9 @@ export function GlowbraidStudio() {
       style: FiberStyle,
       seeds?: number[],
     ) => {
-      const count = gridSize * gridSize;
-      seedsRef.current =
-        seeds && seeds.length === count
-          ? seeds
-          : deriveFrameSeeds(masterSeed, count);
-      framesRef.current = generateWall({
-        gridSize,
-        frameSeeds: seedsRef.current,
-        style,
-      });
+      const geometry = deriveGeometry(gridSize, masterSeed, style, seeds);
+      seedsRef.current = geometry.seeds;
+      framesRef.current = geometry.frames;
     },
     [],
   );

@@ -4,6 +4,8 @@ Glowbraid is a browser-based simulator for a fibre-optic wall: a grid of square 
 
 This project is a digital companion to a real physical build: [Fiber Optic and LEDs: A Wall Decoration](https://www.instructables.com/Fiber-Optic-and-LEDs-a-Wall-Decoration/) by the original author on Instructables. It lets you design and preview a wall of this kind — grid size, fibre routing, colours, animations — entirely virtually before cutting a single fibre or wiring a single LED in the real world.
 
+**[Live demo](https://eduardse.github.io/glowbraid/)**
+
 ## Video showcase
 
 ![Demo](docs/demo.gif)

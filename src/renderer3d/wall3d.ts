@@ -14,6 +14,7 @@ import {
   writeWallFiberColors,
 } from "./fiberColors";
 import {
+  bezelGeometry,
   computeWorldLayout,
   fiberWorldPoints,
   frameOrigin,
@@ -46,8 +47,6 @@ export interface Wall3D {
 
 /** Board slab thickness, cm. */
 const BOARD_DEPTH = 1.5;
-/** Bezel extrusion depth off the board face, cm. */
-const BEZEL_DEPTH = 2;
 /** Fibre tube radius at thickness 1, cm (~2mm side-glow strand). */
 const FIBER_RADIUS = 0.1;
 /** Default bezel color — matches the 2D sim-mode bezel. */
@@ -76,30 +75,6 @@ function gradientBackground(): THREE.Texture {
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
-}
-
-/** Square ring (outer frame minus light panel), extruded toward the viewer. */
-function bezelGeometry(layout: WorldLayout): THREE.ExtrudeGeometry {
-  const s = layout.frameSize;
-  const b = layout.border;
-  const shape = new THREE.Shape([
-    new THREE.Vector2(0, 0),
-    new THREE.Vector2(s, 0),
-    new THREE.Vector2(s, -s),
-    new THREE.Vector2(0, -s),
-  ]);
-  shape.holes.push(
-    new THREE.Path([
-      new THREE.Vector2(b, -b),
-      new THREE.Vector2(s - b, -b),
-      new THREE.Vector2(s - b, -(s - b)),
-      new THREE.Vector2(b, -(s - b)),
-    ]),
-  );
-  return new THREE.ExtrudeGeometry(shape, {
-    depth: BEZEL_DEPTH,
-    bevelEnabled: false,
-  });
 }
 
 function bezelColor(frameColors: (string | null)[], index: number): string {

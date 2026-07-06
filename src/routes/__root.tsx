@@ -25,15 +25,15 @@ export const Route = createRootRoute({
       },
       {
         rel: "icon",
-        href: "/favicon.ico",
+        href: `${import.meta.env.BASE_URL}favicon.ico`,
       },
       {
         rel: "apple-touch-icon",
-        href: "/apple-touch-icon.png",
+        href: `${import.meta.env.BASE_URL}apple-touch-icon.png`,
       },
       {
         rel: "manifest",
-        href: "/manifest.json",
+        href: `${import.meta.env.BASE_URL}manifest.json`,
       },
     ],
   }),

@@ -1,11 +1,14 @@
+import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 import { DEFAULT_FIBER_STYLE, generateFrame } from "@/engine/fibers";
 import {
+  BEZEL_DEPTH,
   BULGE_MAX,
   BULGE_MIN,
+  bezelGeometry,
   bulgeHeight,
   computeWorldLayout,
-  FIBER_LIFT,
+  FIBER_SOCKET_Z,
   fiberWorldPoints,
   frameOrigin,
 } from "../fiberGeometry";
@@ -63,21 +66,22 @@ describe("fiberWorldPoints", () => {
     expect(p.length).toBe(fiber.path.length * 3);
   });
 
-  it("pins z to the lift height at both socket ends", () => {
+  it("pins z to the bezel's mid-depth socket height at both ends", () => {
     const p = fiberWorldPoints(fiber, 0, layout);
-    expect(p[2]).toBeCloseTo(FIBER_LIFT, 5);
-    expect(p[p.length - 1]).toBeCloseTo(FIBER_LIFT, 5);
+    expect(FIBER_SOCKET_Z).toBeCloseTo(BEZEL_DEPTH / 2, 6);
+    expect(p[2]).toBeCloseTo(FIBER_SOCKET_Z, 5);
+    expect(p[p.length - 1]).toBeCloseTo(FIBER_SOCKET_Z, 5);
   });
 
-  it("bulges smoothly between the lift floor and the max height", () => {
+  it("bulges smoothly between the socket floor and the max height", () => {
     const p = fiberWorldPoints(fiber, 0, layout);
     let maxZ = 0;
     for (let i = 2; i < p.length; i += 3) {
-      expect(p[i]).toBeGreaterThanOrEqual(FIBER_LIFT - 1e-6);
+      expect(p[i]).toBeGreaterThanOrEqual(FIBER_SOCKET_Z - 1e-6);
       maxZ = Math.max(maxZ, p[i]);
     }
-    expect(maxZ).toBeGreaterThan(FIBER_LIFT + BULGE_MIN * 0.9);
-    expect(maxZ).toBeLessThanOrEqual(FIBER_LIFT + BULGE_MAX + 1e-6);
+    expect(maxZ).toBeGreaterThan(FIBER_SOCKET_Z + BULGE_MIN * 0.9);
+    expect(maxZ).toBeLessThanOrEqual(FIBER_SOCKET_Z + BULGE_MAX + 1e-6);
   });
 
   it("is deterministic", () => {
@@ -97,5 +101,56 @@ describe("fiberWorldPoints", () => {
       o.y - layout.border - fiber.path[0].y * layout.panelSize,
       5,
     );
+  });
+});
+
+describe("bezelGeometry", () => {
+  const b = layout.border;
+  const s = layout.frameSize;
+
+  // The set of x-normal signs on the vertical side-wall triangles lying in
+  // the plane x≈px (which way those faces point along x).
+  function wallNormalXSigns(px: number): Set<number> {
+    const geo = bezelGeometry(layout).toNonIndexed();
+    const pos = geo.getAttribute("position");
+    const a = new THREE.Vector3();
+    const c = new THREE.Vector3();
+    const d = new THREE.Vector3();
+    const ac = new THREE.Vector3();
+    const ad = new THREE.Vector3();
+    const n = new THREE.Vector3();
+    const signs = new Set<number>();
+    for (let t = 0; t < pos.count; t += 3) {
+      a.fromBufferAttribute(pos, t);
+      c.fromBufferAttribute(pos, t + 1);
+      d.fromBufferAttribute(pos, t + 2);
+      if (![a, c, d].every((v) => Math.abs(v.x - px) < 1e-3)) continue;
+      n.crossVectors(ac.subVectors(c, a), ad.subVectors(d, a)).normalize();
+      if (n.x > 0.5) signs.add(1);
+      else if (n.x < -0.5) signs.add(-1);
+    }
+    return signs;
+  }
+
+  it("faces the inner (cavity-facing) wall toward the hole, not the material", () => {
+    // Left inner wall sits at x = b; its visible face must point +x (into the
+    // cavity). A same-wound hole would flip these to -x and cull the wall.
+    expect(wallNormalXSigns(b)).toEqual(new Set([1]));
+  });
+
+  it("faces the outer wall outward", () => {
+    // Left outer wall sits at x = 0; its visible face points -x (away from
+    // the frame centre).
+    expect(wallNormalXSigns(0)).toEqual(new Set([-1]));
+  });
+
+  it("extrudes toward the viewer to the bezel depth", () => {
+    const geo = bezelGeometry(layout);
+    geo.computeBoundingBox();
+    const box = geo.boundingBox;
+    expect(box?.min.z).toBeCloseTo(0, 6);
+    expect(box?.max.z).toBeCloseTo(BEZEL_DEPTH, 6);
+    // Outer edge spans the full frame; inner hole is inset by the border.
+    expect(box?.max.x).toBeCloseTo(s, 6);
   });
 });
