@@ -1,3 +1,4 @@
+import * as THREE from "three";
 import { hash } from "@/engine/random";
 import type { Fiber } from "@/engine/types";
 import { FRAME_BEZEL_RATIO } from "@/renderer/wallRenderer";
@@ -63,8 +64,44 @@ export function frameOrigin(
   };
 }
 
-/** Base clearance between the board face and every fibre centreline, cm. */
-export const FIBER_LIFT = 0.15;
+/** Bezel extrusion depth off the board face, cm. */
+export const BEZEL_DEPTH = 2;
+/**
+ * Fibre socket height off the board face, cm — fibres enter through the
+ * bezel's inner wall at its mid-depth, where the LED strips sit.
+ */
+export const FIBER_SOCKET_Z = BEZEL_DEPTH / 2;
+/**
+ * Square bezel ring (outer frame minus the light-panel hole) extruded toward
+ * the viewer. The outer contour is wound clockwise and the hole
+ * counter-clockwise: THREE.ExtrudeGeometry only normalizes hole winding when
+ * the outer contour is *not* clockwise, so a same-wound hole leaves the inner
+ * (cavity-facing) wall with inverted normals and it gets back-face culled —
+ * the frame then looks hollow, with no visible inner wall.
+ */
+export function bezelGeometry(layout: WorldLayout): THREE.ExtrudeGeometry {
+  const s = layout.frameSize;
+  const b = layout.border;
+  const shape = new THREE.Shape([
+    new THREE.Vector2(0, 0),
+    new THREE.Vector2(s, 0),
+    new THREE.Vector2(s, -s),
+    new THREE.Vector2(0, -s),
+  ]);
+  shape.holes.push(
+    new THREE.Path([
+      new THREE.Vector2(b, -b),
+      new THREE.Vector2(b, -(s - b)),
+      new THREE.Vector2(s - b, -(s - b)),
+      new THREE.Vector2(s - b, -b),
+    ]),
+  );
+  return new THREE.ExtrudeGeometry(shape, {
+    depth: BEZEL_DEPTH,
+    bevelEnabled: false,
+  });
+}
+
 /** Deterministic per-fibre bulge height range, cm. */
 export const BULGE_MIN = 0.5;
 export const BULGE_MAX = 2.5;
@@ -83,9 +120,10 @@ export function bulgeHeight(frameIndex: number, fiber: Fiber): number {
 }
 
 /**
- * World-space xyz triplets for a fibre's path points. z is FIBER_LIFT plus a
- * smooth arclength-parameterized bump `h·sin(πs)^1.5`, pinned back to
- * FIBER_LIFT at both socket stubs.
+ * World-space xyz triplets for a fibre's path points. z is FIBER_SOCKET_Z
+ * plus a smooth arclength-parameterized bump `h·sin(πs)^1.5`, pinned back to
+ * FIBER_SOCKET_Z at both socket stubs so the ends meet the bezel wall at
+ * LED-strip height.
  */
 export function fiberWorldPoints(
   fiber: Fiber,
@@ -106,7 +144,7 @@ export function fiberWorldPoints(
     const s = cum[i] / total;
     out[i * 3] = origin.x + layout.border + pts[i].x * layout.panelSize;
     out[i * 3 + 1] = origin.y - layout.border - pts[i].y * layout.panelSize;
-    out[i * 3 + 2] = FIBER_LIFT + h * Math.sin(Math.PI * s) ** 1.5;
+    out[i * 3 + 2] = FIBER_SOCKET_Z + h * Math.sin(Math.PI * s) ** 1.5;
   }
   return out;
 }
