@@ -370,6 +370,7 @@ export function GlowbraidStudio() {
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: exhaustive list ensures autosave on any persisted field change
   useEffect(() => {
+    if (uiRef.current.empty) return;
     window.clearTimeout(saveTimerRef.current);
     saveTimerRef.current = window.setTimeout(() => {
       const s = uiRef.current;
