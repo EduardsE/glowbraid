@@ -50,7 +50,6 @@ interface StudioState {
   palette: PaletteId;
   loop: boolean;
   zoom: number;
-  saved: boolean;
 }
 
 const INITIAL_STATE: StudioState = {
@@ -76,7 +75,6 @@ const INITIAL_STATE: StudioState = {
   palette: "sunset",
   loop: true,
   zoom: 1,
-  saved: false,
 };
 
 function randomSeed(): number {
@@ -537,93 +535,6 @@ export function GlowbraidStudio() {
     rebuild(s.gridSize, s.masterSeed, style, seedsRef.current);
     patch(partial);
   };
-  const handleSave = () => {
-    const s = uiRef.current;
-    const snapshot: ProjectSnapshot = {
-      gridSize: s.gridSize,
-      frameSize: s.frameSize,
-      frameGap: s.frameGap,
-      boardPadding: s.boardPadding,
-      boardColor: s.boardColor,
-      frameColors: s.frameColors,
-      showMeasurements: s.showMeasurements,
-      masterSeed: s.masterSeed,
-      seeds: seedsRef.current,
-      anim: s.anim,
-      speed: s.speed,
-      brightness: s.brightness,
-      palette: s.palette,
-      curviness: s.curviness,
-      randomness: s.randomness,
-      socketDepth: s.socketDepth,
-      mode: s.mode,
-    };
-    if (saveProject(snapshot)) patch({ saved: true });
-  };
-  const handleLoad = () => {
-    const d = loadProject();
-    if (!d) return;
-    // Sanitize fields that would brick the render loop if a hand-edited or
-    // legacy snapshot carries an unknown value (PALETTES[bad] → undefined →
-    // drawWall throws every frame). Kept minimal, not a full schema check.
-    const palette: PaletteId = Object.hasOwn(PALETTES, d.palette)
-      ? d.palette
-      : "sunset";
-    const anim: AnimationId = ANIMATIONS.some((a) => a.id === d.anim)
-      ? d.anim
-      : "flow";
-    const gridSize = Math.min(
-      6,
-      Math.max(1, Math.round(Number(d.gridSize) || 3)),
-    );
-    const frameSize = cmField(d.frameSize, 25, 10, 40);
-    const frameGap = cmField(d.frameGap, 20, 0, 30);
-    const boardPadding = cmField(d.boardPadding, 4, 0, 20);
-    const boardColor =
-      typeof d.boardColor === "string" ? d.boardColor : DEFAULT_BOARD_COLOR;
-    const frameCount = gridSize * gridSize;
-    const frameColors: (string | null)[] =
-      Array.isArray(d.frameColors) &&
-      d.frameColors.length === frameCount &&
-      d.frameColors.every((c) => c === null || typeof c === "string")
-        ? d.frameColors
-        : Array(frameCount).fill(null);
-    const curviness = styleAxis(d.curviness, DEFAULT_FIBER_STYLE.curviness);
-    const randomness = styleAxis(d.randomness, DEFAULT_FIBER_STYLE.randomness);
-    const socketDepth = styleAxis(
-      d.socketDepth,
-      DEFAULT_FIBER_STYLE.socketDepth,
-    );
-    const mode: StudioState["mode"] =
-      d.mode === "edit" || d.mode === "3d" ? d.mode : "sim";
-    rebuild(
-      gridSize,
-      d.masterSeed,
-      { curviness, randomness, socketDepth },
-      d.seeds,
-    );
-    patch({
-      gridSize,
-      frameSize,
-      frameGap,
-      boardPadding,
-      boardColor,
-      frameColors,
-      showMeasurements: d.showMeasurements === true,
-      masterSeed: d.masterSeed,
-      curviness,
-      randomness,
-      socketDepth,
-      anim,
-      speed: d.speed,
-      brightness: d.brightness,
-      palette,
-      mode,
-      selectedFrame: null,
-      selectedFiber: null,
-    });
-    if (mode === "3d") void ensure3D();
-  };
   const handleMapClick = (e: MouseEvent<HTMLCanvasElement>) => {
     const s = uiRef.current;
     const geo = mapGeoRef.current;
@@ -695,13 +606,6 @@ export function GlowbraidStudio() {
           onSocketDepth={(v) => handleStyle({ socketDepth: v })}
           onReroute={handleReroute}
           onGenerate={handleGenerate}
-          onSave={handleSave}
-          onLoad={handleLoad}
-          saveHint={
-            ui.saved
-              ? "Saved to this browser ✓"
-              : "Stores the current wall in this browser."
-          }
         />
         <section className="relative min-w-0 flex-1 overflow-hidden bg-[#0a0b0e]">
           <canvas
