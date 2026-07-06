@@ -13,6 +13,12 @@ export interface LeftPanelProps {
   onFrameGap: (n: number) => void;
   boardPadding: number;
   onBoardPadding: (n: number) => void;
+  cornerRadius: number;
+  onCornerRadius: (n: number) => void;
+  frameWidth: number;
+  onFrameWidth: (n: number) => void;
+  frameOffset: number;
+  onFrameOffset: (n: number) => void;
   showMeasurements: boolean;
   onShowMeasurements: (v: boolean) => void;
   boardColor: string;
@@ -87,6 +93,45 @@ export function LeftPanel(props: LeftPanelProps) {
           step={1}
           value={props.boardPadding}
           onChange={(e) => props.onBoardPadding(Number(e.target.value))}
+          className="w-full"
+        />
+      </SliderRow>
+
+      <SliderRow label="Frame width" value={`${props.frameWidth} mm`}>
+        <input
+          type="range"
+          aria-label="Frame width"
+          min={1}
+          max={props.frameSize * 5 - 1}
+          step={1}
+          value={props.frameWidth}
+          onChange={(e) => props.onFrameWidth(Number(e.target.value))}
+          className="w-full"
+        />
+      </SliderRow>
+
+      <SliderRow label="Corner radius" value={`${props.cornerRadius} mm`}>
+        <input
+          type="range"
+          aria-label="Corner radius"
+          min={0}
+          max={props.frameSize * 5}
+          step={1}
+          value={props.cornerRadius}
+          onChange={(e) => props.onCornerRadius(Number(e.target.value))}
+          className="w-full"
+        />
+      </SliderRow>
+
+      <SliderRow label="Frame offset" value={`${props.frameOffset} cm`}>
+        <input
+          type="range"
+          aria-label="Frame offset"
+          min={0}
+          max={10}
+          step={0.5}
+          value={props.frameOffset}
+          onChange={(e) => props.onFrameOffset(Number(e.target.value))}
           className="w-full"
         />
       </SliderRow>

@@ -632,6 +632,12 @@ export function GlowbraidStudio() {
           onFrameGap={(n) => patch({ frameGap: n })}
           boardPadding={ui.boardPadding}
           onBoardPadding={(n) => patch({ boardPadding: n })}
+          cornerRadius={ui.cornerRadius}
+          onCornerRadius={(n) => patch({ cornerRadius: n })}
+          frameWidth={ui.frameWidth}
+          onFrameWidth={(n) => patch({ frameWidth: n })}
+          frameOffset={ui.frameOffset}
+          onFrameOffset={(n) => patch({ frameOffset: n })}
           showMeasurements={ui.showMeasurements}
           onShowMeasurements={(v) => patch({ showMeasurements: v })}
           boardColor={ui.boardColor}
