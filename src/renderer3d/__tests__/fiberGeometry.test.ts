@@ -11,22 +11,45 @@ import {
   FIBER_SOCKET_Z,
   fiberWorldPoints,
   frameOrigin,
+  roundedRectPoints,
 } from "../fiberGeometry";
 
 const frame = generateFrame(4242, DEFAULT_FIBER_STYLE);
-// 2×2 grid, 25cm frames, 20mm gap, 4cm padding → board edge 2*25 + 2 + 2*4 = 60cm
-const layout = computeWorldLayout(2, 25, 20, 4);
+// 2×2 grid, 25cm frames, 20mm gap, 4cm padding, 8mm width, 15mm radius, 2cm offset
+const layout = computeWorldLayout(2, 25, 20, 4, 8, 15, 2);
 
 describe("computeWorldLayout", () => {
   it("sizes the board from frames, gaps and padding", () => {
     expect(layout.boardSize).toBe(60);
     expect(layout.gapCm).toBe(2);
-    expect(layout.border).toBeCloseTo(25 * 0.03, 6);
-    expect(layout.panelSize).toBeCloseTo(25 - 2 * 25 * 0.03, 6);
+  });
+
+  it("derives the border from frame width and the radii from corner radius", () => {
+    expect(layout.border).toBeCloseTo(0.8, 6); // 8mm
+    expect(layout.panelSize).toBeCloseTo(25 - 2 * 0.8, 6);
+    expect(layout.outerRadius).toBeCloseTo(1.5, 6); // 15mm
+    expect(layout.innerRadius).toBeCloseTo(0.7, 6); // 1.5 - 0.8
+    expect(layout.frameOffset).toBe(2);
+  });
+
+  it("clamps the outer radius to half the frame edge", () => {
+    const big = computeWorldLayout(1, 20, 0, 0, 8, 9999, 0);
+    expect(big.outerRadius).toBeCloseTo(10, 6);
+  });
+
+  it("clamps the inner radius to zero when the border exceeds it", () => {
+    const thick = computeWorldLayout(1, 20, 0, 0, 30, 5, 0);
+    expect(thick.innerRadius).toBe(0);
+  });
+
+  it("clamps the border to half the frame size so the panel never goes negative", () => {
+    const big = computeWorldLayout(1, 20, 0, 0, 999, 15, 0);
+    expect(big.border).toBeCloseTo(10, 6);
+    expect(big.panelSize).toBeGreaterThanOrEqual(0);
   });
 
   it("handles a 1×1 grid with zero gap contribution", () => {
-    const single = computeWorldLayout(1, 30, 20, 0);
+    const single = computeWorldLayout(1, 30, 20, 0, 8, 15, 2);
     expect(single.boardSize).toBe(30);
   });
 });
@@ -66,22 +89,24 @@ describe("fiberWorldPoints", () => {
     expect(p.length).toBe(fiber.path.length * 3);
   });
 
-  it("pins z to the bezel's mid-depth socket height at both ends", () => {
+  it("pins z to the offset socket height at both ends", () => {
     const p = fiberWorldPoints(fiber, 0, layout);
+    const socket = layout.frameOffset + FIBER_SOCKET_Z;
     expect(FIBER_SOCKET_Z).toBeCloseTo(BEZEL_DEPTH / 2, 6);
-    expect(p[2]).toBeCloseTo(FIBER_SOCKET_Z, 5);
-    expect(p[p.length - 1]).toBeCloseTo(FIBER_SOCKET_Z, 5);
+    expect(p[2]).toBeCloseTo(socket, 5);
+    expect(p[p.length - 1]).toBeCloseTo(socket, 5);
   });
 
   it("bulges smoothly between the socket floor and the max height", () => {
     const p = fiberWorldPoints(fiber, 0, layout);
+    const socket = layout.frameOffset + FIBER_SOCKET_Z;
     let maxZ = 0;
     for (let i = 2; i < p.length; i += 3) {
-      expect(p[i]).toBeGreaterThanOrEqual(FIBER_SOCKET_Z - 1e-6);
+      expect(p[i]).toBeGreaterThanOrEqual(socket - 1e-6);
       maxZ = Math.max(maxZ, p[i]);
     }
-    expect(maxZ).toBeGreaterThan(FIBER_SOCKET_Z + BULGE_MIN * 0.9);
-    expect(maxZ).toBeLessThanOrEqual(FIBER_SOCKET_Z + BULGE_MAX + 1e-6);
+    expect(maxZ).toBeGreaterThan(socket + BULGE_MIN * 0.9);
+    expect(maxZ).toBeLessThanOrEqual(socket + BULGE_MAX + 1e-6);
   });
 
   it("is deterministic", () => {
@@ -152,5 +177,43 @@ describe("bezelGeometry", () => {
     expect(box?.max.z).toBeCloseTo(BEZEL_DEPTH, 6);
     // Outer edge spans the full frame; inner hole is inset by the border.
     expect(box?.max.x).toBeCloseTo(s, 6);
+  });
+});
+
+function signedArea(pts: THREE.Vector2[]): number {
+  let a = 0;
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i];
+    const q = pts[(i + 1) % pts.length];
+    a += p.x * q.y - q.x * p.y;
+  }
+  return a / 2;
+}
+
+describe("roundedRectPoints", () => {
+  it("returns the four sharp corners when radius is zero", () => {
+    const pts = roundedRectPoints(0, 0, 10, 10, 0, true);
+    expect(pts).toHaveLength(4);
+  });
+
+  it("winds clockwise (negative signed area) when clockwise=true", () => {
+    expect(signedArea(roundedRectPoints(0, 0, 10, 10, 2, true))).toBeLessThan(
+      0,
+    );
+  });
+
+  it("winds counter-clockwise when clockwise=false", () => {
+    expect(
+      signedArea(roundedRectPoints(0, 0, 10, 10, 2, false)),
+    ).toBeGreaterThan(0);
+  });
+
+  it("stays within the rectangle bounds", () => {
+    for (const p of roundedRectPoints(0, 0, 10, 10, 3, true)) {
+      expect(p.x).toBeGreaterThanOrEqual(-1e-9);
+      expect(p.x).toBeLessThanOrEqual(10 + 1e-9);
+      expect(p.y).toBeLessThanOrEqual(1e-9);
+      expect(p.y).toBeGreaterThanOrEqual(-10 - 1e-9);
+    }
   });
 });

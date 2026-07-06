@@ -86,6 +86,12 @@ export interface ProjectSnapshot {
   frameGap: number;
   /** Padding between the frame grid's outer edge and the board edge in centimetres (0–20). Absent in legacy saves → loader defaults to 4. */
   boardPadding: number;
+  /** Frame corner radius in millimetres. Absent in legacy saves → loader defaults to 15. */
+  cornerRadius?: number;
+  /** Bezel wall thickness in millimetres. Absent in legacy saves → loader defaults to 8. */
+  frameWidth?: number;
+  /** Frame standoff from the board in centimetres (3D only). Absent in legacy saves → loader defaults to 2. */
+  frameOffset?: number;
   /** Backing board / fibre-backdrop fill (hex). Absent in legacy saves → loader defaults to "#101114". */
   boardColor?: string;
   /** Blueprint dimension overlay toggle. Absent in legacy saves → loader defaults to false. */
