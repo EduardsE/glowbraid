@@ -15,13 +15,8 @@ import { deriveFrameSeeds, generateWall } from "@/engine/wall";
 import type { MapGeometry } from "@/renderer/mapRenderer";
 import { drawConnectionMap, pickMapFiber } from "@/renderer/mapRenderer";
 import { computeWallLayout, pickFrame } from "@/renderer/viewport";
-import {
-  DEFAULT_BOARD_COLOR,
-  drawShowcaseFrame,
-  drawWall,
-} from "@/renderer/wallRenderer";
+import { DEFAULT_BOARD_COLOR, drawWall } from "@/renderer/wallRenderer";
 import type { Wall3D } from "@/renderer3d/wall3d";
-import { EmptyState, type EmptyStatePreset } from "./EmptyState";
 import { Header } from "./Header";
 import { InspectorPanel } from "./InspectorPanel";
 import { LeftPanel } from "./LeftPanel";
@@ -33,7 +28,6 @@ import { useCanvasInteraction } from "./useCanvasInteraction";
 const DURATION = 12;
 
 interface StudioState {
-  empty: boolean;
   mode: "edit" | "sim" | "3d";
   gridSize: number;
   frameSize: number;
@@ -60,7 +54,6 @@ interface StudioState {
 }
 
 const INITIAL_STATE: StudioState = {
-  empty: true,
   mode: "sim",
   gridSize: 3,
   frameSize: 25,
@@ -144,8 +137,91 @@ function deriveGeometry(
   };
 }
 
+interface InitialProject {
+  state: StudioState;
+  seeds: number[];
+  frames: Frame[];
+}
+
+function buildInitialProject(): InitialProject {
+  const d = loadProject();
+  if (!d) {
+    const { seeds, frames } = deriveGeometry(
+      INITIAL_STATE.gridSize,
+      INITIAL_STATE.masterSeed,
+      styleOf(INITIAL_STATE),
+    );
+    return { state: INITIAL_STATE, seeds, frames };
+  }
+  // Sanitize fields that would brick the render loop if a hand-edited or
+  // legacy snapshot carries an unknown value (PALETTES[bad] → undefined →
+  // drawWall throws every frame). Kept minimal, not a full schema check.
+  const palette: PaletteId = Object.hasOwn(PALETTES, d.palette)
+    ? d.palette
+    : "sunset";
+  const anim: AnimationId = ANIMATIONS.some((a) => a.id === d.anim)
+    ? d.anim
+    : "flow";
+  const gridSize = Math.min(
+    6,
+    Math.max(1, Math.round(Number(d.gridSize) || 3)),
+  );
+  const frameSize = cmField(d.frameSize, 25, 10, 40);
+  const frameGap = cmField(d.frameGap, 20, 0, 30);
+  const boardPadding = cmField(d.boardPadding, 4, 0, 20);
+  const boardColor =
+    typeof d.boardColor === "string" ? d.boardColor : DEFAULT_BOARD_COLOR;
+  const frameCount = gridSize * gridSize;
+  const frameColors: (string | null)[] =
+    Array.isArray(d.frameColors) &&
+    d.frameColors.length === frameCount &&
+    d.frameColors.every((c) => c === null || typeof c === "string")
+      ? d.frameColors
+      : Array(frameCount).fill(null);
+  const curviness = styleAxis(d.curviness, DEFAULT_FIBER_STYLE.curviness);
+  const randomness = styleAxis(d.randomness, DEFAULT_FIBER_STYLE.randomness);
+  const socketDepth = styleAxis(d.socketDepth, DEFAULT_FIBER_STYLE.socketDepth);
+  const mode: StudioState["mode"] =
+    d.mode === "edit" || d.mode === "3d" ? d.mode : "sim";
+  const { seeds, frames } = deriveGeometry(
+    gridSize,
+    d.masterSeed,
+    { curviness, randomness, socketDepth },
+    d.seeds,
+  );
+  return {
+    state: {
+      ...INITIAL_STATE,
+      gridSize,
+      frameSize,
+      frameGap,
+      boardPadding,
+      boardColor,
+      frameColors,
+      showMeasurements: d.showMeasurements === true,
+      masterSeed: d.masterSeed,
+      curviness,
+      randomness,
+      socketDepth,
+      anim,
+      speed: d.speed,
+      brightness: d.brightness,
+      palette,
+      mode,
+    },
+    seeds,
+    frames,
+  };
+}
+
 export function GlowbraidStudio() {
-  const [ui, setUi] = useState<StudioState>(INITIAL_STATE);
+  const initialRef = useRef<InitialProject | null>(null);
+  if (initialRef.current === null) {
+    initialRef.current = buildInitialProject();
+  }
+  const initial = initialRef.current;
+
+  const [ui, setUi] = useState<StudioState>(initial.state);
   const uiRef = useRef(ui);
   uiRef.current = ui;
 
@@ -163,9 +239,8 @@ export function GlowbraidStudio() {
   const tRef = useRef(0);
   const panRef = useRef<Point>({ x: 0, y: 0 });
   const sizeRef = useRef({ width: 0, height: 0, dpr: 1 });
-  const framesRef = useRef<Frame[]>([]);
-  const seedsRef = useRef<number[]>([]);
-  const showcaseRef = useRef<Frame | null>(null);
+  const framesRef = useRef<Frame[]>(initial.frames);
+  const seedsRef = useRef<number[]>(initial.seeds);
   const mapGeoRef = useRef<MapGeometry | null>(null);
 
   const patch = useCallback((partial: Partial<StudioState>) => {
@@ -219,19 +294,6 @@ export function GlowbraidStudio() {
     ctx.clearRect(0, 0, width, height);
     const s = uiRef.current;
     const palette = PALETTES[s.palette];
-    if (s.empty) {
-      if (!showcaseRef.current) {
-        showcaseRef.current = generateFrame(51840, styleOf(s));
-      }
-      drawShowcaseFrame(ctx, width, height, showcaseRef.current, {
-        time: tRef.current,
-        anim: s.anim,
-        speed: s.speed,
-        brightness: s.brightness,
-        palette,
-      });
-      return;
-    }
     if (s.mode === "3d") {
       wall3dRef.current?.render({
         frames: framesRef.current,
@@ -339,7 +401,6 @@ export function GlowbraidStudio() {
       })),
     onClickAt: (x, y) => {
       const s = uiRef.current;
-      if (s.empty) return;
       const layout = computeWallLayout({
         gridSize: s.gridSize,
         frameSize: s.frameSize,
@@ -368,9 +429,12 @@ export function GlowbraidStudio() {
     [],
   );
 
+  useEffect(() => {
+    if (uiRef.current.mode === "3d") void ensure3D();
+  }, [ensure3D]);
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: exhaustive list ensures autosave on any persisted field change
   useEffect(() => {
-    if (uiRef.current.empty) return;
     window.clearTimeout(saveTimerRef.current);
     saveTimerRef.current = window.setTimeout(() => {
       const s = uiRef.current;
@@ -438,24 +502,9 @@ export function GlowbraidStudio() {
     rebuild(ui.gridSize, seed, styleOf(ui));
     patch({
       masterSeed: seed,
-      empty: false,
       selectedFrame: null,
       selectedFiber: null,
       frameColors: Array(ui.gridSize * ui.gridSize).fill(null),
-    });
-  };
-  const handlePreset = (preset: EmptyStatePreset) => {
-    const seed = randomSeed();
-    rebuild(preset.gridSize, seed, styleOf(ui));
-    patch({
-      gridSize: preset.gridSize,
-      palette: preset.palette,
-      anim: preset.anim,
-      masterSeed: seed,
-      empty: false,
-      selectedFrame: null,
-      selectedFiber: null,
-      frameColors: Array(preset.gridSize * preset.gridSize).fill(null),
     });
   };
   const handleReseed = () => {
@@ -485,10 +534,7 @@ export function GlowbraidStudio() {
   const handleStyle = (partial: Partial<FiberStyle>) => {
     const s = uiRef.current;
     const style = { ...styleOf(s), ...partial };
-    if (!s.empty) {
-      rebuild(s.gridSize, s.masterSeed, style, seedsRef.current);
-    }
-    showcaseRef.current = null;
+    rebuild(s.gridSize, s.masterSeed, style, seedsRef.current);
     patch(partial);
   };
   const handleSave = () => {
@@ -573,7 +619,6 @@ export function GlowbraidStudio() {
       brightness: d.brightness,
       palette,
       mode,
-      empty: false,
       selectedFrame: null,
       selectedFiber: null,
     });
@@ -596,7 +641,7 @@ export function GlowbraidStudio() {
       ? (framesRef.current[ui.selectedFrame] ?? null)
       : null;
   const wallLabel = `${ui.gridSize} × ${ui.gridSize}  ·  ${ui.gridSize * ui.gridSize} frames  ·  ${ui.gridSize * ui.gridSize * 24} LEDs`;
-  const mode3dActive = ui.mode === "3d" && !ui.empty;
+  const mode3dActive = ui.mode === "3d";
 
   return (
     <div className="font-grotesk flex h-screen w-screen select-none flex-col overflow-hidden text-[#e9eaf0] [background:radial-gradient(140%_120%_at_50%_-20%,#14151b_0%,#0b0c0f_60%)]">
@@ -667,9 +712,6 @@ export function GlowbraidStudio() {
             ref={glCanvasRef}
             className={`absolute inset-0 block h-full w-full cursor-grab ${mode3dActive ? "" : "hidden"}`}
           />
-          {ui.empty ? (
-            <EmptyState onPreset={handlePreset} onStart={handleGenerate} />
-          ) : null}
           <div className="font-smono pointer-events-none absolute bottom-3.5 left-3.5 z-[6] flex gap-1.5 text-[10px] text-[rgba(233,234,240,0.35)]">
             {ui.mode === "3d" ? (
               <>
@@ -701,7 +743,6 @@ export function GlowbraidStudio() {
         <InspectorPanel
           frame={selectedFrame}
           frameNumber={ui.selectedFrame}
-          empty={ui.empty}
           selectedFiber={ui.selectedFiber}
           mapCanvasRef={mapCanvasRef}
           onMapClick={handleMapClick}
