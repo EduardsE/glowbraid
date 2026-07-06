@@ -593,7 +593,11 @@ export function GlowbraidStudio() {
   const mode3dActive = ui.mode === "3d";
 
   return (
-    <div className="font-grotesk flex h-screen w-screen select-none flex-col overflow-hidden text-[#e9eaf0] [background:radial-gradient(140%_120%_at_50%_-20%,#14151b_0%,#0b0c0f_60%)]">
+    <div className="font-grotesk flex h-dvh w-screen select-none flex-col overflow-hidden text-ink [background:radial-gradient(140%_120%_at_50%_-20%,#15141c_0%,#0b0c0f_60%)]">
+      <div
+        aria-hidden="true"
+        className="grain pointer-events-none fixed inset-0 z-50"
+      />
       <Header
         mode={ui.mode}
         onModeChange={handleMode}
@@ -660,7 +664,7 @@ export function GlowbraidStudio() {
             ref={glCanvasRef}
             className={`absolute inset-0 block h-full w-full cursor-grab ${mode3dActive ? "" : "hidden"}`}
           />
-          <div className="font-smono pointer-events-none absolute bottom-3.5 left-3.5 z-[6] flex gap-1.5 text-[10px] text-[rgba(233,234,240,0.35)]">
+          <div className="font-smono pointer-events-none absolute bottom-3.5 left-3.5 z-[6] flex gap-1.5 text-[10px] text-ink/35">
             {ui.mode === "3d" ? (
               <>
                 <HintChip>drag · orbit</HintChip>
@@ -675,7 +679,7 @@ export function GlowbraidStudio() {
               </>
             )}
           </div>
-          <div className="font-smono pointer-events-none absolute bottom-3.5 right-3.5 z-[6] rounded-md border border-white/[0.08] bg-[rgba(12,13,17,0.6)] px-[9px] py-1 text-[10px] text-[rgba(233,234,240,0.4)]">
+          <div className="font-smono pointer-events-none absolute bottom-3.5 right-3.5 z-[6] rounded-md border border-white/[0.08] bg-[rgba(12,13,17,0.6)] px-[9px] py-1 text-[10px] text-ink/40">
             {ui.mode === "edit"
               ? "EDIT · LEDS VISIBLE"
               : ui.mode === "sim"
