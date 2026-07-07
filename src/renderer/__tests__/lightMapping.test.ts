@@ -2,9 +2,12 @@ import { describe, expect, it } from "vitest";
 import { MIN_SEGMENT_INTENSITY } from "@/engine/light";
 import {
   boostSaturation,
+  CROSSFADE_RANGE,
+  CROSSFADE_START,
   floorIntensity,
   INTENSITY_FLOOR,
   lightBoardFactor,
+  lightFactorFromLuminance,
   relativeLuminance,
 } from "../lightMapping";
 
@@ -91,5 +94,20 @@ describe("boostSaturation", () => {
 
   it("keeps an already-saturated primary unchanged", () => {
     expect(boostSaturation([255, 0, 0], 0.8)).toEqual([255, 0, 0]);
+  });
+});
+
+describe("lightFactorFromLuminance", () => {
+  it("is 0 at/below CROSSFADE_START and 1 at/above START + RANGE", () => {
+    expect(lightFactorFromLuminance(0)).toBe(0);
+    expect(lightFactorFromLuminance(CROSSFADE_START)).toBe(0);
+    expect(lightFactorFromLuminance(CROSSFADE_START + CROSSFADE_RANGE)).toBe(1);
+    expect(lightFactorFromLuminance(1)).toBe(1);
+  });
+
+  it("agrees with lightBoardFactor for a hex color", () => {
+    expect(lightFactorFromLuminance(relativeLuminance("#808080"))).toBe(
+      lightBoardFactor("#808080"),
+    );
   });
 });

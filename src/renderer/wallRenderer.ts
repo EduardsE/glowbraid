@@ -9,8 +9,11 @@ import {
   boostSaturation,
   floorIntensity,
   lightBoardFactor,
+  lightFactorFromLuminance,
   SATURATION_BOOST,
 } from "./lightMapping";
+import type { PourPaletteId } from "./pourField";
+import { getPourTexture, type PourTexture } from "./pourTexture";
 import { computeWallLayout, frameGradientPos, frameRect } from "./viewport";
 
 /** Global glow multiplier (design prop default). */
@@ -195,6 +198,10 @@ export interface WallDrawState {
   frameGap: number;
   boardPadding: number;
   boardColor: string;
+  /** Board artwork mode; absent → "none" (flat boardColor fill). */
+  boardArt?: "none" | "pour";
+  boardArtSeed?: number;
+  boardArtPalette?: PourPaletteId;
   frameColors: (string | null)[];
   showMeasurements: boolean;
   zoom: number;
@@ -219,6 +226,13 @@ interface FrameDrawOptions {
   frameSizeCm: number;
   color: string | null;
   boardColor: string;
+  /** Active pour artwork + board rect in canvas px; null → flat boardColor panel. */
+  pour: {
+    texture: PourTexture;
+    boardX: number;
+    boardY: number;
+    boardSize: number;
+  } | null;
   /** 0 dark board → 1 light board; drives the additive↔graphic crossfade. */
   lightFactor: number;
   gpos: number;
@@ -263,16 +277,33 @@ export function drawWall(
     canvasHeight: height,
   });
 
+  const pourTex =
+    state.boardArt === "pour" &&
+    state.boardArtSeed != null &&
+    state.boardArtPalette != null
+      ? getPourTexture(state.boardArtSeed, state.boardArtPalette)
+      : null;
+
   // Backing board — sits behind the frame grid, visible in the inter-frame
   // gaps and around the outer edge per `boardPadding`.
   ctx.save();
-  ctx.fillStyle = state.boardColor;
-  ctx.fillRect(
-    layout.boardX,
-    layout.boardY,
-    layout.boardSize,
-    layout.boardSize,
-  );
+  if (pourTex) {
+    ctx.drawImage(
+      pourTex.canvas,
+      layout.boardX,
+      layout.boardY,
+      layout.boardSize,
+      layout.boardSize,
+    );
+  } else {
+    ctx.fillStyle = state.boardColor;
+    ctx.fillRect(
+      layout.boardX,
+      layout.boardY,
+      layout.boardSize,
+      layout.boardSize,
+    );
+  }
   ctx.strokeStyle = "rgba(255,255,255,0.06)";
   ctx.lineWidth = 1;
   ctx.strokeRect(
@@ -284,7 +315,9 @@ export function drawWall(
   ctx.restore();
 
   const edit = state.mode === "edit";
-  const lightFactor = lightBoardFactor(state.boardColor);
+  const lightFactor = pourTex
+    ? lightFactorFromLuminance(pourTex.averageLuminance)
+    : lightBoardFactor(state.boardColor);
   for (let index = 0; index < state.frames.length; index++) {
     const rect = frameRect(layout, index);
     const selected = index === state.selectedFrame;
@@ -297,6 +330,14 @@ export function drawWall(
       frameSizeCm: state.frameSize,
       color: state.frameColors[index] ?? null,
       boardColor: state.boardColor,
+      pour: pourTex
+        ? {
+            texture: pourTex,
+            boardX: layout.boardX,
+            boardY: layout.boardY,
+            boardSize: layout.boardSize,
+          }
+        : null,
       lightFactor,
       gpos: frameGradientPos(index, state.gridSize),
       time: state.time,
@@ -337,6 +378,7 @@ function drawFrame(
     frameSizeCm,
     color,
     boardColor,
+    pour,
     lightFactor,
     gpos,
     time,
@@ -377,8 +419,25 @@ function drawFrame(
   ctx.save();
   roundRect(ctx, panelX, panelY, panelSize, panelSize, innerPx);
   ctx.clip();
-  ctx.fillStyle = boardColor;
-  ctx.fillRect(panelX, panelY, panelSize, panelSize);
+  // The board shows through the open frame: in pour mode, draw this panel's
+  // sub-rectangle of the artwork so the painting continues behind the fibres.
+  if (pour) {
+    const scale = pour.texture.canvas.width / pour.boardSize;
+    ctx.drawImage(
+      pour.texture.canvas,
+      (panelX - pour.boardX) * scale,
+      (panelY - pour.boardY) * scale,
+      panelSize * scale,
+      panelSize * scale,
+      panelX,
+      panelY,
+      panelSize,
+      panelSize,
+    );
+  } else {
+    ctx.fillStyle = boardColor;
+    ctx.fillRect(panelX, panelY, panelSize, panelSize);
+  }
   const amb = samplePalette(palette, (time * 0.03) % 1);
   const ambientGradient = ctx.createRadialGradient(
     panelX + panelSize * 0.5,
