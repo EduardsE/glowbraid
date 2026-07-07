@@ -48,10 +48,15 @@ export function relativeLuminance(hex: string): number {
   return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
 }
 
+/** 0 dark → 1 light for a raw relative luminance; drives the additive↔graphic crossfade. */
+export function lightFactorFromLuminance(lum: number): number {
+  const f = (lum - CROSSFADE_START) / CROSSFADE_RANGE;
+  return Math.max(0, Math.min(1, f));
+}
+
 /** 0 on dark boards → 1 on light boards; drives the additive↔graphic crossfade. */
 export function lightBoardFactor(hex: string): number {
-  const f = (relativeLuminance(hex) - CROSSFADE_START) / CROSSFADE_RANGE;
-  return Math.max(0, Math.min(1, f));
+  return lightFactorFromLuminance(relativeLuminance(hex));
 }
 
 /** Push channels away from their mean by `amount`, clamped to 0–255. */
