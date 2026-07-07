@@ -16,10 +16,12 @@ import {
   writeWallFiberColors,
 } from "./fiberColors";
 import {
+  BEZEL_DEPTH,
   bezelGeometry,
   computeWorldLayout,
   fiberWorldPoints,
   frameOrigin,
+  frameSquarePlane,
   type WorldLayout,
 } from "./fiberGeometry";
 
@@ -51,6 +53,7 @@ export interface Wall3D {
   resetCamera(): void;
   dollyIn(): void;
   dollyOut(): void;
+  pick(clientX: number, clientY: number): number | null;
   dispose(): void;
 }
 
@@ -142,6 +145,9 @@ export function createWall3D(canvas: HTMLCanvasElement): Wall3D {
   let builtFrames: Frame[] | null = null;
   let builtKey = "";
   let firstBuild = true;
+  let pickPlanes: THREE.Mesh[] = [];
+  const raycaster = new THREE.Raycaster();
+  const ndc = new THREE.Vector2();
   scene.add(group);
 
   function disposeGroup(): void {
@@ -211,6 +217,24 @@ export function createWall3D(canvas: HTMLCanvasElement): Wall3D {
       const o = frameOrigin(layout, i);
       mesh.position.set(o.x, o.y, layout.frameOffset);
       group.add(mesh);
+    }
+
+    // Invisible per-frame pick targets. visible:false meshes are skipped by
+    // the renderer but are still hit by Raycaster, so they cost no draw work.
+    // Placed at the bezel front to minimise click parallax vs. the raised frame.
+    const pickMat = new THREE.MeshBasicMaterial({ visible: false });
+    pickPlanes = [];
+    for (let i = 0; i < state.frames.length; i++) {
+      const sq = frameSquarePlane(layout, i);
+      const mesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(sq.size, sq.size),
+        pickMat,
+      );
+      mesh.visible = false;
+      mesh.position.set(sq.cx, sq.cy, layout.frameOffset + BEZEL_DEPTH);
+      mesh.userData.frameIndex = i;
+      group.add(mesh);
+      pickPlanes.push(mesh);
     }
 
     const tubes: THREE.BufferGeometry[] = [];
@@ -283,6 +307,18 @@ export function createWall3D(canvas: HTMLCanvasElement): Wall3D {
     camera.position.copy(controls.target).add(offset);
   }
 
+  function pick(clientX: number, clientY: number): number | null {
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width < 1 || rect.height < 1) return null;
+    ndc.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+    ndc.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(ndc, camera);
+    const hits = raycaster.intersectObjects(pickPlanes, false);
+    if (hits.length === 0) return null;
+    const idx = hits[0].object.userData.frameIndex;
+    return typeof idx === "number" ? idx : null;
+  }
+
   function render(state: Wall3DState): void {
     const key = `${state.gridSize}|${state.frameSize}|${state.frameGap}|${state.boardPadding}|${state.frameWidth}|${state.cornerRadius}|${state.frameOffset}|${state.boardArt ?? "none"}|${state.boardArtSeed ?? 0}|${state.boardArtPalette ?? ""}`;
     if (state.frames !== builtFrames || key !== builtKey) {
@@ -334,6 +370,7 @@ export function createWall3D(canvas: HTMLCanvasElement): Wall3D {
     resetCamera,
     dollyIn: () => dolly(1 / DOLLY_STEP),
     dollyOut: () => dolly(DOLLY_STEP),
+    pick,
     dispose: () => {
       ro.disconnect();
       canvas.removeEventListener("webglcontextlost", onContextLost);
