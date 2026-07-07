@@ -7,6 +7,8 @@ import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js"
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import type { Palette } from "@/engine/palettes";
 import type { AnimationId, Frame } from "@/engine/types";
+import type { PourPaletteId } from "@/renderer/pourField";
+import { getPourTexture } from "@/renderer/pourTexture";
 import { shadeForSim } from "@/renderer/wallRenderer";
 import {
   RADIAL_SEGMENTS,
@@ -32,6 +34,10 @@ export interface Wall3DState {
   frameWidth: number;
   frameOffset: number;
   boardColor: string;
+  /** Board artwork mode; absent → "none" (flat boardColor material). */
+  boardArt?: "none" | "pour";
+  boardArtSeed?: number;
+  boardArtPalette?: PourPaletteId;
   frameColors: (string | null)[];
   time: number;
   anim: AnimationId;
@@ -125,6 +131,7 @@ export function createWall3D(canvas: HTMLCanvasElement): Wall3D {
   let layout: WorldLayout = computeWorldLayout(1, 25, 20, 4, 8, 15, 2);
   let group = new THREE.Group();
   let boardMat: THREE.MeshStandardMaterial | null = null;
+  let boardTex: THREE.CanvasTexture | null = null;
   let bezelMats: THREE.MeshStandardMaterial[] = [];
   let colorArray = new Float32Array(0);
   let colorAttr: THREE.BufferAttribute | null = null;
@@ -148,6 +155,8 @@ export function createWall3D(canvas: HTMLCanvasElement): Wall3D {
         }
       }
     });
+    boardTex?.dispose();
+    boardTex = null;
     group = new THREE.Group();
     scene.add(group);
   }
@@ -169,8 +178,19 @@ export function createWall3D(canvas: HTMLCanvasElement): Wall3D {
       layout.boardSize,
       BOARD_DEPTH,
     );
+    const pour =
+      state.boardArt === "pour" &&
+      state.boardArtSeed != null &&
+      state.boardArtPalette != null
+        ? getPourTexture(state.boardArtSeed, state.boardArtPalette)
+        : null;
+    if (pour) {
+      boardTex = new THREE.CanvasTexture(pour.canvas);
+      boardTex.colorSpace = THREE.SRGBColorSpace;
+    }
     boardMat = new THREE.MeshStandardMaterial({
-      color: state.boardColor,
+      color: pour ? 0xffffff : state.boardColor,
+      map: pour ? boardTex : null,
       roughness: 0.9,
       metalness: 0.05,
     });
@@ -264,13 +284,13 @@ export function createWall3D(canvas: HTMLCanvasElement): Wall3D {
   }
 
   function render(state: Wall3DState): void {
-    const key = `${state.gridSize}|${state.frameSize}|${state.frameGap}|${state.boardPadding}|${state.frameWidth}|${state.cornerRadius}|${state.frameOffset}`;
+    const key = `${state.gridSize}|${state.frameSize}|${state.frameGap}|${state.boardPadding}|${state.frameWidth}|${state.cornerRadius}|${state.frameOffset}|${state.boardArt ?? "none"}|${state.boardArtSeed ?? 0}|${state.boardArtPalette ?? ""}`;
     if (state.frames !== builtFrames || key !== builtKey) {
       builtFrames = state.frames;
       builtKey = key;
       rebuild(state);
     }
-    boardMat?.color.set(state.boardColor);
+    if (boardMat && boardMat.map == null) boardMat.color.set(state.boardColor);
     for (let i = 0; i < bezelMats.length; i++) {
       bezelMats[i].color.set(bezelColor(state.frameColors, i));
     }
