@@ -364,6 +364,7 @@ export function GlowbraidStudio() {
         boardArtSeed: s.boardArtSeed,
         boardArtPalette: s.boardArtPalette,
         frameColors: s.frameColors,
+        selectedFrame: s.selectedFrame,
         time: tRef.current,
         anim: s.anim,
         speed: s.speed,
