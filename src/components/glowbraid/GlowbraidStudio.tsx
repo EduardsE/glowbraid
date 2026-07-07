@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ANIMATIONS } from "@/engine/animation";
 import { DEFAULT_FIBER_STYLE, generateFrame } from "@/engine/fibers";
 import { PALETTES } from "@/engine/palettes";
+import { hash } from "@/engine/random";
 import type {
   AnimationId,
   FiberStyle,
@@ -14,6 +15,7 @@ import type {
 import { deriveFrameSeeds, generateWall } from "@/engine/wall";
 import type { MapGeometry } from "@/renderer/mapRenderer";
 import { drawConnectionMap, pickMapFiber } from "@/renderer/mapRenderer";
+import { POUR_PALETTES, type PourPaletteId } from "@/renderer/pourField";
 import { computeWallLayout, pickFrame } from "@/renderer/viewport";
 import { DEFAULT_BOARD_COLOR, drawWall } from "@/renderer/wallRenderer";
 import type { Wall3D } from "@/renderer3d/wall3d";
@@ -37,6 +39,9 @@ interface StudioState {
   frameWidth: number;
   frameOffset: number;
   boardColor: string;
+  boardArt: "none" | "pour";
+  boardArtSeed: number;
+  boardArtPalette: PourPaletteId;
   frameColors: (string | null)[];
   showMeasurements: boolean;
   curviness: number;
@@ -65,6 +70,9 @@ const INITIAL_STATE: StudioState = {
   frameWidth: 8,
   frameOffset: 2,
   boardColor: DEFAULT_BOARD_COLOR,
+  boardArt: "none",
+  boardArtSeed: deriveBoardArtSeed(7431),
+  boardArtPalette: "tidal",
   frameColors: [],
   showMeasurements: false,
   curviness: DEFAULT_FIBER_STYLE.curviness,
@@ -85,6 +93,11 @@ const INITIAL_STATE: StudioState = {
 
 function randomSeed(): number {
   return Math.floor(Math.random() * 99999);
+}
+
+/** Spec'd fallback: board-art seed derived deterministically from the wall's master seed. */
+function deriveBoardArtSeed(masterSeed: number): number {
+  return Math.floor(hash(masterSeed) * 2 ** 31);
 }
 
 function formatTime(seconds: number): string {
@@ -189,6 +202,16 @@ function buildInitialProject(): InitialProject {
   const frameOffset = numField(d.frameOffset, 2, 0, 10);
   const boardColor =
     typeof d.boardColor === "string" ? d.boardColor : DEFAULT_BOARD_COLOR;
+  const boardArt: StudioState["boardArt"] =
+    d.boardArt === "pour" ? "pour" : "none";
+  const boardArtSeed = Number.isFinite(Number(d.boardArtSeed))
+    ? Math.floor(Number(d.boardArtSeed))
+    : deriveBoardArtSeed(d.masterSeed);
+  const boardArtPalette: PourPaletteId =
+    typeof d.boardArtPalette === "string" &&
+    Object.hasOwn(POUR_PALETTES, d.boardArtPalette)
+      ? (d.boardArtPalette as PourPaletteId)
+      : "tidal";
   const frameCount = gridSize * gridSize;
   const frameColors: (string | null)[] =
     Array.isArray(d.frameColors) &&
@@ -218,6 +241,9 @@ function buildInitialProject(): InitialProject {
       frameWidth,
       frameOffset,
       boardColor,
+      boardArt,
+      boardArtSeed,
+      boardArtPalette,
       frameColors,
       showMeasurements: d.showMeasurements === true,
       masterSeed: d.masterSeed,
@@ -326,6 +352,9 @@ export function GlowbraidStudio() {
         frameWidth: s.frameWidth,
         frameOffset: s.frameOffset,
         boardColor: s.boardColor,
+        boardArt: s.boardArt,
+        boardArtSeed: s.boardArtSeed,
+        boardArtPalette: s.boardArtPalette,
         frameColors: s.frameColors,
         time: tRef.current,
         anim: s.anim,
@@ -343,6 +372,9 @@ export function GlowbraidStudio() {
         frameGap: s.frameGap,
         boardPadding: s.boardPadding,
         boardColor: s.boardColor,
+        boardArt: s.boardArt,
+        boardArtSeed: s.boardArtSeed,
+        boardArtPalette: s.boardArtPalette,
         frameColors: s.frameColors,
         showMeasurements: s.showMeasurements,
         zoom: s.zoom,
@@ -477,6 +509,9 @@ export function GlowbraidStudio() {
         frameWidth: s.frameWidth,
         frameOffset: s.frameOffset,
         boardColor: s.boardColor,
+        boardArt: s.boardArt,
+        boardArtSeed: s.boardArtSeed,
+        boardArtPalette: s.boardArtPalette,
         frameColors: s.frameColors,
         showMeasurements: s.showMeasurements,
         masterSeed: s.masterSeed,
@@ -502,6 +537,9 @@ export function GlowbraidStudio() {
     ui.frameWidth,
     ui.frameOffset,
     ui.boardColor,
+    ui.boardArt,
+    ui.boardArtSeed,
+    ui.boardArtPalette,
     ui.frameColors,
     ui.showMeasurements,
     ui.masterSeed,
@@ -646,6 +684,11 @@ export function GlowbraidStudio() {
           onShowMeasurements={(v) => patch({ showMeasurements: v })}
           boardColor={ui.boardColor}
           onBoardColor={(c) => patch({ boardColor: c })}
+          boardArt={ui.boardArt}
+          onBoardArt={(mode) => patch({ boardArt: mode })}
+          boardArtPalette={ui.boardArtPalette}
+          onBoardArtPalette={(id) => patch({ boardArtPalette: id })}
+          onBoardArtReroll={() => patch({ boardArtSeed: randomSeed() })}
           curviness={ui.curviness}
           onCurviness={(v) => handleStyle({ curviness: v })}
           randomness={ui.randomness}

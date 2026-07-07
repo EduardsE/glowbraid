@@ -1,5 +1,10 @@
 import { Shuffle, Sparkles } from "lucide-react";
 import type { ReactNode } from "react";
+import {
+  POUR_PALETTE_IDS,
+  POUR_PALETTES,
+  type PourPaletteId,
+} from "@/renderer/pourField";
 import { ColorSwatchPicker } from "./ColorSwatchPicker";
 
 const GRID_OPTIONS = [1, 2, 3, 4, 5, 6];
@@ -24,6 +29,11 @@ export interface LeftPanelProps {
   onShowMeasurements: (v: boolean) => void;
   boardColor: string;
   onBoardColor: (c: string) => void;
+  boardArt: "none" | "pour";
+  onBoardArt: (mode: "none" | "pour") => void;
+  boardArtPalette: PourPaletteId;
+  onBoardArtPalette: (id: PourPaletteId) => void;
+  onBoardArtReroll: () => void;
   curviness: number;
   onCurviness: (v: number) => void;
   randomness: number;
@@ -153,6 +163,61 @@ export function LeftPanel(props: LeftPanelProps) {
           onChange={props.onBoardColor}
           ariaLabel="Board color"
         />
+      </div>
+
+      <div className="flex flex-col gap-[7px]">
+        <div className="text-xs text-ink/70">Board art</div>
+        <div className="flex gap-[5px]">
+          {(["none", "pour"] as const).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => props.onBoardArt(mode)}
+              className={
+                mode === props.boardArt
+                  ? "h-8 flex-1 cursor-pointer rounded-lg border border-glow/50 bg-glow/15 text-xs text-white"
+                  : "h-8 flex-1 cursor-pointer rounded-lg border border-white/[0.09] bg-white/[0.02] text-xs text-ink/65 hover:bg-white/[0.06] hover:text-ink/90"
+              }
+            >
+              {mode === "none" ? "None" : "Pour"}
+            </button>
+          ))}
+        </div>
+        {props.boardArt === "pour" ? (
+          <>
+            <div className="flex flex-wrap gap-2">
+              {POUR_PALETTE_IDS.map((id) => {
+                const stops = POUR_PALETTES[id].stops;
+                const gradient = `linear-gradient(135deg, ${stops
+                  .map(([r, g, b]) => `rgb(${r},${g},${b})`)
+                  .join(", ")})`;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    title={POUR_PALETTES[id].name}
+                    aria-label={`Pour palette: ${POUR_PALETTES[id].name}`}
+                    onClick={() => props.onBoardArtPalette(id)}
+                    style={{ background: gradient }}
+                    className={
+                      id === props.boardArtPalette
+                        ? "h-[30px] w-[30px] cursor-pointer rounded-[7px] border border-white/15 outline outline-2 outline-offset-2 outline-glow/80"
+                        : "h-[30px] w-[30px] cursor-pointer rounded-[7px] border border-white/15 hover:border-white/40"
+                    }
+                  />
+                );
+              })}
+            </div>
+            <button
+              type="button"
+              onClick={props.onBoardArtReroll}
+              className="flex h-8 cursor-pointer items-center justify-center gap-2 rounded-[10px] border border-white/10 bg-white/[0.03] text-xs text-ink hover:bg-white/[0.08]"
+            >
+              <Shuffle size={12} aria-hidden="true" />
+              Reroll artwork
+            </button>
+          </>
+        ) : null}
       </div>
 
       <Divider />
