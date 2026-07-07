@@ -218,7 +218,7 @@ export function renderPourRGBA(
   palette: PourPalette,
   width: number,
   height: number,
-): { pixels: Uint8ClampedArray; averageLuminance: number } {
+): { pixels: Uint8ClampedArray<ArrayBuffer>; averageLuminance: number } {
   const pixels = new Uint8ClampedArray(width * height * 4);
   const laceColor = palette.stops[palette.stops.length - 1];
   let lumSum = 0;
