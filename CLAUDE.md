@@ -28,8 +28,8 @@ Path aliases: both `#/*` and `@/*` resolve to `./src/*`; existing code uses `@/`
 Strictly layered **engine → renderer → UI**; imports only point left.
 
 - `src/engine/` — pure, deterministic, React/DOM-free simulation: seeded RNG (`random.ts`), LED layout (`leds.ts`), fibre generation via perfect matching of the 24 LEDs into 12 fibres (`fibers.ts`), wall/seed derivation (`wall.ts`), light propagation (`light.ts`), animations and palettes. Kept framework-free on purpose — the same logic is meant to later drive real ESP32 LED hardware. Don't import React or DOM types here.
-- `src/renderer/` — Canvas2D drawing: `wallRenderer.ts` (wall + showcase frame), `mapRenderer.ts` (inspector connection map), `viewport.ts` (layout/zoom/pan math + hit testing).
-- `src/renderer3d/` — three.js 3D installation view: `wall3d.ts` (stateful scene renderer, lazy-loaded on first 3D entry), `fiberGeometry.ts`/`fiberColors.ts` (pure, GPU-free helpers with Vitest coverage). Consumes the same engine output and the shared `fiberSegmentLights` light pipeline as the 2D renderer. Frame picking via invisible per-frame pick-planes (`frameSquarePlane` + a Raycaster in `wall3d.ts`) drives the same `selectedFrame` selection the 2D view uses; camera state is session-only.
+- `src/renderer/` — shared rendering support, no 2D canvas drawing (the app is 3D-only): `mapRenderer.ts` (inspector connection map), `viewport.ts` (`frameGradientPos`, the diagonal gradient position used by 3D fibre coloring), `pourField.ts`/`pourTexture.ts` (procedural board-art generation), `wallDefaults.ts` (board-color default + bezel shading, shared with the 3D renderer).
+- `src/renderer3d/` — three.js 3D installation view, the only view: `wall3d.ts` (stateful scene renderer, lazy-loaded on first mount), `fiberGeometry.ts`/`fiberColors.ts` (pure, GPU-free helpers with Vitest coverage). Consumes the same engine output and the `fiberSegmentLights` light pipeline. Frame picking via invisible per-frame pick-planes (`frameSquarePlane` + a Raycaster in `wall3d.ts`) drives `selectedFrame`; camera state is session-only.
 - `src/components/glowbraid/` — React shell. `GlowbraidStudio.tsx` owns all state and wires everything; the other files are presentational panels and two hooks (`useAnimationLoop`, `useCanvasInteraction`).
 
 ### Determinism is a persistence contract
@@ -41,7 +41,7 @@ Saved projects store only seeds + settings (`ProjectSnapshot` in `src/engine/typ
 
 ### Render loop lives outside React state
 
-`GlowbraidStudio.tsx` keeps per-frame mutable data in refs (`tRef`, `panRef`, `framesRef`, `sizeRef`…) and redraws imperatively via `useAnimationLoop`; React state (`ui`) only holds things that change UI chrome. Scrub position and time readout are written directly to DOM nodes each tick — don't move animation-frequency data into `useState`.
+`GlowbraidStudio.tsx` keeps per-frame mutable data in refs (`tRef`, `framesRef`, `seedsRef`…) and redraws imperatively via `useAnimationLoop`; React state (`ui`) only holds things that change UI chrome. Scrub position and time readout are written directly to DOM nodes each tick — don't move animation-frequency data into `useState`.
 
 ### Canvas performance
 
