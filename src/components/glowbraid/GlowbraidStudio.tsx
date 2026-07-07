@@ -60,6 +60,8 @@ interface StudioState {
   zoom: number;
 }
 
+const INITIAL_MASTER_SEED = 7431;
+
 const INITIAL_STATE: StudioState = {
   mode: "sim",
   gridSize: 3,
@@ -71,14 +73,14 @@ const INITIAL_STATE: StudioState = {
   frameOffset: 2,
   boardColor: DEFAULT_BOARD_COLOR,
   boardArt: "none",
-  boardArtSeed: deriveBoardArtSeed(7431),
+  boardArtSeed: deriveBoardArtSeed(INITIAL_MASTER_SEED),
   boardArtPalette: "tidal",
   frameColors: [],
   showMeasurements: false,
   curviness: DEFAULT_FIBER_STYLE.curviness,
   randomness: DEFAULT_FIBER_STYLE.randomness,
   socketDepth: DEFAULT_FIBER_STYLE.socketDepth,
-  masterSeed: 7431,
+  masterSeed: INITIAL_MASTER_SEED,
   geometryVersion: 0,
   selectedFrame: null,
   selectedFiber: null,
@@ -97,7 +99,9 @@ function randomSeed(): number {
 
 /** Spec'd fallback: board-art seed derived deterministically from the wall's master seed. */
 function deriveBoardArtSeed(masterSeed: number): number {
-  return Math.floor(hash(masterSeed) * 2 ** 31);
+  return Math.floor(
+    hash(Number.isFinite(masterSeed) ? masterSeed : 0) * 2 ** 31,
+  );
 }
 
 function formatTime(seconds: number): string {
@@ -204,9 +208,10 @@ function buildInitialProject(): InitialProject {
     typeof d.boardColor === "string" ? d.boardColor : DEFAULT_BOARD_COLOR;
   const boardArt: StudioState["boardArt"] =
     d.boardArt === "pour" ? "pour" : "none";
-  const boardArtSeed = Number.isFinite(Number(d.boardArtSeed))
-    ? Math.floor(Number(d.boardArtSeed))
-    : deriveBoardArtSeed(d.masterSeed);
+  const boardArtSeed =
+    typeof d.boardArtSeed === "number" && Number.isFinite(d.boardArtSeed)
+      ? Math.floor(d.boardArtSeed)
+      : deriveBoardArtSeed(d.masterSeed);
   const boardArtPalette: PourPaletteId =
     typeof d.boardArtPalette === "string" &&
     Object.hasOwn(POUR_PALETTES, d.boardArtPalette)

@@ -23,8 +23,8 @@ let cached: PourTexture | null = null;
 
 /**
  * Build (or fetch) the pour artwork for a seed + palette. Returns null when
- * no real 2D context exists (SSR/tests) — callers fall back to the flat
- * boardColor fill.
+ * canvas 2D context creation fails (canvas-less test envs). Callers only
+ * run client-side; the flat boardColor fill is the fallback.
  */
 export function getPourTexture(
   seed: number,
