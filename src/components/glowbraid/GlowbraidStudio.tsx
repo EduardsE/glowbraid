@@ -15,7 +15,7 @@ import { deriveFrameSeeds, generateWall } from "@/engine/wall";
 import type { MapGeometry } from "@/renderer/mapRenderer";
 import { drawConnectionMap, pickMapFiber } from "@/renderer/mapRenderer";
 import { POUR_PALETTES, type PourPaletteId } from "@/renderer/pourField";
-import { DEFAULT_BOARD_COLOR } from "@/renderer/wallRenderer";
+import { DEFAULT_BOARD_COLOR } from "@/renderer/wallDefaults";
 import type { Wall3D } from "@/renderer3d/wall3d";
 import { Header } from "./Header";
 import { InspectorPanel } from "./InspectorPanel";

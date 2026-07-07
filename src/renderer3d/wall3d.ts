@@ -9,7 +9,7 @@ import type { Palette } from "@/engine/palettes";
 import type { AnimationId, Frame } from "@/engine/types";
 import type { PourPaletteId } from "@/renderer/pourField";
 import { getPourTexture } from "@/renderer/pourTexture";
-import { shadeForSim } from "@/renderer/wallRenderer";
+import { shadeForSim } from "@/renderer/wallDefaults";
 import {
   RADIAL_SEGMENTS,
   TUBULAR_SEGMENTS,
