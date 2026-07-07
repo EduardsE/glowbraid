@@ -1,4 +1,5 @@
 import { hash } from "@/engine/random";
+import type { RGB } from "@/engine/types";
 
 /**
  * Procedural acrylic-pour field — pure math, DOM-free.
@@ -106,4 +107,151 @@ export function worley(
     }
   }
   return { f1, f2 };
+}
+
+export type PourPaletteId = "tidal" | "magma" | "bubblegum" | "iris";
+
+export interface PourPalette {
+  id: PourPaletteId;
+  name: string;
+  stops: RGB[];
+}
+
+/**
+ * Pour palettes are separate from the LED palettes: pours live on white
+ * lacing and near-black negative space, which the LED palettes deliberately
+ * avoid. Stops are ordered dark → light; samplePourStops clamps (no wrap).
+ */
+export const POUR_PALETTES: Record<PourPaletteId, PourPalette> = {
+  tidal: {
+    id: "tidal",
+    name: "Tidal",
+    stops: [
+      [6, 10, 18],
+      [13, 48, 74],
+      [26, 134, 150],
+      [126, 206, 208],
+      [243, 246, 246],
+    ],
+  },
+  magma: {
+    id: "magma",
+    name: "Magma",
+    stops: [
+      [24, 28, 52],
+      [41, 74, 158],
+      [227, 66, 32],
+      [255, 148, 54],
+      [247, 244, 238],
+    ],
+  },
+  bubblegum: {
+    id: "bubblegum",
+    name: "Bubblegum",
+    stops: [
+      [46, 74, 168],
+      [221, 58, 158],
+      [248, 150, 206],
+      [164, 240, 222],
+      [236, 248, 246],
+    ],
+  },
+  iris: {
+    id: "iris",
+    name: "Iris",
+    stops: [
+      [16, 10, 20],
+      [84, 32, 130],
+      [168, 90, 220],
+      [212, 166, 74],
+      [246, 244, 248],
+    ],
+  },
+};
+
+export const POUR_PALETTE_IDS: PourPaletteId[] = [
+  "tidal",
+  "magma",
+  "bubblegum",
+  "iris",
+];
+
+/** Clamped piecewise-linear palette sample (unlike samplePalette, no wrap). */
+export function samplePourStops(palette: PourPalette, t: number): RGB {
+  const stops = palette.stops;
+  const n = stops.length - 1;
+  const c = Math.min(1, Math.max(0, t)) * n;
+  const i = Math.min(n - 1, Math.floor(c));
+  const f = c - i;
+  const a = stops[i];
+  const b = stops[i + 1];
+  return [
+    a[0] + (b[0] - a[0]) * f,
+    a[1] + (b[1] - a[1]) * f,
+    a[2] + (b[2] - a[2]) * f,
+  ];
+}
+
+/** Marble features across the board's width. */
+const FLOW_SCALE = 3.2;
+/** Worley cells per warped flow unit. */
+const CELL_SCALE = 1.8;
+/** F2−F1 distance below which a pixel reads as bright lacing. */
+const LACE_WIDTH = 0.16;
+/** How strongly lacing pulls toward the palette's lightest stop. */
+const LACE_STRENGTH = 0.85;
+/** Max darkening of cell rims (the dark webbing between cells). */
+const RIM_DARKEN = 0.45;
+/** Widen the fbm output (which clusters near 0.5) across the full palette. */
+const CONTRAST = 2.2;
+
+/**
+ * Rasterize one pour artwork into a raw RGBA buffer.
+ *
+ * Per pixel: warp the coordinates (marbling), map fbm through the palette,
+ * then — gated by a low-frequency mask so parts of the canvas stay purely
+ * marbled — overlay Worley cells: bright lacing where f2−f1 is small, and
+ * darkened rims just inside cell borders. Pure function of its arguments.
+ */
+export function renderPourRGBA(
+  seed: number,
+  palette: PourPalette,
+  width: number,
+  height: number,
+): { pixels: Uint8ClampedArray; averageLuminance: number } {
+  const pixels = new Uint8ClampedArray(width * height * 4);
+  const laceColor = palette.stops[palette.stops.length - 1];
+  let lumSum = 0;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const u = ((x + 0.5) / width) * FLOW_SCALE;
+      const v = ((y + 0.5) / height) * FLOW_SCALE;
+      const w = warpPoint(seed, u, v);
+      const base = fbm(seed + 5, w.x, w.y, 4);
+      const t = (base - 0.5) * CONTRAST + 0.5;
+      let [r, g, b] = samplePourStops(palette, t);
+
+      const mask = fbm(seed + 83, u * 0.9 + 7.3, v * 0.9 + 2.1, 3);
+      const cellAmount = Math.min(1, Math.max(0, (mask - 0.42) / 0.22));
+      if (cellAmount > 0) {
+        const { f1, f2 } = worley(seed + 3, w.x * CELL_SCALE, w.y * CELL_SCALE);
+        const lace = Math.max(0, 1 - (f2 - f1) / LACE_WIDTH) * cellAmount;
+        const rim =
+          Math.min(1, Math.max(0, (f1 - 0.3) / 0.35)) * cellAmount * (1 - lace);
+        const pull = lace * LACE_STRENGTH;
+        const shade = 1 - RIM_DARKEN * rim;
+        r = (r + (laceColor[0] - r) * pull) * shade;
+        g = (g + (laceColor[1] - g) * pull) * shade;
+        b = (b + (laceColor[2] - b) * pull) * shade;
+      }
+
+      const o = (y * width + x) * 4;
+      pixels[o] = r;
+      pixels[o + 1] = g;
+      pixels[o + 2] = b;
+      pixels[o + 3] = 255;
+      lumSum += (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+    }
+  }
+  return { pixels, averageLuminance: lumSum / (width * height) };
 }
