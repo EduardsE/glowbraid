@@ -11,6 +11,7 @@ import {
   FIBER_SOCKET_Z,
   fiberWorldPoints,
   frameOrigin,
+  frameSquarePlane,
   roundedRectPoints,
 } from "../fiberGeometry";
 
@@ -215,5 +216,26 @@ describe("roundedRectPoints", () => {
       expect(p.y).toBeLessThanOrEqual(1e-9);
       expect(p.y).toBeGreaterThanOrEqual(-10 - 1e-9);
     }
+  });
+});
+
+describe("frameSquarePlane", () => {
+  // layout = computeWorldLayout(2, 25, 20, 4, 8, 15, 2): boardSize 60, gap 2cm.
+  // Frame 0 outer top-left = frameOrigin(layout, 0) = (-26, 26); square is 25cm.
+  it("centres the plane on the frame square (y-down convention)", () => {
+    const p = frameSquarePlane(layout, 0);
+    expect(p.cx).toBeCloseTo(-26 + 25 / 2, 6); // -13.5
+    expect(p.cy).toBeCloseTo(26 - 25 / 2, 6); // 13.5
+    expect(p.size).toBe(25);
+  });
+
+  it("steps adjacent frames one pitch (frameSize + gap) apart", () => {
+    const a = frameSquarePlane(layout, 0);
+    const b = frameSquarePlane(layout, 1); // next column
+    const c = frameSquarePlane(layout, 2); // next row (2x2 grid)
+    expect(b.cx - a.cx).toBeCloseTo(25 + 2, 6); // +pitch in x
+    expect(b.cy).toBeCloseTo(a.cy, 6);
+    expect(c.cy - a.cy).toBeCloseTo(-(25 + 2), 6); // rows step downward
+    expect(c.cx).toBeCloseTo(a.cx, 6);
   });
 });
