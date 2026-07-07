@@ -16,10 +16,13 @@ import {
   writeWallFiberColors,
 } from "./fiberColors";
 import {
+  BEZEL_DEPTH,
   bezelGeometry,
   computeWorldLayout,
   fiberWorldPoints,
   frameOrigin,
+  frameSquarePlane,
+  roundedRectPoints,
   type WorldLayout,
 } from "./fiberGeometry";
 
@@ -39,6 +42,8 @@ export interface Wall3DState {
   boardArtSeed?: number;
   boardArtPalette?: PourPaletteId;
   frameColors: (string | null)[];
+  /** Frame index to outline as selected, or null for none. */
+  selectedFrame: number | null;
   time: number;
   anim: AnimationId;
   speed: number;
@@ -51,6 +56,7 @@ export interface Wall3D {
   resetCamera(): void;
   dollyIn(): void;
   dollyOut(): void;
+  pick(clientX: number, clientY: number): number | null;
   dispose(): void;
 }
 
@@ -68,6 +74,10 @@ const DOLLY_STEP = 1.15;
 const BLOOM_STRENGTH = 0.9;
 const BLOOM_RADIUS = 0.4;
 const BLOOM_THRESHOLD = 0.55;
+/** Selection outline colour — bright enough that UnrealBloomPass blooms it into a glow. */
+const SELECT_COLOR = 0x6cf0ff;
+/** Outline outset beyond the frame's outer edge, cm. */
+const SELECT_OUTSET = 0.4;
 
 function gradientBackground(): THREE.Texture {
   const c = document.createElement("canvas");
@@ -142,6 +152,11 @@ export function createWall3D(canvas: HTMLCanvasElement): Wall3D {
   let builtFrames: Frame[] | null = null;
   let builtKey = "";
   let firstBuild = true;
+  let pickPlanes: THREE.Mesh[] = [];
+  let outline: THREE.LineLoop | null = null;
+  let outlineFrame: number | null = null;
+  const raycaster = new THREE.Raycaster();
+  const ndc = new THREE.Vector2();
   scene.add(group);
 
   function disposeGroup(): void {
@@ -157,6 +172,7 @@ export function createWall3D(canvas: HTMLCanvasElement): Wall3D {
     });
     boardTex?.dispose();
     boardTex = null;
+    disposeOutline();
     group = new THREE.Group();
     scene.add(group);
   }
@@ -211,6 +227,24 @@ export function createWall3D(canvas: HTMLCanvasElement): Wall3D {
       const o = frameOrigin(layout, i);
       mesh.position.set(o.x, o.y, layout.frameOffset);
       group.add(mesh);
+    }
+
+    // Invisible per-frame pick targets. visible:false meshes are skipped by
+    // the renderer but are still hit by Raycaster, so they cost no draw work.
+    // Placed at the bezel front to minimise click parallax vs. the raised frame.
+    const pickMat = new THREE.MeshBasicMaterial({ visible: false });
+    pickPlanes = [];
+    for (let i = 0; i < state.frames.length; i++) {
+      const sq = frameSquarePlane(layout, i);
+      const mesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(sq.size, sq.size),
+        pickMat,
+      );
+      mesh.visible = false;
+      mesh.position.set(sq.cx, sq.cy, layout.frameOffset + BEZEL_DEPTH);
+      mesh.userData.frameIndex = i;
+      group.add(mesh);
+      pickPlanes.push(mesh);
     }
 
     const tubes: THREE.BufferGeometry[] = [];
@@ -283,6 +317,53 @@ export function createWall3D(canvas: HTMLCanvasElement): Wall3D {
     camera.position.copy(controls.target).add(offset);
   }
 
+  function disposeOutline(): void {
+    if (outline) {
+      scene.remove(outline);
+      outline.geometry.dispose();
+      (outline.material as THREE.Material).dispose();
+      outline = null;
+    }
+    outlineFrame = null;
+  }
+
+  function buildOutline(index: number): void {
+    disposeOutline();
+    const o = frameOrigin(layout, index);
+    const m = SELECT_OUTSET;
+    const pts = roundedRectPoints(
+      o.x - m,
+      o.y + m,
+      layout.frameSize + 2 * m,
+      layout.frameSize + 2 * m,
+      layout.outerRadius + m,
+      true,
+    );
+    const z = layout.frameOffset + BEZEL_DEPTH + 0.05;
+    const geo = new THREE.BufferGeometry().setFromPoints(
+      pts.map((p) => new THREE.Vector3(p.x, p.y, z)),
+    );
+    const mat = new THREE.LineBasicMaterial({
+      color: SELECT_COLOR,
+      toneMapped: false,
+    });
+    outline = new THREE.LineLoop(geo, mat);
+    scene.add(outline);
+    outlineFrame = index;
+  }
+
+  function pick(clientX: number, clientY: number): number | null {
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width < 1 || rect.height < 1) return null;
+    ndc.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+    ndc.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(ndc, camera);
+    const hits = raycaster.intersectObjects(pickPlanes, false);
+    if (hits.length === 0) return null;
+    const idx = hits[0].object.userData.frameIndex;
+    return typeof idx === "number" ? idx : null;
+  }
+
   function render(state: Wall3DState): void {
     const key = `${state.gridSize}|${state.frameSize}|${state.frameGap}|${state.boardPadding}|${state.frameWidth}|${state.cornerRadius}|${state.frameOffset}|${state.boardArt ?? "none"}|${state.boardArtSeed ?? 0}|${state.boardArtPalette ?? ""}`;
     if (state.frames !== builtFrames || key !== builtKey) {
@@ -306,6 +387,15 @@ export function createWall3D(canvas: HTMLCanvasElement): Wall3D {
         state.palette,
       );
       colorAttr.needsUpdate = true;
+    }
+    const sel =
+      state.selectedFrame != null && state.selectedFrame < state.frames.length
+        ? state.selectedFrame
+        : null;
+    if (sel == null) {
+      if (outline) disposeOutline();
+    } else if (sel !== outlineFrame) {
+      buildOutline(sel);
     }
     controls.update();
     composer.render();
@@ -334,6 +424,7 @@ export function createWall3D(canvas: HTMLCanvasElement): Wall3D {
     resetCamera,
     dollyIn: () => dolly(1 / DOLLY_STEP),
     dollyOut: () => dolly(DOLLY_STEP),
+    pick,
     dispose: () => {
       ro.disconnect();
       canvas.removeEventListener("webglcontextlost", onContextLost);

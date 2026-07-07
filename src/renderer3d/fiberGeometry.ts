@@ -84,6 +84,21 @@ export function frameOrigin(
   };
 }
 
+/**
+ * World-space centre and edge length of frame `index`'s full square (bezel +
+ * light panel), for positioning an invisible pick-plane. Mirrors the y-down
+ * convention: `frameOrigin` gives the outer top-left, so the centre is half a
+ * frame right and half a frame *down* (−y).
+ */
+export function frameSquarePlane(
+  layout: WorldLayout,
+  index: number,
+): { cx: number; cy: number; size: number } {
+  const o = frameOrigin(layout, index);
+  const half = layout.frameSize / 2;
+  return { cx: o.x + half, cy: o.y - half, size: layout.frameSize };
+}
+
 /** Bezel extrusion depth off the board face, cm. */
 export const BEZEL_DEPTH = 2;
 /**

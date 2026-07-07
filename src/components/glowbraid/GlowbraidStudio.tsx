@@ -1,4 +1,4 @@
-import type { MouseEvent } from "react";
+import type { MouseEvent, PointerEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ANIMATIONS } from "@/engine/animation";
 import { DEFAULT_FIBER_STYLE, generateFrame } from "@/engine/fibers";
@@ -28,6 +28,8 @@ import { useAnimationLoop } from "./useAnimationLoop";
 import { useCanvasInteraction } from "./useCanvasInteraction";
 
 const DURATION = 12;
+/** Max pointer travel (client px) between down and up to count as a click, not an orbit-drag. */
+const CLICK_DRAG_PX = 4;
 
 interface StudioState {
   mode: "edit" | "sim" | "3d";
@@ -280,6 +282,7 @@ export function GlowbraidStudio() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const glCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const wall3dRef = useRef<Wall3D | null>(null);
+  const pointerDownRef = useRef<{ x: number; y: number } | null>(null);
   const disposedRef = useRef(false);
   const noticeTimerRef = useRef(0);
   const saveTimerRef = useRef(0);
@@ -361,6 +364,7 @@ export function GlowbraidStudio() {
         boardArtSeed: s.boardArtSeed,
         boardArtPalette: s.boardArtPalette,
         frameColors: s.frameColors,
+        selectedFrame: s.selectedFrame,
         time: tRef.current,
         anim: s.anim,
         speed: s.speed,
@@ -481,6 +485,28 @@ export function GlowbraidStudio() {
       sizeRef.current = { width, height, dpr };
     },
   });
+
+  const handleGlPointerDown = useCallback(
+    (e: PointerEvent<HTMLCanvasElement>) => {
+      // Only the primary button starts a potential select; right-drag is pan.
+      pointerDownRef.current =
+        e.button === 0 ? { x: e.clientX, y: e.clientY } : null;
+    },
+    [],
+  );
+
+  const handleGlPointerUp = useCallback(
+    (e: PointerEvent<HTMLCanvasElement>) => {
+      const down = pointerDownRef.current;
+      pointerDownRef.current = null;
+      if (!down || e.button !== 0) return;
+      if (Math.hypot(e.clientX - down.x, e.clientY - down.y) > CLICK_DRAG_PX)
+        return;
+      const index = wall3dRef.current?.pick(e.clientX, e.clientY) ?? null;
+      setUi((prev) => ({ ...prev, selectedFrame: index, selectedFiber: null }));
+    },
+    [],
+  );
 
   useEffect(() => {
     // Reset on every effect setup: React can run this effect's cleanup and
@@ -710,6 +736,8 @@ export function GlowbraidStudio() {
           />
           <canvas
             ref={glCanvasRef}
+            onPointerDown={handleGlPointerDown}
+            onPointerUp={handleGlPointerUp}
             className={`absolute inset-0 block h-full w-full cursor-grab ${mode3dActive ? "" : "hidden"}`}
           />
           <div className="font-smono pointer-events-none absolute bottom-3.5 left-3.5 z-[6] flex gap-1.5 text-[10px] text-ink/35">
