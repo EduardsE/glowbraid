@@ -64,7 +64,7 @@ export interface Wall3D {
 const BOARD_DEPTH = 1.5;
 /** Fibre tube radius at thickness 1, cm (~2mm side-glow strand). */
 const FIBER_RADIUS = 0.1;
-/** Default bezel color — matches the 2D sim-mode bezel. */
+/** Default bezel color for frames without a custom color. */
 const DEFAULT_BEZEL = "#141519";
 /** Home camera: direction from board center and distance in board sizes. */
 const HOME_DIR = new THREE.Vector3(0.35, 0.3, 1).normalize();

@@ -1,9 +1,8 @@
 import { POUR_PALETTES, type PourPaletteId, renderPourRGBA } from "./pourField";
 
 /**
- * Offscreen-canvas cache for the generated pour artwork, mirroring the
- * glowSpriteCache approach in wallRenderer.ts: generate once, blit every
- * frame. Single entry — only one artwork is ever on screen.
+ * Offscreen-canvas cache for the generated pour artwork: generate once,
+ * blit every frame. Single entry — only one artwork is ever on screen.
  */
 
 /**
