@@ -94,6 +94,12 @@ export interface ProjectSnapshot {
   frameOffset?: number;
   /** Backing board / fibre-backdrop fill (hex). Absent in legacy saves → loader defaults to "#101114". */
   boardColor?: string;
+  /** Board artwork mode. Absent in legacy saves → loader defaults to "none". */
+  boardArt?: "none" | "pour";
+  /** Seed for the generated board artwork. Absent → loader derives it from masterSeed. */
+  boardArtSeed?: number;
+  /** Pour palette id — validated against the renderer's POUR_PALETTES at load. Absent/unknown → "tidal". */
+  boardArtPalette?: string;
   /** Blueprint dimension overlay toggle. Absent in legacy saves → loader defaults to false. */
   showMeasurements: boolean;
   masterSeed: number;
