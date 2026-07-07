@@ -100,11 +100,9 @@ export interface ProjectSnapshot {
   boardArtSeed?: number;
   /** Pour palette id — validated against the renderer's POUR_PALETTES at load. Absent/unknown → "tidal". */
   boardArtPalette?: string;
-  /** Blueprint dimension overlay toggle. Absent in legacy saves → loader defaults to false. */
-  showMeasurements: boolean;
   masterSeed: number;
   seeds: number[];
-  /** Per-frame bezel color (hex), parallel to `seeds`; null = use the default edit/sim pair. Absent or length-mismatched → loader defaults to all null. */
+  /** Per-frame bezel color (hex), parallel to `seeds`; null = use the default bezel color. Absent or length-mismatched → loader defaults to all null. */
   frameColors?: (string | null)[];
   anim: AnimationId;
   speed: number;
@@ -115,6 +113,4 @@ export interface ProjectSnapshot {
   randomness: number;
   /** FiberStyle socket depth, 0–1. Absent in legacy saves → loader defaults to 0.4. */
   socketDepth: number;
-  /** Unknown values in legacy/hand-edited saves → loader falls back to "sim". */
-  mode: "edit" | "sim" | "3d";
 }

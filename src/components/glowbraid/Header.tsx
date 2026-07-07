@@ -1,10 +1,7 @@
-import { Box, Minus, PencilRuler, Play, Plus } from "lucide-react";
-import type { ReactNode } from "react";
+import { Minus, Plus } from "lucide-react";
 import { BrandMark } from "./BrandMark";
 
 export interface HeaderProps {
-  mode: "edit" | "sim" | "3d";
-  onModeChange: (mode: "edit" | "sim" | "3d") => void;
   wallLabel: string;
   zoomPct: string;
   onZoomIn: () => void;
@@ -13,8 +10,6 @@ export interface HeaderProps {
 }
 
 export function Header({
-  mode,
-  onModeChange,
   wallLabel,
   zoomPct,
   onZoomIn,
@@ -33,26 +28,6 @@ export function Header({
             FIBRE OPTIC WALL STUDIO
           </span>
         </div>
-      </div>
-      <div className="flex rounded-[11px] border border-white/[0.08] bg-white/[0.02] p-[3px]">
-        <ModeButton
-          active={mode === "edit"}
-          icon={<PencilRuler size={13} aria-hidden="true" />}
-          label="Edit"
-          onClick={() => onModeChange("edit")}
-        />
-        <ModeButton
-          active={mode === "sim"}
-          icon={<Play size={13} aria-hidden="true" />}
-          label="Simulate"
-          onClick={() => onModeChange("sim")}
-        />
-        <ModeButton
-          active={mode === "3d"}
-          icon={<Box size={13} aria-hidden="true" />}
-          label="3D"
-          onClick={() => onModeChange("3d")}
-        />
       </div>
       <div className="flex items-center gap-2.5">
         <span className="font-smono rounded-lg border border-white/[0.08] bg-white/[0.02] px-2.5 py-[5px] text-[11px] text-ink/55">
@@ -85,33 +60,5 @@ export function Header({
         </div>
       </div>
     </header>
-  );
-}
-
-function ModeButton({
-  active,
-  icon,
-  label,
-  onClick,
-}: {
-  active: boolean;
-  icon: ReactNode;
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={active}
-      onClick={onClick}
-      className={
-        active
-          ? "flex cursor-pointer items-center gap-1.5 rounded-lg bg-glow/20 px-3.5 py-1.5 text-xs font-medium text-white shadow-[0_0_14px_rgba(155,140,255,0.15)]"
-          : "flex cursor-pointer items-center gap-1.5 rounded-lg bg-transparent px-3.5 py-1.5 text-xs font-medium text-ink/55 hover:bg-white/[0.04] hover:text-ink/90"
-      }
-    >
-      {icon}
-      {label}
-    </button>
   );
 }

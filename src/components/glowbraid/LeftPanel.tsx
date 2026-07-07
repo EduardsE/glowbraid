@@ -25,8 +25,6 @@ export interface LeftPanelProps {
   onFrameWidth: (n: number) => void;
   frameOffset: number;
   onFrameOffset: (n: number) => void;
-  showMeasurements: boolean;
-  onShowMeasurements: (v: boolean) => void;
   boardColor: string;
   onBoardColor: (c: string) => void;
   boardArt: "none" | "pour";
@@ -146,15 +144,6 @@ export function LeftPanel(props: LeftPanelProps) {
           className="w-full"
         />
       </SliderRow>
-
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-ink/70">Show measurements</span>
-        <Switch
-          checked={props.showMeasurements}
-          onChange={props.onShowMeasurements}
-          ariaLabel="Show measurements"
-        />
-      </div>
 
       <div className="flex flex-col gap-[7px]">
         <div className="text-xs text-ink/70">Board color</div>
@@ -315,39 +304,6 @@ export function LeftPanel(props: LeftPanelProps) {
         SOON · Draw fibres · Move LEDs · Layers · ESP32 live · DMX
       </div>
     </aside>
-  );
-}
-
-function Switch({
-  checked,
-  onChange,
-  ariaLabel,
-}: {
-  checked: boolean;
-  onChange: (v: boolean) => void;
-  ariaLabel: string;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={ariaLabel}
-      onClick={() => onChange(!checked)}
-      className={
-        checked
-          ? "relative h-[18px] w-8 cursor-pointer rounded-full border border-glow/60 bg-glow/30"
-          : "relative h-[18px] w-8 cursor-pointer rounded-full border border-white/10 bg-white/[0.04] hover:border-white/20"
-      }
-    >
-      <span
-        className={
-          checked
-            ? "absolute left-0 top-[2px] h-3 w-3 translate-x-4 rounded-full bg-[#cfc6ff] transition-transform duration-200"
-            : "absolute left-0 top-[2px] h-3 w-3 translate-x-[2px] rounded-full bg-ink/40 transition-transform duration-200"
-        }
-      />
-    </button>
   );
 }
 

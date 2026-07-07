@@ -9,15 +9,13 @@ import type {
   FiberStyle,
   Frame,
   PaletteId,
-  Point,
   ProjectSnapshot,
 } from "@/engine/types";
 import { deriveFrameSeeds, generateWall } from "@/engine/wall";
 import type { MapGeometry } from "@/renderer/mapRenderer";
 import { drawConnectionMap, pickMapFiber } from "@/renderer/mapRenderer";
 import { POUR_PALETTES, type PourPaletteId } from "@/renderer/pourField";
-import { computeWallLayout, pickFrame } from "@/renderer/viewport";
-import { DEFAULT_BOARD_COLOR, drawWall } from "@/renderer/wallRenderer";
+import { DEFAULT_BOARD_COLOR } from "@/renderer/wallRenderer";
 import type { Wall3D } from "@/renderer3d/wall3d";
 import { Header } from "./Header";
 import { InspectorPanel } from "./InspectorPanel";
@@ -25,14 +23,12 @@ import { LeftPanel } from "./LeftPanel";
 import { loadProject, saveProject } from "./storage";
 import { TransportBar } from "./TransportBar";
 import { useAnimationLoop } from "./useAnimationLoop";
-import { useCanvasInteraction } from "./useCanvasInteraction";
 
 const DURATION = 12;
 /** Max pointer travel (client px) between down and up to count as a click, not an orbit-drag. */
 const CLICK_DRAG_PX = 4;
 
 interface StudioState {
-  mode: "edit" | "sim" | "3d";
   gridSize: number;
   frameSize: number;
   frameGap: number;
@@ -45,7 +41,6 @@ interface StudioState {
   boardArtSeed: number;
   boardArtPalette: PourPaletteId;
   frameColors: (string | null)[];
-  showMeasurements: boolean;
   curviness: number;
   randomness: number;
   socketDepth: number;
@@ -59,13 +54,11 @@ interface StudioState {
   brightness: number;
   palette: PaletteId;
   loop: boolean;
-  zoom: number;
 }
 
 const INITIAL_MASTER_SEED = 7431;
 
 const INITIAL_STATE: StudioState = {
-  mode: "sim",
   gridSize: 3,
   frameSize: 25,
   frameGap: 20,
@@ -78,7 +71,6 @@ const INITIAL_STATE: StudioState = {
   boardArtSeed: deriveBoardArtSeed(INITIAL_MASTER_SEED),
   boardArtPalette: "tidal",
   frameColors: [],
-  showMeasurements: false,
   curviness: DEFAULT_FIBER_STYLE.curviness,
   randomness: DEFAULT_FIBER_STYLE.randomness,
   socketDepth: DEFAULT_FIBER_STYLE.socketDepth,
@@ -92,7 +84,6 @@ const INITIAL_STATE: StudioState = {
   brightness: 0.92,
   palette: "sunset",
   loop: true,
-  zoom: 1,
 };
 
 function randomSeed(): number {
@@ -189,7 +180,7 @@ function buildInitialProject(): InitialProject {
   }
   // Sanitize fields that would brick the render loop if a hand-edited or
   // legacy snapshot carries an unknown value (PALETTES[bad] → undefined →
-  // drawWall throws every frame). Kept minimal, not a full schema check.
+  // the 3D renderer throws every frame). Kept minimal, not a full schema check.
   const palette: PaletteId = Object.hasOwn(PALETTES, d.palette)
     ? d.palette
     : "sunset";
@@ -229,8 +220,6 @@ function buildInitialProject(): InitialProject {
   const curviness = styleAxis(d.curviness, DEFAULT_FIBER_STYLE.curviness);
   const randomness = styleAxis(d.randomness, DEFAULT_FIBER_STYLE.randomness);
   const socketDepth = styleAxis(d.socketDepth, DEFAULT_FIBER_STYLE.socketDepth);
-  const mode: StudioState["mode"] =
-    d.mode === "edit" || d.mode === "3d" ? d.mode : "sim";
   const { seeds, frames } = deriveGeometry(
     gridSize,
     d.masterSeed,
@@ -252,7 +241,6 @@ function buildInitialProject(): InitialProject {
       boardArtSeed,
       boardArtPalette,
       frameColors,
-      showMeasurements: d.showMeasurements === true,
       masterSeed: d.masterSeed,
       curviness,
       randomness,
@@ -261,7 +249,6 @@ function buildInitialProject(): InitialProject {
       speed: d.speed,
       brightness: d.brightness,
       palette,
-      mode,
     },
     seeds,
     frames,
@@ -279,7 +266,6 @@ export function GlowbraidStudio() {
   const uiRef = useRef(ui);
   uiRef.current = ui;
 
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const glCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const wall3dRef = useRef<Wall3D | null>(null);
   const pointerDownRef = useRef<{ x: number; y: number } | null>(null);
@@ -292,8 +278,6 @@ export function GlowbraidStudio() {
   const timeRef = useRef<HTMLSpanElement | null>(null);
 
   const tRef = useRef(0);
-  const panRef = useRef<Point>({ x: 0, y: 0 });
-  const sizeRef = useRef({ width: 0, height: 0, dpr: 1 });
   const framesRef = useRef<Frame[]>(initial.frames);
   const seedsRef = useRef<number[]>(initial.seeds);
   const mapGeoRef = useRef<MapGeometry | null>(null);
@@ -311,20 +295,11 @@ export function GlowbraidStudio() {
         wall3dRef.current = mod.createWall3D(canvas);
       }
     } catch {
-      setUi((prev) => (prev.mode === "3d" ? { ...prev, mode: "sim" } : prev));
       setNotice("3D view unavailable");
       window.clearTimeout(noticeTimerRef.current);
       noticeTimerRef.current = window.setTimeout(() => setNotice(null), 5000);
     }
   }, []);
-
-  const handleMode = useCallback(
-    (mode: StudioState["mode"]) => {
-      patch({ mode });
-      if (mode === "3d") void ensure3D();
-    },
-    [patch, ensure3D],
-  );
 
   const rebuild = useCallback(
     (
@@ -341,63 +316,29 @@ export function GlowbraidStudio() {
   );
 
   const draw = useCallback(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext("2d");
-    if (!canvas || !ctx) return;
-    const { width, height, dpr } = sizeRef.current;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, width, height);
     const s = uiRef.current;
     const palette = PALETTES[s.palette];
-    if (s.mode === "3d") {
-      wall3dRef.current?.render({
-        frames: framesRef.current,
-        gridSize: s.gridSize,
-        frameSize: s.frameSize,
-        frameGap: s.frameGap,
-        boardPadding: s.boardPadding,
-        cornerRadius: s.cornerRadius,
-        frameWidth: s.frameWidth,
-        frameOffset: s.frameOffset,
-        boardColor: s.boardColor,
-        boardArt: s.boardArt,
-        boardArtSeed: s.boardArtSeed,
-        boardArtPalette: s.boardArtPalette,
-        frameColors: s.frameColors,
-        selectedFrame: s.selectedFrame,
-        time: tRef.current,
-        anim: s.anim,
-        speed: s.speed,
-        brightness: s.brightness,
-        palette,
-      });
-    } else {
-      drawWall(ctx, width, height, {
-        frames: framesRef.current,
-        gridSize: s.gridSize,
-        frameSize: s.frameSize,
-        cornerRadius: s.cornerRadius,
-        frameWidth: s.frameWidth,
-        frameGap: s.frameGap,
-        boardPadding: s.boardPadding,
-        boardColor: s.boardColor,
-        boardArt: s.boardArt,
-        boardArtSeed: s.boardArtSeed,
-        boardArtPalette: s.boardArtPalette,
-        frameColors: s.frameColors,
-        showMeasurements: s.showMeasurements,
-        zoom: s.zoom,
-        pan: panRef.current,
-        mode: s.mode,
-        selectedFrame: s.selectedFrame,
-        selectedFiber: s.selectedFiber,
-        time: tRef.current,
-        anim: s.anim,
-        speed: s.speed,
-        brightness: s.brightness,
-        palette,
-      });
-    }
+    wall3dRef.current?.render({
+      frames: framesRef.current,
+      gridSize: s.gridSize,
+      frameSize: s.frameSize,
+      frameGap: s.frameGap,
+      boardPadding: s.boardPadding,
+      cornerRadius: s.cornerRadius,
+      frameWidth: s.frameWidth,
+      frameOffset: s.frameOffset,
+      boardColor: s.boardColor,
+      boardArt: s.boardArt,
+      boardArtSeed: s.boardArtSeed,
+      boardArtPalette: s.boardArtPalette,
+      frameColors: s.frameColors,
+      selectedFrame: s.selectedFrame,
+      time: tRef.current,
+      anim: s.anim,
+      speed: s.speed,
+      brightness: s.brightness,
+      palette,
+    });
     const mapCanvas = mapCanvasRef.current;
     const frame =
       s.selectedFrame != null
@@ -456,36 +397,6 @@ export function GlowbraidStudio() {
 
   useAnimationLoop(step);
 
-  useCanvasInteraction(canvasRef, {
-    getPan: () => panRef.current,
-    setPan: (x, y) => {
-      panRef.current = { x, y };
-    },
-    onZoomFactor: (factor) =>
-      setUi((prev) => ({
-        ...prev,
-        zoom: Math.min(4, Math.max(0.3, prev.zoom * factor)),
-      })),
-    onClickAt: (x, y) => {
-      const s = uiRef.current;
-      const layout = computeWallLayout({
-        gridSize: s.gridSize,
-        frameSize: s.frameSize,
-        frameGap: s.frameGap / 10,
-        boardPadding: s.boardPadding,
-        zoom: s.zoom,
-        pan: panRef.current,
-        canvasWidth: sizeRef.current.width,
-        canvasHeight: sizeRef.current.height,
-      });
-      const index = pickFrame(layout, framesRef.current.length, x, y);
-      setUi((prev) => ({ ...prev, selectedFrame: index, selectedFiber: null }));
-    },
-    onResize: (width, height, dpr) => {
-      sizeRef.current = { width, height, dpr };
-    },
-  });
-
   const handleGlPointerDown = useCallback(
     (e: PointerEvent<HTMLCanvasElement>) => {
       // Only the primary button starts a potential select; right-drag is pan.
@@ -523,7 +434,7 @@ export function GlowbraidStudio() {
   }, []);
 
   useEffect(() => {
-    if (uiRef.current.mode === "3d") void ensure3D();
+    void ensure3D();
   }, [ensure3D]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: exhaustive list ensures autosave on any persisted field change
@@ -544,7 +455,6 @@ export function GlowbraidStudio() {
         boardArtSeed: s.boardArtSeed,
         boardArtPalette: s.boardArtPalette,
         frameColors: s.frameColors,
-        showMeasurements: s.showMeasurements,
         masterSeed: s.masterSeed,
         seeds: seedsRef.current,
         anim: s.anim,
@@ -554,7 +464,6 @@ export function GlowbraidStudio() {
         curviness: s.curviness,
         randomness: s.randomness,
         socketDepth: s.socketDepth,
-        mode: s.mode,
       };
       saveProject(snapshot);
     }, 400);
@@ -572,7 +481,6 @@ export function GlowbraidStudio() {
     ui.boardArtSeed,
     ui.boardArtPalette,
     ui.frameColors,
-    ui.showMeasurements,
     ui.masterSeed,
     ui.geometryVersion,
     ui.anim,
@@ -582,7 +490,6 @@ export function GlowbraidStudio() {
     ui.curviness,
     ui.randomness,
     ui.socketDepth,
-    ui.mode,
   ]);
 
   const handleGridSize = (n: number) => {
@@ -659,7 +566,6 @@ export function GlowbraidStudio() {
       ? (framesRef.current[ui.selectedFrame] ?? null)
       : null;
   const wallLabel = `${ui.gridSize} × ${ui.gridSize}  ·  ${ui.gridSize * ui.gridSize} frames  ·  ${ui.gridSize * ui.gridSize * 24} LEDs`;
-  const mode3dActive = ui.mode === "3d";
 
   return (
     <div className="font-grotesk flex h-dvh w-screen select-none flex-col overflow-hidden text-ink [background:radial-gradient(140%_120%_at_50%_-20%,#15141c_0%,#0b0c0f_60%)]">
@@ -668,32 +574,11 @@ export function GlowbraidStudio() {
         className="grain pointer-events-none fixed inset-0 z-50"
       />
       <Header
-        mode={ui.mode}
-        onModeChange={handleMode}
         wallLabel={wallLabel}
-        zoomPct={ui.mode === "3d" ? "3D" : `${Math.round(ui.zoom * 100)}%`}
-        onZoomIn={() => {
-          if (uiRef.current.mode === "3d") {
-            wall3dRef.current?.dollyIn();
-            return;
-          }
-          setUi((prev) => ({ ...prev, zoom: Math.min(4, prev.zoom * 1.15) }));
-        }}
-        onZoomOut={() => {
-          if (uiRef.current.mode === "3d") {
-            wall3dRef.current?.dollyOut();
-            return;
-          }
-          setUi((prev) => ({ ...prev, zoom: Math.max(0.3, prev.zoom / 1.15) }));
-        }}
-        onFit={() => {
-          if (uiRef.current.mode === "3d") {
-            wall3dRef.current?.resetCamera();
-            return;
-          }
-          panRef.current = { x: 0, y: 0 };
-          patch({ zoom: 1 });
-        }}
+        zoomPct="3D"
+        onZoomIn={() => wall3dRef.current?.dollyIn()}
+        onZoomOut={() => wall3dRef.current?.dollyOut()}
+        onFit={() => wall3dRef.current?.resetCamera()}
       />
       <div className="relative flex min-h-0 flex-1">
         <LeftPanel
@@ -711,8 +596,6 @@ export function GlowbraidStudio() {
           onFrameWidth={(n) => patch({ frameWidth: n })}
           frameOffset={ui.frameOffset}
           onFrameOffset={(n) => patch({ frameOffset: n })}
-          showMeasurements={ui.showMeasurements}
-          onShowMeasurements={(v) => patch({ showMeasurements: v })}
           boardColor={ui.boardColor}
           onBoardColor={(c) => patch({ boardColor: c })}
           boardArt={ui.boardArt}
@@ -731,36 +614,15 @@ export function GlowbraidStudio() {
         />
         <section className="relative min-w-0 flex-1 overflow-hidden bg-[#0a0b0e]">
           <canvas
-            ref={canvasRef}
-            className={`absolute inset-0 block h-full w-full cursor-grab ${mode3dActive ? "hidden" : ""}`}
-          />
-          <canvas
             ref={glCanvasRef}
             onPointerDown={handleGlPointerDown}
             onPointerUp={handleGlPointerUp}
-            className={`absolute inset-0 block h-full w-full cursor-grab ${mode3dActive ? "" : "hidden"}`}
+            className="absolute inset-0 block h-full w-full cursor-grab"
           />
           <div className="font-smono pointer-events-none absolute bottom-3.5 left-3.5 z-[6] flex gap-1.5 text-[10px] text-ink/35">
-            {ui.mode === "3d" ? (
-              <>
-                <HintChip>drag · orbit</HintChip>
-                <HintChip>right-drag · pan</HintChip>
-                <HintChip>scroll · dolly</HintChip>
-              </>
-            ) : (
-              <>
-                <HintChip>scroll · zoom</HintChip>
-                <HintChip>drag · pan</HintChip>
-                <HintChip>click · select</HintChip>
-              </>
-            )}
-          </div>
-          <div className="font-smono pointer-events-none absolute bottom-3.5 right-3.5 z-[6] rounded-md border border-white/[0.08] bg-[rgba(12,13,17,0.6)] px-[9px] py-1 text-[10px] text-ink/40">
-            {ui.mode === "edit"
-              ? "EDIT · LEDS VISIBLE"
-              : ui.mode === "sim"
-                ? "SIMULATE · INSTALLATION VIEW"
-                : "3D · INSTALLATION VIEW"}
+            <HintChip>drag · orbit</HintChip>
+            <HintChip>right-drag · pan</HintChip>
+            <HintChip>scroll · dolly</HintChip>
           </div>
           {notice ? (
             <div className="font-smono pointer-events-none absolute right-3.5 top-3.5 z-[6] rounded-md border border-white/[0.08] bg-[rgba(42,18,22,0.75)] px-[9px] py-1 text-[10px] text-[rgba(255,180,180,0.85)]">
