@@ -1,0 +1,371 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-30T11:25:13.923Z",
+  "title": "Design System: Glowbraid",
+  "extensions": {
+    "colorMeta": {
+      "paper": {
+        "role": "neutral",
+        "displayName": "Plot-Bond Paper",
+        "canonical": "oklch(96.3% 0.003 229)",
+        "tonalRamp": [
+          "oklch(15% 0.003 229)",
+          "oklch(27% 0.003 229)",
+          "oklch(38% 0.003 229)",
+          "oklch(50% 0.003 229)",
+          "oklch(61% 0.003 229)",
+          "oklch(73% 0.003 229)",
+          "oklch(84% 0.003 229)",
+          "oklch(95% 0.003 229)"
+        ]
+      },
+      "paper-2": {
+        "role": "neutral",
+        "displayName": "Paper, Shaded",
+        "canonical": "oklch(92.9% 0.004 237)",
+        "tonalRamp": [
+          "oklch(15% 0.004 237)",
+          "oklch(27% 0.004 237)",
+          "oklch(38% 0.004 237)",
+          "oklch(50% 0.004 237)",
+          "oklch(61% 0.004 237)",
+          "oklch(73% 0.004 237)",
+          "oklch(84% 0.004 237)",
+          "oklch(95% 0.004 237)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Carbon Ink",
+        "canonical": "oklch(21.2% 0.011 261)",
+        "tonalRamp": [
+          "oklch(15% 0.011 261)",
+          "oklch(27% 0.011 261)",
+          "oklch(38% 0.011 261)",
+          "oklch(50% 0.011 261)",
+          "oklch(61% 0.011 261)",
+          "oklch(73% 0.011 261)",
+          "oklch(84% 0.011 261)",
+          "oklch(95% 0.011 261)"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Ink, Second Weight",
+        "canonical": "oklch(43.2% 0.015 256)",
+        "tonalRamp": [
+          "oklch(15% 0.015 256)",
+          "oklch(27% 0.015 256)",
+          "oklch(38% 0.015 256)",
+          "oklch(50% 0.015 256)",
+          "oklch(61% 0.015 256)",
+          "oklch(73% 0.015 256)",
+          "oklch(84% 0.015 256)",
+          "oklch(95% 0.015 256)"
+        ]
+      },
+      "ink-3": {
+        "role": "neutral",
+        "displayName": "Ink, Third Weight",
+        "canonical": "oklch(52.6% 0.013 257)",
+        "tonalRamp": [
+          "oklch(15% 0.013 257)",
+          "oklch(27% 0.013 257)",
+          "oklch(38% 0.013 257)",
+          "oklch(50% 0.013 257)",
+          "oklch(61% 0.013 257)",
+          "oklch(73% 0.013 257)",
+          "oklch(84% 0.013 257)",
+          "oklch(95% 0.013 257)"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Table Rule",
+        "canonical": "oklch(84.3% 0.007 248)",
+        "tonalRamp": [
+          "oklch(15% 0.007 248)",
+          "oklch(27% 0.007 248)",
+          "oklch(38% 0.007 248)",
+          "oklch(50% 0.007 248)",
+          "oklch(61% 0.007 248)",
+          "oklch(73% 0.007 248)",
+          "oklch(84% 0.007 248)",
+          "oklch(95% 0.007 248)"
+        ]
+      },
+      "redline": {
+        "role": "primary",
+        "displayName": "Redline Carmine",
+        "canonical": "oklch(53.8% 0.2 20)",
+        "tonalRamp": [
+          "oklch(15% 0.2 20)",
+          "oklch(27% 0.2 20)",
+          "oklch(38% 0.2 20)",
+          "oklch(50% 0.2 20)",
+          "oklch(61% 0.2 20)",
+          "oklch(73% 0.2 20)",
+          "oklch(84% 0.2 20)",
+          "oklch(95% 0.2 20)"
+        ]
+      },
+      "redline-lit": {
+        "role": "primary",
+        "displayName": "Redline, Lit",
+        "canonical": "oklch(71.5% 0.18 17)",
+        "tonalRamp": [
+          "oklch(15% 0.18 17)",
+          "oklch(27% 0.18 17)",
+          "oklch(38% 0.18 17)",
+          "oklch(50% 0.18 17)",
+          "oklch(61% 0.18 17)",
+          "oklch(73% 0.18 17)",
+          "oklch(84% 0.18 17)",
+          "oklch(95% 0.18 17)"
+        ]
+      },
+      "view": {
+        "role": "neutral",
+        "displayName": "View Black",
+        "canonical": "oklch(15% 0.002 286)",
+        "tonalRamp": [
+          "oklch(15% 0.002 286)",
+          "oklch(27% 0.002 286)",
+          "oklch(38% 0.002 286)",
+          "oklch(50% 0.002 286)",
+          "oklch(61% 0.002 286)",
+          "oklch(73% 0.002 286)",
+          "oklch(84% 0.002 286)",
+          "oklch(95% 0.002 286)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The name in the title block, uppercase condensed. One use."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Schedule section titles, uppercase condensed under a 2px object line."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Title-block values and the editable seed."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Base text; notes and empty states in second-weight ink."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Schedule row names and field labels; 600 and redline while live."
+      },
+      "value": {
+        "displayName": "Value",
+        "purpose": "The typed number in a schedule row, right-aligned, tabular."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Title-block labels and ruler numerals."
+      },
+      "key": {
+        "displayName": "Key",
+        "purpose": "The letter inside a key balloon."
+      },
+      "dimension": {
+        "displayName": "Dimension",
+        "purpose": "The live dimension's value lettered on the 3D wall."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "ease-out-expo",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "The only easing; state transitions on colour and opacity."
+      },
+      {
+        "name": "duration-state",
+        "value": "160ms",
+        "purpose": "Background, border, colour and opacity on controls; dimension lines fading in and out."
+      },
+      {
+        "name": "dimension-linger",
+        "value": "1000ms",
+        "purpose": "How long a live dimension stays on the wall after its row loses attention."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "0.01ms",
+        "purpose": "All transitions and animations collapse under prefers-reduced-motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "760px"
+      },
+      {
+        "name": "lg",
+        "value": "1180px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Solid ink. The one action a section exists for (New wall); at most one per section.",
+      "html": "<button class=\"ds-btn-primary\" type=\"button\">New wall</button>",
+      "css": ".ds-btn-primary { font-family: var(--font-sans, 'Sofia Sans Variable', 'DIN Alternate', 'Bahnschrift', ui-sans-serif, system-ui, sans-serif); font-variant-numeric: tabular-nums lining-nums; display: inline-flex; align-items: center; justify-content: center; height: 34px; padding: 0 12px; min-width: 150px; border: 1px solid var(--color-ink, #16191e); border-radius: 0; background: var(--color-ink, #16191e); color: var(--color-paper, #f1f3f4); font-size: 13.5px; font-weight: 600; cursor: pointer; transition: background-color 0.16s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.16s cubic-bezier(0.16, 1, 0.3, 1), color 0.16s cubic-bezier(0.16, 1, 0.3, 1); } .ds-btn-primary:hover { background: var(--color-ink-2, #4b5159); } .ds-btn-primary:active { background: var(--color-ink-3, #666b72); } .ds-btn-primary:focus-visible { outline: 2px solid var(--color-redline, #c81e3a); outline-offset: 2px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Paper with an ink border, for every other action (Re-route fibres, Re-seed frame, Apply to all). Shown with its disabled state.",
+      "html": "<div class=\"ds-btn-row\"><button class=\"ds-btn-secondary\" type=\"button\">Re-route fibres</button><button class=\"ds-btn-secondary\" type=\"button\" disabled>Apply to all</button></div>",
+      "css": ".ds-btn-row { display: flex; gap: 8px; } .ds-btn-secondary { font-family: var(--font-sans, 'Sofia Sans Variable', 'DIN Alternate', 'Bahnschrift', ui-sans-serif, system-ui, sans-serif); font-variant-numeric: tabular-nums lining-nums; display: inline-flex; align-items: center; justify-content: center; height: 34px; padding: 0 12px; min-width: 150px; border: 1px solid var(--color-ink, #16191e); border-radius: 0; background: var(--color-paper, #f1f3f4); color: var(--color-ink, #16191e); font-size: 13.5px; font-weight: 600; cursor: pointer; transition: background-color 0.16s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.16s cubic-bezier(0.16, 1, 0.3, 1), color 0.16s cubic-bezier(0.16, 1, 0.3, 1); } .ds-btn-secondary:hover { background: var(--color-paper-2, #e5e8ea); } .ds-btn-secondary:active { background: var(--color-rule, #c8ccd0); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--color-redline, #c81e3a); outline-offset: 2px; } .ds-btn-secondary:disabled { cursor: not-allowed; border-color: var(--color-rule, #c8ccd0); background: var(--color-paper, #f1f3f4); color: var(--color-ink-3, #666b72); }"
+    },
+    {
+      "name": "Segmented Cells",
+      "kind": "chip",
+      "refersTo": "segmented-cell",
+      "description": "A full option set as joined table cells; the chosen cell is inked solid. Used for grid size, board art, drive pattern and speed presets.",
+      "html": "<div class=\"ds-seg\" role=\"group\" aria-label=\"Grid size\"><button type=\"button\" class=\"ds-seg-cell\" aria-pressed=\"false\">1</button><button type=\"button\" class=\"ds-seg-cell\" aria-pressed=\"false\">2</button><button type=\"button\" class=\"ds-seg-cell ds-seg-on\" aria-pressed=\"true\">3</button><button type=\"button\" class=\"ds-seg-cell\" aria-pressed=\"false\">4</button><button type=\"button\" class=\"ds-seg-cell\" aria-pressed=\"false\">5</button><button type=\"button\" class=\"ds-seg-cell\" aria-pressed=\"false\">6</button></div>",
+      "css": ".ds-seg { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1px; width: 186px; border: 1px solid var(--color-ink, #16191e); background: var(--color-ink, #16191e); } .ds-seg-cell { font-family: var(--font-sans, 'Sofia Sans Variable', 'DIN Alternate', 'Bahnschrift', ui-sans-serif, system-ui, sans-serif); font-variant-numeric: tabular-nums lining-nums; height: 30px; min-width: 0; padding: 0 6px; border: 0; border-radius: 0; background: var(--color-paper, #f1f3f4); color: var(--color-ink, #16191e); font-size: 13px; cursor: pointer; transition: background-color 0.16s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.16s cubic-bezier(0.16, 1, 0.3, 1), color 0.16s cubic-bezier(0.16, 1, 0.3, 1); } .ds-seg-cell:hover { background: var(--color-paper-2, #e5e8ea); } .ds-seg-cell:active { background: var(--color-rule, #c8ccd0); } .ds-seg-cell.ds-seg-on { background: var(--color-ink, #16191e); color: var(--color-paper, #f1f3f4); font-weight: 600; } .ds-seg-cell:focus-visible { outline: 2px solid var(--color-redline, #c81e3a); outline-offset: 2px; position: relative; }"
+    },
+    {
+      "name": "Schedule Row",
+      "kind": "custom",
+      "refersTo": "schedule-row",
+      "description": "The signature control: key balloon, name, scale-rule slider, typed value, unit. The second row is shown live, as while its dimension is drawn on the wall.",
+      "html": "<div class=\"ds-rows\"><div class=\"ds-row\"><span class=\"ds-row-mark\">B</span><span class=\"ds-row-label\">Frame size</span><input class=\"ds-row-rule\" type=\"range\" min=\"10\" max=\"40\" value=\"25\" style=\"--p:0.5\" aria-label=\"Frame size\"><span class=\"ds-row-value\"><input class=\"ds-row-field\" type=\"text\" inputmode=\"decimal\" value=\"25\" aria-label=\"Frame size, cm\"><span class=\"ds-row-unit\">cm</span></span></div><div class=\"ds-row ds-row-live\"><span class=\"ds-row-mark\">C</span><span class=\"ds-row-label\">Frame spacing</span><input class=\"ds-row-rule\" type=\"range\" min=\"0\" max=\"30\" value=\"20\" style=\"--p:0.667\" aria-label=\"Frame spacing\"><span class=\"ds-row-value\"><input class=\"ds-row-field\" type=\"text\" inputmode=\"decimal\" value=\"20\" aria-label=\"Frame spacing, mm\"><span class=\"ds-row-unit\">mm</span></span></div></div>",
+      "css": ".ds-rows { font-family: var(--font-sans, 'Sofia Sans Variable', 'DIN Alternate', 'Bahnschrift', ui-sans-serif, system-ui, sans-serif); font-variant-numeric: tabular-nums lining-nums; width: 296px; color: var(--color-ink, #16191e); } .ds-row { display: grid; grid-template-columns: 17px minmax(0, 1fr) 92px 58px; align-items: center; column-gap: 10px; height: 32px; border-bottom: 1px solid var(--color-rule, #c8ccd0); } .ds-row-mark { font-family: var(--font-cond, 'Sofia Sans Condensed Variable', 'DIN Condensed', 'Sofia Sans Variable', ui-sans-serif, sans-serif); display: flex; align-items: center; justify-content: center; width: 17px; height: 17px; box-sizing: border-box; border: 1px solid var(--color-ink-3, #666b72); border-radius: 9999px; color: var(--color-ink-2, #4b5159); font-size: 11px; font-weight: 700; line-height: 1; } .ds-row-label { font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ds-row-live .ds-row-mark { border-color: var(--color-redline, #c81e3a); background: var(--color-redline, #c81e3a); color: var(--color-paper, #f1f3f4); } .ds-row-live .ds-row-label { color: var(--color-redline, #c81e3a); font-weight: 600; } .ds-row-value { display: flex; align-items: baseline; justify-content: flex-end; gap: 4px; } .ds-row-unit { flex: none; width: 21px; font-size: 12px; color: var(--color-ink-2, #4b5159); } .ds-row-rule { --thumb-w: 5px; --graduations: linear-gradient(var(--color-ink, #16191e), var(--color-ink, #16191e)) left bottom / calc(var(--thumb-w) / 2 + var(--p, 0) * (100% - var(--thumb-w))) 3px no-repeat, linear-gradient(var(--color-ink-3, #666b72), var(--color-ink-3, #666b72)) left bottom / 100% 1px no-repeat, linear-gradient(to right, var(--color-ink-3, #666b72) 1px, transparent 1px) left top / calc((100% - 1px) / 10) 100% repeat-x; -webkit-appearance: none; appearance: none; width: 100%; height: 32px; margin: 0; background: transparent; cursor: pointer; } .ds-row-rule::-webkit-slider-runnable-track { height: 9px; background: var(--graduations); } .ds-row-rule::-moz-range-track { height: 9px; background: var(--graduations); } .ds-row-rule::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: var(--thumb-w); height: 19px; margin-top: -5px; border: 0; border-radius: 0; background: var(--color-ink, #16191e); } .ds-row-rule::-moz-range-thumb { width: var(--thumb-w); height: 19px; border: 0; border-radius: 0; background: var(--color-ink, #16191e); } .ds-row-rule:hover::-webkit-slider-thumb, .ds-row-rule:active::-webkit-slider-thumb, .ds-row-rule:focus-visible::-webkit-slider-thumb { background: var(--color-redline, #c81e3a); } .ds-row-rule:hover::-moz-range-thumb, .ds-row-rule:active::-moz-range-thumb, .ds-row-rule:focus-visible::-moz-range-thumb { background: var(--color-redline, #c81e3a); } .ds-row-rule:focus-visible { outline: 2px solid var(--color-redline, #c81e3a); outline-offset: 0; } .ds-row-field { width: 100%; min-width: 0; padding: 1px 2px; border: 0; border-bottom: 1px solid transparent; border-radius: 0; background: transparent; color: var(--color-ink, #16191e); font: inherit; font-size: 14px; font-weight: 700; text-align: right; caret-color: var(--color-redline, #c81e3a); transition: border-color 0.16s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.16s cubic-bezier(0.16, 1, 0.3, 1); } .ds-row-field:hover { border-bottom-color: var(--color-ink-3, #666b72); } .ds-row-field:focus-visible { outline: none; border-bottom-color: var(--color-redline, #c81e3a); background: var(--color-paper-2, #e5e8ea); }"
+    },
+    {
+      "name": "Key Balloon",
+      "kind": "chip",
+      "refersTo": "key-balloon",
+      "description": "The only round shape in the system: a key to something on the wall. Idle dimension mark, live dimension mark, and the selected frame's number tag.",
+      "html": "<div class=\"ds-balloons\"><span class=\"ds-balloon\">A</span><span class=\"ds-balloon ds-balloon-live\">C</span><span class=\"ds-balloon-tag\">05</span></div>",
+      "css": ".ds-balloons { display: flex; align-items: center; gap: 12px; } .ds-balloon { font-family: var(--font-cond, 'Sofia Sans Condensed Variable', 'DIN Condensed', 'Sofia Sans Variable', ui-sans-serif, sans-serif); display: flex; align-items: center; justify-content: center; width: 17px; height: 17px; box-sizing: border-box; border: 1px solid var(--color-ink-3, #666b72); border-radius: 9999px; color: var(--color-ink-2, #4b5159); font-size: 11px; font-weight: 700; line-height: 1; } .ds-balloon-live { border-color: var(--color-redline, #c81e3a); background: var(--color-redline, #c81e3a); color: var(--color-paper, #f1f3f4); } .ds-balloon-tag { font-family: var(--font-cond, 'Sofia Sans Condensed Variable', 'DIN Condensed', 'Sofia Sans Variable', ui-sans-serif, sans-serif); display: flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 4px; box-sizing: border-box; border: 1.5px solid var(--color-redline, #c81e3a); border-radius: 9999px; color: var(--color-redline, #c81e3a); font-size: 12.5px; font-weight: 800; line-height: 1; }"
+    },
+    {
+      "name": "Typed Field",
+      "kind": "input",
+      "refersTo": "number-field",
+      "description": "A value that reads as bold dimension text until touched. Underline appears on hover; focus turns it redline on shaded paper.",
+      "html": "<label class=\"ds-field-wrap\"><span class=\"ds-field-label\">Seed</span><input class=\"ds-field\" type=\"text\" inputmode=\"decimal\" value=\"7431\" aria-label=\"Wall seed\"></label>",
+      "css": ".ds-field-wrap { font-family: var(--font-sans, 'Sofia Sans Variable', 'DIN Alternate', 'Bahnschrift', ui-sans-serif, system-ui, sans-serif); font-variant-numeric: tabular-nums lining-nums; display: flex; flex-direction: column; width: 120px; color: var(--color-ink, #16191e); } .ds-field-label { font-size: 11.5px; line-height: 1; color: var(--color-ink-2, #4b5159); } .ds-field { width: 100%; min-width: 0; padding: 1px 2px; border: 0; border-bottom: 1px solid transparent; border-radius: 0; background: transparent; color: var(--color-ink, #16191e); font: inherit; font-size: 14px; font-weight: 700; text-align: right; caret-color: var(--color-redline, #c81e3a); transition: border-color 0.16s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.16s cubic-bezier(0.16, 1, 0.3, 1); } .ds-field:hover { border-bottom-color: var(--color-ink-3, #666b72); } .ds-field:focus-visible { outline: none; border-bottom-color: var(--color-redline, #c81e3a); background: var(--color-paper-2, #e5e8ea); } .ds-field { margin-top: 3px; padding-left: 0; padding-right: 0; text-align: left; font-size: 15px; line-height: 1.25; }"
+    },
+    {
+      "name": "Transport",
+      "kind": "custom",
+      "refersTo": "transport-key",
+      "description": "Joined square keys, a bold time readout and the 12-second scrub ruler. The playhead is redline only while playing.",
+      "html": "<div class=\"ds-transport\"><div class=\"ds-transport-keys\"><button type=\"button\" class=\"ds-tkey\" aria-label=\"Pause\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"currentColor\" aria-hidden=\"true\"><rect x=\"5\" y=\"3\" width=\"5\" height=\"18\" rx=\"1\"/><rect x=\"14\" y=\"3\" width=\"5\" height=\"18\" rx=\"1\"/></svg></button><button type=\"button\" class=\"ds-tkey\" aria-label=\"Stop and rewind\"><svg width=\"11\" height=\"11\" viewBox=\"0 0 24 24\" fill=\"currentColor\" aria-hidden=\"true\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\"/></svg></button><button type=\"button\" class=\"ds-tkey ds-tkey-on\" aria-label=\"Loop\" aria-pressed=\"true\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m17 2 4 4-4 4\"/><path d=\"M3 11v-1a4 4 0 0 1 4-4h14\"/><path d=\"m7 22-4-4 4-4\"/><path d=\"M21 13v1a4 4 0 0 1-4 4H3\"/></svg></button></div><span class=\"ds-transport-time\">0:05 / 0:12</span><div class=\"ds-transport-ruler\"><input class=\"ds-scrub\" type=\"range\" min=\"0\" max=\"1000\" value=\"430\" aria-label=\"Timeline position\"><div class=\"ds-scrub-marks\" aria-hidden=\"true\"><span>0</span><span>3</span><span>6</span><span>9</span><span>12 s</span></div></div></div>",
+      "css": ".ds-transport { font-family: var(--font-sans, 'Sofia Sans Variable', 'DIN Alternate', 'Bahnschrift', ui-sans-serif, system-ui, sans-serif); font-variant-numeric: tabular-nums lining-nums; display: flex; align-items: center; gap: 16px; width: 520px; max-width: 100%; color: var(--color-ink, #16191e); } .ds-transport-keys { display: flex; } .ds-tkey { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; flex: none; border: 1px solid var(--color-ink, #16191e); border-radius: 0; background: var(--color-paper, #f1f3f4); color: var(--color-ink, #16191e); cursor: pointer; transition: background-color 0.16s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.16s cubic-bezier(0.16, 1, 0.3, 1), color 0.16s cubic-bezier(0.16, 1, 0.3, 1); } .ds-tkey + .ds-tkey { margin-left: -1px; } .ds-tkey:hover { background: var(--color-paper-2, #e5e8ea); } .ds-tkey:active { background: var(--color-rule, #c8ccd0); } .ds-tkey.ds-tkey-on { background: var(--color-ink, #16191e); color: var(--color-paper, #f1f3f4); } .ds-tkey.ds-tkey-on:hover { background: var(--color-ink-2, #4b5159); } .ds-tkey:focus-visible { outline: 2px solid var(--color-redline, #c81e3a); outline-offset: 2px; position: relative; } .ds-transport-time { flex: none; min-width: 78px; font-size: 14px; font-weight: 600; } .ds-transport-ruler { display: flex; flex-direction: column; flex: 1; min-width: 0; } .ds-scrub { --graduations: linear-gradient(var(--color-ink, #16191e), var(--color-ink, #16191e)) left bottom / 100% 1px no-repeat, linear-gradient(to right, var(--color-ink, #16191e) 1px, transparent 1px) left top / calc((100% - 1px) / 12) 100% repeat-x; -webkit-appearance: none; appearance: none; width: 100%; height: 28px; margin: 0; background: transparent; cursor: pointer; } .ds-scrub::-webkit-slider-runnable-track { height: 10px; background: var(--graduations); } .ds-scrub::-moz-range-track { height: 10px; background: var(--graduations); } .ds-scrub::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 3px; height: 24px; margin-top: -9px; border: 0; border-radius: 0; background: var(--color-redline, #c81e3a); } .ds-scrub::-moz-range-thumb { width: 3px; height: 24px; border: 0; border-radius: 0; background: var(--color-redline, #c81e3a); } .ds-scrub:focus-visible { outline: 2px solid var(--color-redline, #c81e3a); outline-offset: 0; } .ds-scrub-marks { display: flex; justify-content: space-between; margin-top: -2px; font-size: 11.5px; line-height: 1; color: var(--color-ink-2, #4b5159); }"
+    },
+    {
+      "name": "Finish Swatches",
+      "kind": "chip",
+      "refersTo": "swatch",
+      "description": "Square finish chips; the chosen chip takes a 2px ink outline. The last chip opens a custom colour.",
+      "html": "<div class=\"ds-swatches\"><button type=\"button\" class=\"ds-swatch\" style=\"background:#181a20\" aria-label=\"Black\" aria-pressed=\"false\"></button><button type=\"button\" class=\"ds-swatch\" style=\"background:#4a4a4a\" aria-label=\"Graphite\" aria-pressed=\"false\"></button><button type=\"button\" class=\"ds-swatch\" style=\"background:#e8e4d8\" aria-label=\"White\" aria-pressed=\"false\"></button><button type=\"button\" class=\"ds-swatch ds-swatch-on\" style=\"background:#6b4a32\" aria-label=\"Walnut\" aria-pressed=\"true\"></button><button type=\"button\" class=\"ds-swatch\" style=\"background:#c9a066\" aria-label=\"Oak\" aria-pressed=\"false\"></button><button type=\"button\" class=\"ds-swatch ds-swatch-custom\" aria-label=\"Custom colour\"><svg width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/><path d=\"M12 5v14\"/></svg></button></div>",
+      "css": ".ds-swatches { display: flex; flex-wrap: wrap; gap: 8px; padding: 4px; } .ds-swatch { display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; flex: none; padding: 0; border: 1px solid color-mix(in srgb, var(--color-ink, #16191e) 45%, transparent); border-radius: 0; outline-offset: 2px; cursor: pointer; transition: border-color 0.16s cubic-bezier(0.16, 1, 0.3, 1); } .ds-swatch:hover { border-color: var(--color-ink, #16191e); } .ds-swatch.ds-swatch-on { outline: 2px solid var(--color-ink, #16191e); } .ds-swatch-custom { background: var(--color-paper-2, #e5e8ea); color: var(--color-ink-2, #4b5159); } .ds-swatch:focus-visible { outline: 2px solid var(--color-redline, #c81e3a); }"
+    },
+    {
+      "name": "Title Block",
+      "kind": "nav",
+      "description": "The drawing's title block: mark and name, then label over value cells divided by ink lines. Runs along the sheet's bottom edge from 760px.",
+      "html": "<div class=\"ds-title\"><div class=\"ds-title-name\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" aria-hidden=\"true\"><rect x=\"2\" y=\"2\" width=\"20\" height=\"20\" stroke-width=\"2.5\"/><path d=\"M2 8.5C11 8.5 15.5 13 15.5 22\" stroke-width=\"1.5\"/><path d=\"M8.5 2C8.5 11 13 15.5 22 15.5\" stroke-width=\"1.5\"/></svg><span class=\"ds-title-word\">Glowbraid</span></div><div class=\"ds-title-cell\"><span class=\"ds-title-label\">Wall</span><span class=\"ds-title-value\">3 × 3</span></div><div class=\"ds-title-cell\"><span class=\"ds-title-label\">Overall</span><span class=\"ds-title-value\">87 × 87 cm</span></div><div class=\"ds-title-cell\"><span class=\"ds-title-label\">LEDs</span><span class=\"ds-title-value\">216</span></div></div>",
+      "css": ".ds-title { font-family: var(--font-sans, 'Sofia Sans Variable', 'DIN Alternate', 'Bahnschrift', ui-sans-serif, system-ui, sans-serif); font-variant-numeric: tabular-nums lining-nums; display: flex; align-items: stretch; border-top: 2px solid var(--color-ink, #16191e); background: var(--color-paper, #f1f3f4); color: var(--color-ink, #16191e); } .ds-title-name { display: flex; align-items: center; gap: 10px; padding: 8px 16px; } .ds-title-word { font-family: var(--font-cond, 'Sofia Sans Condensed Variable', 'DIN Condensed', 'Sofia Sans Variable', ui-sans-serif, sans-serif); font-size: 21px; font-weight: 800; line-height: 1; letter-spacing: 0.05em; text-transform: uppercase; } .ds-title-cell { display: flex; flex-direction: column; justify-content: center; padding: 6px 16px; border-left: 1px solid var(--color-ink, #16191e); white-space: nowrap; } .ds-title-label { font-size: 11.5px; line-height: 1; color: var(--color-ink-2, #4b5159); } .ds-title-value { padding-top: 3px; font-size: 15px; font-weight: 700; line-height: 1.25; }"
+    },
+    {
+      "name": "View Keys and Live Dimension",
+      "kind": "custom",
+      "refersTo": "view-key",
+      "description": "What the interface may add to the dark view: paper-line keys that invert when pressed, and a redline-lit dimension with its key balloon.",
+      "html": "<div class=\"ds-view\"><div class=\"ds-view-keys\"><button type=\"button\" class=\"ds-vkey ds-vkey-on\" aria-pressed=\"true\" aria-label=\"Hide dimensions\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z\"/><path d=\"m14.5 12.5 2-2\"/><path d=\"m11.5 9.5 2-2\"/><path d=\"m8.5 6.5 2-2\"/><path d=\"m17.5 15.5 2-2\"/></svg></button><div class=\"ds-vkey-group\"><button type=\"button\" class=\"ds-vkey\" aria-label=\"Zoom out\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/></svg></button><button type=\"button\" class=\"ds-vkey ds-vkey-text\">Fit</button><button type=\"button\" class=\"ds-vkey\" aria-label=\"Zoom in\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/><path d=\"M12 5v14\"/></svg></button></div></div><svg class=\"ds-dim\" width=\"220\" height=\"70\" viewBox=\"0 0 220 70\" aria-hidden=\"true\"><path d=\"M30 60V34M190 60V34M30 40H190M25.5 44.5l9-9M185.5 44.5l9-9\" fill=\"none\" stroke-width=\"1.5\"/><circle cx=\"76\" cy=\"20\" r=\"10\"/><text class=\"ds-dim-mark\" x=\"76\" y=\"20\" text-anchor=\"middle\" dominant-baseline=\"central\">B</text><text class=\"ds-dim-value\" x=\"116\" y=\"20\" text-anchor=\"middle\" dominant-baseline=\"central\">25 cm</text></svg></div>",
+      "css": ".ds-view { font-family: var(--font-sans, 'Sofia Sans Variable', 'DIN Alternate', 'Bahnschrift', ui-sans-serif, system-ui, sans-serif); font-variant-numeric: tabular-nums lining-nums; display: flex; flex-direction: column; align-items: flex-start; gap: 14px; padding: 12px; background: linear-gradient(#161718, var(--color-view, #0b0b0c)); } .ds-view-keys { display: flex; gap: 8px; } .ds-vkey-group { display: flex; } .ds-vkey { display: flex; align-items: center; justify-content: center; height: 32px; min-width: 32px; padding: 0; border: 1px solid color-mix(in srgb, var(--color-paper, #f1f3f4) 60%, transparent); border-radius: 0; background: color-mix(in srgb, var(--color-view, #0b0b0c) 75%, transparent); color: var(--color-paper, #f1f3f4); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: background-color 0.16s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.16s cubic-bezier(0.16, 1, 0.3, 1), color 0.16s cubic-bezier(0.16, 1, 0.3, 1); } .ds-vkey-text { padding: 0 10px; } .ds-vkey-group .ds-vkey + .ds-vkey { margin-left: -1px; } .ds-vkey:hover { background: var(--color-paper, #f1f3f4); color: var(--color-ink, #16191e); } .ds-vkey.ds-vkey-on { background: var(--color-paper, #f1f3f4); color: var(--color-ink, #16191e); } .ds-vkey.ds-vkey-on:hover { background: var(--color-paper-2, #e5e8ea); } .ds-vkey:focus-visible { outline: 2px solid var(--color-redline, #c81e3a); outline-offset: 2px; position: relative; } .ds-dim path { stroke: var(--color-redline-lit, #ff6b7a); } .ds-dim circle { fill: var(--color-redline-lit, #ff6b7a); } .ds-dim text { font-family: var(--font-cond, 'Sofia Sans Condensed Variable', 'DIN Condensed', 'Sofia Sans Variable', ui-sans-serif, sans-serif); } .ds-dim-mark { fill: var(--color-view, #0b0b0c); font-size: 13px; font-weight: 800; } .ds-dim-value { fill: var(--color-redline-lit, #ff6b7a); font-size: 19px; font-weight: 700; paint-order: stroke; stroke: var(--color-view, #0b0b0c); stroke-width: 4px; stroke-linejoin: round; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Shop Drawing",
+    "overview": "The studio is the wall's working drawing. Every setting is a line in a schedule, six of them keyed by letter (A to F) to a dimension line drawn on the 3D wall itself, and the wall's derived facts sit in a title block along the sheet's edge. The author reads a real size, changes it, watches it measured on the wall, and trusts the number enough to cut timber. Nothing on the sheet explains itself; it is lettered for one fluent reader.\n\nThe material is cool plot-bond paper and carbon ink, flat, square and ruled. There is one coloured pencil, a carmine redline, and it only ever marks what is live. The single dark surface is the 3D view, where the fibres supply all the colour and everything the interface adds is a thin paper-coloured line. Density is a drawing's density: 32px rows, 328px columns, 13 to 15px lettering, tabular figures throughout.\n\nThis system rejects the dark glass dashboard it replaced: a header bar, panels of anonymous sliders, a glowing accent. It has no top header at desktop widths, no cards, no shadows, no gradients in its chrome.",
+    "keyCharacteristics": [
+      "Paper and ink chrome around one dark view; the wall is the only thing that glows.",
+      "Controls are schedule rows, joined table cells and scale-rule sliders, not generic form widgets.",
+      "Every slider carries a typed value and a unit; numbers are bold, units are quiet.",
+      "Redline is state, never style.",
+      "Square corners; round only on key balloons.",
+      "Values snap. The playhead is the only continuous motion in the chrome."
+    ],
+    "rules": [
+      {
+        "name": "The Redline Rule",
+        "body": "Redline marks only what is live: the active dimension, the playhead, the selected frame, the traced fibre, focus, a slider thumb under the pointer. It is never a fill for a resting control, never a brand flourish, never a decoration. When nothing is live, the paper is black and grey.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Dark Surface Rule",
+        "body": "Only the 3D view is dark. Panels, transport, title block, tooltips and any future surface are paper.",
+        "section": "colors"
+      },
+      {
+        "name": "The Borrowed Colour Rule",
+        "body": "Chroma outside redline appears only as data: finish swatches, pour palettes, light-palette strips. Those colours are shown in flat square chips and never leak into chrome.",
+        "section": "colors"
+      },
+      {
+        "name": "The Value Is Bold Rule",
+        "body": "In any label and value pair the value carries the weight (700, or 600 for a named choice) and the label stays regular. Units are smaller and second-weight ink.",
+        "section": "typography"
+      },
+      {
+        "name": "The Condensed Is Lettered Rule",
+        "body": "Condensed type is reserved for titles, key letters and text drawn on the wall. Rows, values and prose use the normal cut.",
+        "section": "typography"
+      },
+      {
+        "name": "The Drawn Line Rule",
+        "body": "Anything added to the 3D view is a drawn paper line or paper lettering: dimension lines with tick terminators at 80% paper, object outlines at 45 to 70%, controls with a 60% paper border. Never colour, glow, glass or chrome. Redline-lit is the only exception, under the Redline Rule.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Balloon Exception",
+        "body": "Key balloons are round, as on a drawing, and nothing else is: the A to F dimension marks (17px), the frame-number tag (22px in the panel, 25px on the wall), and the live-dimension balloon on the wall (20px). A round shape in this system always means \"this is a key to something on the wall\". LED dots on the wiring map are drawn points, not interface shapes.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do give every numeric control a schedule row: name, scale rule, typed value, unit. A slider without a typed number does not belong on this sheet.",
+      "Do keep redline for live state only, and use `redline-lit` for the same state on the dark view.",
+      "Do build hierarchy from line weight: 2px ink for structure, 1px ink for cells, 1px `rule` for table lines.",
+      "Do show every option of a small set as joined cells with the chosen cell inked solid.",
+      "Do draw anything new on the 3D view as a paper line or paper lettering with the 4px view-coloured halo.",
+      "Do keep figures tabular and values bolder than their labels.",
+      "Do raise touch targets below 760px (rows and buttons 44px, cells 40px, swatches 36px).",
+      "Do update the canvas and WebGL mirrors whenever `ink`, `redline`, `redline-lit` or `view` changes.",
+      "Do use British spelling in lettering: fibre, colour."
+    ],
+    "donts": [
+      "Don't use redline for decoration, emphasis, branding or a resting fill. If nothing is live, nothing is red.",
+      "Don't round a corner unless the shape is a key balloon.",
+      "Don't add a second dark surface, or a dark theme for the chrome.",
+      "Don't put colour, glow, glass, blur or a filled panel over the 3D view.",
+      "Don't add shadows, cards or gradients to the chrome. Gradients appear only inside palette strips and swatches, as data.",
+      "Don't hide a small option set in a dropdown.",
+      "Don't animate layout or position. Transitions are 160ms on colour and opacity; values snap.",
+      "Don't set `ink-3` text on `paper-2`; it falls under 4.5:1.",
+      "Don't bring back a top header bar at desktop widths; the name lives in the title block."
+    ]
+  }
+}
