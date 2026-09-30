@@ -1,7 +1,11 @@
 import { Pause, Play, Repeat, Square } from "lucide-react";
 import type { RefObject } from "react";
+import { cn } from "@/lib/utils";
+import { Segmented } from "./controls";
 
 const SPEED_PRESETS = [0.5, 1, 1.5, 2];
+/** Numbered graduations on the scrub ruler, seconds. */
+const RULER_STEP = 3;
 
 export interface TransportBarProps {
   playing: boolean;
@@ -17,19 +21,29 @@ export interface TransportBarProps {
   duration: number;
 }
 
+const KEY =
+  "flex h-9 w-9 flex-none items-center justify-center border border-ink max-md:h-11 max-md:w-11";
+const KEY_OFF = "bg-paper text-ink hover:bg-paper-2 active:bg-rule";
+const KEY_ON = "bg-ink text-paper hover:bg-ink-2";
+
 export function TransportBar(props: TransportBarProps) {
+  const marks = Array.from(
+    { length: Math.floor(props.duration / RULER_STEP) + 1 },
+    (_, i) => i * RULER_STEP,
+  );
+  const presetValue =
+    SPEED_PRESETS.find((v) => Math.abs(v - props.speed) < 0.01) ?? -1;
+
   return (
-    <footer className="z-20 flex h-[74px] flex-none items-center gap-[18px] border-t border-white/[0.06] bg-[rgba(14,15,20,0.6)] px-[18px] backdrop-blur-[14px]">
-      <div className="flex items-center gap-1.5">
+    <footer className="gb-transport flex items-center gap-4 px-4 py-2.5 max-md:gap-3 max-md:px-3">
+      <div className="flex">
         <button
           type="button"
           aria-label={props.playing ? "Pause" : "Play"}
+          aria-keyshortcuts="Space"
+          title={props.playing ? "Pause (Space)" : "Play (Space)"}
           onClick={props.onPlayPause}
-          className={
-            props.playing
-              ? "flex h-10 w-10 cursor-pointer items-center justify-center rounded-[10px] border border-white/[0.12] bg-white/[0.05] text-white hover:bg-white/[0.09]"
-              : "flex h-10 w-10 cursor-pointer items-center justify-center rounded-[10px] border border-glow/50 bg-glow/20 text-white hover:bg-glow/30"
-          }
+          className={cn(KEY, props.playing ? KEY_OFF : KEY_ON)}
         >
           {props.playing ? (
             <Pause
@@ -51,9 +65,10 @@ export function TransportBar(props: TransportBarProps) {
         </button>
         <button
           type="button"
-          aria-label="Stop"
+          aria-label="Stop and rewind"
+          title="Stop and rewind"
           onClick={props.onStop}
-          className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-[9px] border border-white/10 bg-white/[0.03] text-ink hover:bg-white/[0.08]"
+          className={cn(KEY, KEY_OFF, "-ml-px")}
         >
           <Square
             size={11}
@@ -64,25 +79,22 @@ export function TransportBar(props: TransportBarProps) {
         </button>
         <button
           type="button"
-          aria-label="Toggle loop"
+          aria-label="Loop"
           aria-pressed={props.loop}
+          title={props.loop ? "Loop is on" : "Loop is off"}
           onClick={props.onLoop}
-          className={
-            props.loop
-              ? "flex h-9 w-9 cursor-pointer items-center justify-center rounded-[9px] border border-glow/50 bg-glow/15 text-[#c9beff] hover:bg-glow/25"
-              : "flex h-9 w-9 cursor-pointer items-center justify-center rounded-[9px] border border-white/10 bg-white/[0.03] text-ink/60 hover:bg-white/[0.08] hover:text-ink/90"
-          }
+          className={cn(KEY, props.loop ? KEY_ON : KEY_OFF, "-ml-px")}
         >
-          <Repeat size={14} aria-hidden="true" />
+          <Repeat size={15} aria-hidden="true" />
         </button>
       </div>
       <span
         ref={props.timeRef}
-        className="font-smono min-w-[88px] text-xs tabular-nums text-ink/60"
+        className="min-w-[78px] flex-none text-[14px] font-semibold text-ink"
       >
         0:00 / 0:12
       </span>
-      <div className="flex flex-1 flex-col gap-[5px]">
+      <div className="flex min-w-0 flex-1 flex-col">
         <input
           ref={props.scrubRef}
           type="range"
@@ -91,33 +103,43 @@ export function TransportBar(props: TransportBarProps) {
           max={1000}
           step={1}
           defaultValue={0}
+          data-live={props.playing}
           onInput={(e) => props.onScrub(Number(e.currentTarget.value))}
-          className="w-full"
+          className="gb-scrub"
         />
-        <div className="font-smono flex justify-between text-[9px] tracking-[0.05em] text-ink/20">
-          <span>KEYFRAMES · SOON</span>
-          <span>LOOP {props.duration}s</span>
-        </div>
-      </div>
-      <div className="flex items-center gap-2.5">
-        <span className="text-[11px] text-ink/50">Speed</span>
-        <div className="flex gap-1">
-          {SPEED_PRESETS.map((v) => (
-            <button
-              key={v}
-              type="button"
-              onClick={() => props.onSpeedPreset(v)}
-              className={
-                Math.abs(v - props.speed) < 0.01
-                  ? "font-smono h-[26px] min-w-[34px] cursor-pointer rounded-[7px] border border-glow/50 bg-glow/15 px-1.5 text-[11px] text-white"
-                  : "font-smono h-[26px] min-w-[34px] cursor-pointer rounded-[7px] border border-white/[0.08] bg-white/[0.02] px-1.5 text-[11px] text-ink/60 hover:bg-white/[0.06] hover:text-ink/90"
-              }
-            >
-              {v}×
-            </button>
+        <div
+          aria-hidden="true"
+          className="-mt-0.5 flex justify-between text-[11.5px] leading-none text-ink-2"
+        >
+          {marks.map((s, i) => (
+            <span key={s} className="w-0 whitespace-nowrap">
+              <span
+                className={cn(
+                  "inline-block",
+                  i === 0
+                    ? ""
+                    : i === marks.length - 1
+                      ? "-translate-x-full"
+                      : "-translate-x-1/2",
+                )}
+              >
+                {i === marks.length - 1 ? `${s} s` : s}
+              </span>
+            </span>
           ))}
         </div>
       </div>
+      <Segmented
+        ariaLabel="Playback speed"
+        options={SPEED_PRESETS.map((v) => ({
+          value: v,
+          label: `${v}×`,
+          ariaLabel: `${v} times speed`,
+        }))}
+        value={presetValue}
+        onChange={props.onSpeedPreset}
+        className="w-[176px] flex-none max-sm:hidden"
+      />
     </footer>
   );
 }

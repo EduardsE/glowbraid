@@ -57,6 +57,17 @@ export interface Wall3D {
   dollyIn(): void;
   dollyOut(): void;
   pick(clientX: number, clientY: number): number | null;
+  /**
+   * Projects a world-space point (cm) to CSS pixels relative to the canvas,
+   * using the camera of the last rendered frame. Returns false when the point
+   * falls outside the view frustum's depth range (e.g. behind the camera).
+   */
+  project(
+    x: number,
+    y: number,
+    z: number,
+    out: { x: number; y: number },
+  ): boolean;
   dispose(): void;
 }
 
@@ -70,12 +81,24 @@ const DEFAULT_BEZEL = "#141519";
 const HOME_DIR = new THREE.Vector3(0.35, 0.3, 1).normalize();
 const HOME_DISTANCE = 1.6;
 const DOLLY_STEP = 1.15;
+/**
+ * CSS px kept clear above and below the board at the home camera, so the
+ * view's hint and keys (top) and the overall dimension (bottom) never sit on
+ * the wall — matters most in the short phone view.
+ */
+const HOME_INSET_PX = 76;
+/** Margin factor for perspective and the home camera's tilt. */
+const HOME_FIT_SLACK = 1.1;
 /** Bloom tuning — threshold sits above the board/bezel luminance. */
 const BLOOM_STRENGTH = 0.9;
 const BLOOM_RADIUS = 0.4;
 const BLOOM_THRESHOLD = 0.55;
-/** Selection outline colour — bright enough that UnrealBloomPass blooms it into a glow. */
-const SELECT_COLOR = 0x6cf0ff;
+/**
+ * Selection outline colour — the studio's redline, lightened for the dark
+ * view. Its luminance sits under BLOOM_THRESHOLD so it stays a crisp pencil
+ * line instead of blooming into a glow.
+ */
+const SELECT_COLOR = 0xff6b7a;
 /** Outline outset beyond the frame's outer edge, cm. */
 const SELECT_OUTSET = 0.4;
 
@@ -86,8 +109,8 @@ function gradientBackground(): THREE.Texture {
   const g = c.getContext("2d");
   if (g) {
     const grad = g.createLinearGradient(0, 0, 0, 256);
-    grad.addColorStop(0, "#14151b");
-    grad.addColorStop(1, "#08090c");
+    grad.addColorStop(0, "#161718");
+    grad.addColorStop(1, "#0b0b0c");
     g.fillStyle = grad;
     g.fillRect(0, 0, 2, 256);
   }
@@ -157,6 +180,10 @@ export function createWall3D(canvas: HTMLCanvasElement): Wall3D {
   let outlineFrame: number | null = null;
   const raycaster = new THREE.Raycaster();
   const ndc = new THREE.Vector2();
+  const projected = new THREE.Vector3();
+  // Canvas CSS size, cached by the ResizeObserver so project() never forces layout.
+  let viewW = canvas.clientWidth;
+  let viewH = canvas.clientHeight;
   scene.add(group);
 
   function disposeGroup(): void {
@@ -299,9 +326,16 @@ export function createWall3D(canvas: HTMLCanvasElement): Wall3D {
 
   function resetCamera(): void {
     controls.target.set(0, 0, 0);
-    camera.position
-      .copy(HOME_DIR)
-      .multiplyScalar(layout.boardSize * HOME_DISTANCE);
+    // Far enough that the board fits between the insets; never nearer than
+    // the classic home distance, never beyond the dolly range.
+    const clear = Math.max(0.3, 1 - (2 * HOME_INSET_PX) / Math.max(1, viewH));
+    const visiblePerUnit =
+      2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * clear;
+    const distance = Math.min(
+      4,
+      Math.max(HOME_DISTANCE, HOME_FIT_SLACK / visiblePerUnit),
+    );
+    camera.position.copy(HOME_DIR).multiplyScalar(layout.boardSize * distance);
     controls.update();
   }
 
@@ -364,6 +398,18 @@ export function createWall3D(canvas: HTMLCanvasElement): Wall3D {
     return typeof idx === "number" ? idx : null;
   }
 
+  function project(
+    x: number,
+    y: number,
+    z: number,
+    out: { x: number; y: number },
+  ): boolean {
+    projected.set(x, y, z).project(camera);
+    out.x = (projected.x * 0.5 + 0.5) * viewW;
+    out.y = (-projected.y * 0.5 + 0.5) * viewH;
+    return projected.z > -1 && projected.z < 1;
+  }
+
   function render(state: Wall3DState): void {
     const key = `${state.gridSize}|${state.frameSize}|${state.frameGap}|${state.boardPadding}|${state.frameWidth}|${state.cornerRadius}|${state.frameOffset}|${state.boardArt ?? "none"}|${state.boardArtSeed ?? 0}|${state.boardArtPalette ?? ""}`;
     if (state.frames !== builtFrames || key !== builtKey) {
@@ -404,6 +450,8 @@ export function createWall3D(canvas: HTMLCanvasElement): Wall3D {
   const ro = new ResizeObserver(() => {
     const rect = canvas.getBoundingClientRect();
     if (rect.width < 2 || rect.height < 2) return; // hidden (display:none)
+    viewW = rect.width;
+    viewH = rect.height;
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     renderer.setPixelRatio(dpr);
     renderer.setSize(rect.width, rect.height, false);
@@ -425,6 +473,7 @@ export function createWall3D(canvas: HTMLCanvasElement): Wall3D {
     dollyIn: () => dolly(1 / DOLLY_STEP),
     dollyOut: () => dolly(DOLLY_STEP),
     pick,
+    project,
     dispose: () => {
       ro.disconnect();
       canvas.removeEventListener("webglcontextlost", onContextLost);

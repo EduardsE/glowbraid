@@ -1,3 +1,6 @@
+import { Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
+
 export interface ColorSwatchPickerProps {
   value: string | null;
   onChange: (color: string) => void;
@@ -12,6 +15,17 @@ export const PRESET_COLORS: { name: string; hex: string }[] = [
   { name: "Oak", hex: "#c9a066" },
 ];
 
+/** Schedule name for a finish: preset name, "Default", or the custom hex. */
+export function finishName(value: string | null, defaultHex?: string): string {
+  if (value == null || value === defaultHex) return "Default";
+  const preset = PRESET_COLORS.find((p) => p.hex === value);
+  return preset ? preset.name : value.toUpperCase();
+}
+
+const CHIP =
+  "h-6 w-6 flex-none border border-ink/45 max-md:h-9 max-md:w-9 outline-offset-2 focus-visible:outline-redline";
+const CHIP_ON = "outline outline-2 outline-ink";
+
 export function ColorSwatchPicker(props: ColorSwatchPickerProps) {
   const { value, onChange, ariaLabel } = props;
   const isPreset = PRESET_COLORS.some((p) => p.hex === value);
@@ -25,34 +39,26 @@ export function ColorSwatchPicker(props: ColorSwatchPickerProps) {
           type="button"
           title={p.name}
           aria-label={`${ariaLabel}: ${p.name}`}
+          aria-pressed={value === p.hex}
           onClick={() => onChange(p.hex)}
           style={{ background: p.hex }}
-          className={
-            value === p.hex
-              ? "h-[30px] w-[30px] cursor-pointer rounded-[7px] border border-white/15 outline outline-2 outline-offset-2 outline-glow/80"
-              : "h-[30px] w-[30px] cursor-pointer rounded-[7px] border border-white/15 hover:border-white/40"
-          }
+          className={cn(CHIP, value === p.hex ? CHIP_ON : "hover:border-ink")}
         />
       ))}
       <label
-        title="Custom"
-        aria-label={`${ariaLabel}: custom`}
+        title="Custom colour"
         style={isCustom ? { background: value } : undefined}
-        className={
-          isCustom
-            ? "relative flex h-[30px] w-[30px] cursor-pointer items-center justify-center rounded-[7px] border border-white/15 outline outline-2 outline-offset-2 outline-glow/80"
-            : "relative flex h-[30px] w-[30px] cursor-pointer items-center justify-center rounded-[7px] border border-white/15 bg-[repeating-conic-gradient(#2a2a2e_0%_25%,#1c1c1f_0%_50%)] bg-[length:10px_10px] hover:border-white/40"
-        }
-      >
-        {isCustom ? null : (
-          <span className="pointer-events-none text-[15px] text-white/60">
-            +
-          </span>
+        className={cn(
+          CHIP,
+          "relative flex cursor-pointer items-center justify-center has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-redline",
+          isCustom ? CHIP_ON : "bg-paper-2 text-ink-2 hover:border-ink",
         )}
+      >
+        {isCustom ? null : <Plus size={13} aria-hidden="true" />}
         <input
           type="color"
-          aria-label={`${ariaLabel} custom color`}
-          value={isCustom ? (value as string) : "#9b8cff"}
+          aria-label={`${ariaLabel}: custom colour`}
+          value={isCustom ? (value as string) : "#6b4a32"}
           onChange={(e) => onChange(e.target.value)}
           className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
         />

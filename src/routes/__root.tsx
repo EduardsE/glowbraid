@@ -20,11 +20,11 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "Design and simulate fibre-optic LED walls: generate braided fibre layouts, drive LED animations, and preview the installation in 2D and 3D.",
+          "Design and simulate a fibre-optic LED wall: set real dimensions, generate braided fibre layouts, drive LED animations, and preview the installation in 3D.",
       },
       {
         name: "theme-color",
-        content: "#0b0c0f",
+        content: "#f1f3f4",
       },
       {
         property: "og:title",
@@ -33,7 +33,7 @@ export const Route = createRootRoute({
       {
         property: "og:description",
         content:
-          "Design and simulate fibre-optic LED walls: generate braided fibre layouts, drive LED animations, and preview the installation in 2D and 3D.",
+          "Design and simulate a fibre-optic LED wall: set real dimensions, generate braided fibre layouts, drive LED animations, and preview the installation in 3D.",
       },
       {
         property: "og:type",
@@ -47,6 +47,11 @@ export const Route = createRootRoute({
       },
       {
         rel: "icon",
+        type: "image/svg+xml",
+        href: `${import.meta.env.BASE_URL}favicon.svg`,
+      },
+      {
+        rel: "alternate icon",
         href: `${import.meta.env.BASE_URL}favicon.ico`,
       },
       {

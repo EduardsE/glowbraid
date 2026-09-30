@@ -1,90 +1,70 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
 @import 'tailwindcss';
+@import '@fontsource-variable/sofia-sans';
+@import '@fontsource-variable/sofia-sans-condensed';
 @plugin '@tailwindcss/typography';
 
 @import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
-:root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.141 0.005 285.823);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.141 0.005 285.823);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.141 0.005 285.823);
-  --primary: oklch(0.21 0.006 285.885);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.21 0.006 285.885);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.871 0.006 286.286);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-primary: oklch(0.21 0.006 285.885);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
-  --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.871 0.006 286.286);
-}
-
-.dark {
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.141 0.005 285.823);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.141 0.005 285.823);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.21 0.006 285.885);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.274 0.006 286.033);
-  --input: oklch(0.274 0.006 286.033);
-  --ring: oklch(0.442 0.017 285.786);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.274 0.006 286.033);
-  --sidebar-ring: oklch(0.442 0.017 285.786);
-}
-
+/*
+ * Glowbraid studio tokens — the wall's shop drawing.
+ * Plot-bond paper, carbon ink in three line weights, and one redline pencil
+ * reserved for what is live (active dimension, playhead, selection, focus).
+ * The only dark surface is the view. mapRenderer.ts and wall3d.ts mirror the
+ * ink/redline values because canvas and WebGL can't read CSS variables.
+ */
 @theme {
-  /* Glowbraid app tokens: ink = primary text, glow = single lavender accent */
-  --color-ink: #e9eaf0;
-  --color-glow: #9b8cff;
+  --color-paper: #f1f3f4;
+  --color-paper-2: #e5e8ea;
+  --color-ink: #16191e;
+  --color-ink-2: #4b5159;
+  --color-ink-3: #666b72;
+  --color-rule: #c8ccd0;
+  --color-redline: #c81e3a;
+  --color-redline-lit: #ff6b7a;
+  --color-view: #0b0b0c;
+
+  --font-sans:
+    'Sofia Sans Variable', 'DIN Alternate', 'Bahnschrift', ui-sans-serif,
+    system-ui, sans-serif;
+  --font-cond:
+    'Sofia Sans Condensed Variable', 'DIN Condensed', 'Sofia Sans Variable',
+    ui-sans-serif, sans-serif;
+
+  /* md and lg are the sheet's own breaks (see .gb-sheet), so every
+     responsive utility turns with the layout. */
+  --breakpoint-md: 47.5rem;
+  --breakpoint-lg: 73.75rem;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* shadcn/ui contract, mapped onto the drawing tokens so added components inherit the world. */
+:root {
+  --background: var(--color-paper);
+  --foreground: var(--color-ink);
+  --card: var(--color-paper);
+  --card-foreground: var(--color-ink);
+  --popover: var(--color-paper);
+  --popover-foreground: var(--color-ink);
+  --primary: var(--color-ink);
+  --primary-foreground: var(--color-paper);
+  --secondary: var(--color-paper-2);
+  --secondary-foreground: var(--color-ink);
+  --muted: var(--color-paper-2);
+  --muted-foreground: var(--color-ink-2);
+  --accent: var(--color-paper-2);
+  --accent-foreground: var(--color-ink);
+  --destructive: var(--color-redline);
+  --destructive-foreground: var(--color-paper);
+  --border: var(--color-rule);
+  --input: var(--color-ink-3);
+  --ring: var(--color-redline);
+  --radius: 0rem;
 }
 
 @theme inline {
-  --font-sans: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -104,151 +84,317 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: var(--radius);
+  --radius-md: var(--radius);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
+  --radius-xl: var(--radius);
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--color-ink) 32%, transparent)
+      transparent;
+  }
+  html,
+  body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: var(--color-paper);
   }
   body {
-    background-color: var(--background);
-    color: var(--foreground);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.35;
+    font-variant-numeric: tabular-nums lining-nums;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  ::selection {
+    background: var(--color-ink);
+    color: var(--color-paper);
+  }
+  input {
+    caret-color: var(--color-redline);
   }
   button,
+  input,
   [role='switch'] {
     transition:
-      background-color 0.2s ease,
-      border-color 0.2s ease,
-      color 0.2s ease,
-      box-shadow 0.2s ease,
-      opacity 0.2s ease,
-      transform 0.15s ease;
+      background-color 0.16s var(--ease-out-expo),
+      border-color 0.16s var(--ease-out-expo),
+      color 0.16s var(--ease-out-expo),
+      opacity 0.16s var(--ease-out-expo);
   }
-  button:not(:disabled):active {
-    transform: scale(0.97);
+  button:not(:disabled) {
+    cursor: pointer;
   }
   :focus-visible {
-    outline: 2px solid rgba(155, 140, 255, 0.7);
+    outline: 2px solid var(--color-redline);
     outline-offset: 2px;
   }
 }
 
-html,
-body {
-	height: 100%;
-	margin: 0;
-	padding: 0;
-	overflow: hidden;
-	background: #0b0c0f;
+@layer components {
+  /* ---------- Sheet layout ----------
+   * Phone: title strip, view, transport, then one scrolling column.
+   * ≥760px: a side column beside the view. ≥1180px: schedule left, specs right,
+   * title strip along the bottom edge like a drawing's title block.
+   */
+  .gb-sheet {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    width: 100%;
+    overflow: hidden;
+    background: var(--color-paper);
+  }
+  .gb-view {
+    position: relative;
+    flex: none;
+    height: 42dvh;
+    min-height: 240px;
+    overflow: hidden;
+    background: var(--color-view);
+  }
+  .gb-transport {
+    flex: none;
+    border-bottom: 2px solid var(--color-ink);
+  }
+  .gb-side {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .gb-title {
+    flex: none;
+    border-bottom: 2px solid var(--color-ink);
+  }
+
+  @media (min-width: 760px) {
+    .gb-sheet {
+      display: grid;
+      grid-template-columns: 328px minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1fr) auto auto;
+      grid-template-areas:
+        'side view'
+        'side transport'
+        'title title';
+    }
+    .gb-view {
+      grid-area: view;
+      height: auto;
+      min-height: 0;
+    }
+    .gb-transport {
+      grid-area: transport;
+      border-bottom: 0;
+    }
+    .gb-side {
+      grid-area: side;
+      border-right: 2px solid var(--color-ink);
+    }
+    .gb-title {
+      grid-area: title;
+      border-bottom: 0;
+      border-top: 2px solid var(--color-ink);
+    }
+  }
+
+  @media (min-width: 1180px) {
+    .gb-sheet {
+      grid-template-columns: 328px minmax(0, 1fr) 328px;
+      grid-template-areas:
+        'schedule view specs'
+        'schedule transport specs'
+        'title title title';
+    }
+    .gb-side {
+      display: contents;
+    }
+    .gb-schedule,
+    .gb-specs {
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+    .gb-schedule {
+      grid-area: schedule;
+      border-right: 2px solid var(--color-ink);
+    }
+    .gb-specs {
+      grid-area: specs;
+      border-left: 2px solid var(--color-ink);
+    }
+  }
+
+  /* ---------- Scale-rule slider ----------
+   * Ten graduations over a baseline; the measured length is inked heavy.
+   * --p is the 0–1 fill fraction, set inline by the row.
+   */
+  input[type='range'].gb-rule {
+    --thumb-w: 5px;
+    --thumb: var(--color-ink);
+    --graduations:
+      linear-gradient(var(--color-ink), var(--color-ink)) left bottom /
+        calc(var(--thumb-w) / 2 + var(--p, 0) * (100% - var(--thumb-w))) 3px
+        no-repeat,
+      linear-gradient(var(--color-ink-3), var(--color-ink-3)) left bottom / 100%
+        1px no-repeat,
+      linear-gradient(to right, var(--color-ink-3) 1px, transparent 1px) left top /
+        calc((100% - 1px) / 10) 100% repeat-x;
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 32px;
+    margin: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+  input[type='range'].gb-rule::-webkit-slider-runnable-track {
+    height: 9px;
+    background: var(--graduations);
+  }
+  input[type='range'].gb-rule::-moz-range-track {
+    height: 9px;
+    background: var(--graduations);
+  }
+  input[type='range'].gb-rule::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: var(--thumb-w);
+    height: 19px;
+    margin-top: -5px;
+    border: 0;
+    border-radius: 0;
+    background: var(--thumb);
+  }
+  input[type='range'].gb-rule::-moz-range-thumb {
+    width: var(--thumb-w);
+    height: 19px;
+    border: 0;
+    border-radius: 0;
+    background: var(--thumb);
+  }
+  /* Set on the pseudo-elements directly: a custom property changed on hover
+     does not reliably restyle the thumb in Chromium. */
+  input[type='range'].gb-rule:hover::-webkit-slider-thumb,
+  input[type='range'].gb-rule:active::-webkit-slider-thumb,
+  input[type='range'].gb-rule:focus-visible::-webkit-slider-thumb {
+    background: var(--color-redline);
+  }
+  input[type='range'].gb-rule:hover::-moz-range-thumb,
+  input[type='range'].gb-rule:active::-moz-range-thumb,
+  input[type='range'].gb-rule:focus-visible::-moz-range-thumb {
+    background: var(--color-redline);
+  }
+  input[type='range'].gb-rule:focus-visible {
+    outline-offset: 0;
+  }
+
+  /* Transport scrub: a 12-second ruler with a thin playhead. */
+  input[type='range'].gb-scrub {
+    --thumb-w: 3px;
+    --thumb: var(--color-ink);
+    --graduations:
+      linear-gradient(var(--color-ink), var(--color-ink)) left bottom / 100% 1px
+        no-repeat,
+      linear-gradient(to right, var(--color-ink) 1px, transparent 1px) left top /
+        calc((100% - 1px) / 12) 100% repeat-x;
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 28px;
+    margin: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+  input[type='range'].gb-scrub[data-live='true']::-webkit-slider-thumb {
+    background: var(--color-redline);
+  }
+  input[type='range'].gb-scrub[data-live='true']::-moz-range-thumb {
+    background: var(--color-redline);
+  }
+  input[type='range'].gb-scrub::-webkit-slider-runnable-track {
+    height: 10px;
+    background: var(--graduations);
+  }
+  input[type='range'].gb-scrub::-moz-range-track {
+    height: 10px;
+    background: var(--graduations);
+  }
+  input[type='range'].gb-scrub::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: var(--thumb-w);
+    height: 24px;
+    margin-top: -9px;
+    border: 0;
+    border-radius: 0;
+    background: var(--thumb);
+  }
+  input[type='range'].gb-scrub::-moz-range-thumb {
+    width: var(--thumb-w);
+    height: 24px;
+    border: 0;
+    border-radius: 0;
+    background: var(--thumb);
+  }
+  input[type='range'].gb-scrub:focus-visible {
+    outline-offset: 0;
+  }
+
+  /* Typed value in a schedule row: reads as dimension text until touched. */
+  .gb-field {
+    width: 100%;
+    min-width: 0;
+    padding: 1px 2px;
+    border: 0;
+    border-bottom: 1px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    color: var(--color-ink);
+    font: inherit;
+    font-weight: 700;
+    text-align: right;
+    user-select: text;
+  }
+  .gb-field:hover {
+    border-bottom-color: var(--color-ink-3);
+  }
+  .gb-field:focus-visible {
+    outline: none;
+    border-bottom-color: var(--color-redline);
+    background: var(--color-paper-2);
+  }
+
+  /* ---------- Dimension overlay (SVG over the dark view) ---------- */
+  .gb-dims text {
+    font-family: var(--font-cond);
+    paint-order: stroke;
+    stroke: var(--color-view);
+    stroke-width: 4px;
+    stroke-linejoin: round;
+  }
+  .gb-dim {
+    opacity: 0;
+    transition: opacity 0.16s var(--ease-out-expo);
+  }
+  .gb-dim[data-on='true'] {
+    opacity: 1;
+  }
 }
 
-::-webkit-scrollbar {
-	width: 8px;
-	height: 8px;
-}
-::-webkit-scrollbar-thumb {
-	background: rgba(255, 255, 255, 0.09);
-	border-radius: 8px;
-}
-::-webkit-scrollbar-track {
-	background: transparent;
-}
-
-input[type="range"] {
-	-webkit-appearance: none;
-	appearance: none;
-	height: 22px;
-	margin: 0;
-	background: transparent;
-	cursor: pointer;
-}
-input[type="range"]::-webkit-slider-runnable-track {
-	height: 3px;
-	border-radius: 999px;
-	background: rgba(233, 234, 240, 0.12);
-}
-input[type="range"]::-webkit-slider-thumb {
-	-webkit-appearance: none;
-	appearance: none;
-	margin-top: -5px;
-	height: 13px;
-	width: 13px;
-	border-radius: 999px;
-	background: #b9adff;
-	box-shadow:
-		0 0 0 3px rgba(155, 140, 255, 0.14),
-		0 0 10px rgba(155, 140, 255, 0.35);
-	transition:
-		box-shadow 0.2s ease,
-		transform 0.15s ease;
-}
-input[type="range"]:hover::-webkit-slider-thumb {
-	transform: scale(1.12);
-	box-shadow:
-		0 0 0 4px rgba(155, 140, 255, 0.2),
-		0 0 14px rgba(155, 140, 255, 0.5);
-}
-input[type="range"]:focus-visible {
-	outline: none;
-}
-input[type="range"]:focus-visible::-webkit-slider-thumb {
-	box-shadow:
-		0 0 0 2px #0b0c0f,
-		0 0 0 4px rgba(155, 140, 255, 0.8);
-}
-input[type="range"]::-moz-range-track {
-	height: 3px;
-	border-radius: 999px;
-	background: rgba(233, 234, 240, 0.12);
-}
-input[type="range"]::-moz-range-progress {
-	height: 3px;
-	border-radius: 999px;
-	background: rgba(155, 140, 255, 0.55);
-}
-input[type="range"]::-moz-range-thumb {
-	height: 13px;
-	width: 13px;
-	border: none;
-	border-radius: 999px;
-	background: #b9adff;
-	box-shadow:
-		0 0 0 3px rgba(155, 140, 255, 0.14),
-		0 0 10px rgba(155, 140, 255, 0.35);
-}
-input[type="range"]:focus-visible::-moz-range-thumb {
-	box-shadow:
-		0 0 0 2px #0b0c0f,
-		0 0 0 4px rgba(155, 140, 255, 0.8);
-}
-
-/* Film-grain overlay: breaks flat dark surfaces; static tile, no per-frame cost */
-.grain {
-	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-	background-size: 160px 160px;
-	opacity: 0.03;
-}
-
-.font-grotesk {
-	font-family: "Space Grotesk", system-ui, sans-serif;
-}
-.font-smono {
-	font-family: "Space Mono", monospace;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }
